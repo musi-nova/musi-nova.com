@@ -1,0 +1,101 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 80% 99%;
+    --foreground: 0 0% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+
+    --primary: 146 29% 50%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 25 55% 35%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 60 80% 94%;
+    --accent-foreground: 0 0% 20%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 146 29% 50%;
+
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-musinova-darkgray font-musinova;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-musinova-green text-white font-medium py-2 px-6 rounded-md transition-all hover:bg-opacity-90 hover:shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply bg-musinova-brown text-white font-medium py-2 px-6 rounded-md transition-all hover:bg-opacity-90 hover:shadow-md;
+  }
+
+  .btn-outline {
+    @apply border border-musinova-green text-musinova-green font-medium py-2 px-6 rounded-md transition-all hover:bg-musinova-green hover:text-white hover:shadow-md;
+  }
+
+  .btn-outline-brown {
+    @apply border border-musinova-brown text-musinova-brown font-medium py-2 px-6 rounded-md transition-all hover:bg-musinova-brown hover:text-white hover:shadow-md;
+  }
+
+  .card-hover {
+    @apply transition-all hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .gradient-section {
+    @apply bg-gradient-to-br from-musinova-cream to-white;
+  }
+  
+  .musinova-gradient {
+    @apply bg-gradient-to-b from-musinova-lightyellow to-musinova-lightgreen;
+  }
+  
+  .iridescent-gradient {
+    @apply bg-gradient-to-br from-musinova-lightyellow to-musinova-lightgreen bg-opacity-90 backdrop-blur-sm;
+    position: relative;
+  }
+  
+  .iridescent-gradient::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.1) 100%);
+    z-index: 1;
+    pointer-events: none;
+  }
+  
+  .iridescent-gradient > * {
+    position: relative;
+    z-index: 2;
+  }
+}
