@@ -1,5 +1,6 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { apiFetch } from '@/lib/api';
 
 interface User {
   id: string;
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       formData.append('client_id', 'string');
       formData.append('client_secret', 'string');
     
-      const response = await fetch('https://mn-api.jms.rocks/login', {
+      const response = await apiFetch('login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -60,11 +61,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
         body: formData.toString(),
       });
-  
+
       if (!response.ok) {
-        throw new Error('Failed to log in');
+        throw new Error(`Login failed: ${response.status} ${response.statusText}`);
       }
-  
       const responseData = await response.json();
 
       console.log('Login response:', responseData);

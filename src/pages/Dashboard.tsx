@@ -1,176 +1,544 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import PageLayout from '@/components/PageLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
-import { Music, Play, Users, TrendingUp, BarChart3 } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import PageLayout from "@/components/PageLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { Music, Play, Users, TrendingUp, BarChart3 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { apiFetch } from "@/lib/api";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+// Define a type for the job data
+type Job = {
+  id: string;
+  playlist_id: string;
+  playlist_name: string;
+  campaign_id: string;
+  artist_id: string; // Added artist_id
+};
+
+// Function to fetch campaign summary
+const fetchCampaignSummaryData = async (
+  playlist_id: string,
+  campaign_id: string
+) => {
+  const response = await apiFetch(
+    `user/playlist/${playlist_id}/campaign/${campaign_id}/summary`
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch campaign summary");
+  }
+  return response.json();
+};
+
+// Function to fetch time series data
+const fetchTimeSeriesData = async (
+  playlist_id: string,
+  campaign_id: string
+) => {
+  const response = await apiFetch(
+    `user/playlist/${playlist_id}/campaign/${campaign_id}`
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch time series data");
+  }
+  return response.json();
+};
+
+// Function to fetch artist's top tracks
+const fetchArtistTopTracks = async (artist_id: string) => {
+  const response = await apiFetch(`user/artist/${artist_id}/top-tracks`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch artist's top tracks");
+  }
+  return response.json();
+};
 
 const Dashboard = () => {
-  const [selectedPlaylist, setSelectedPlaylist] = useState("all");
+  const [selectedJob, setSelectedJob] = useState("all");
+  const [jobs, setJobs] = useState<
+    {
+      id: string;
+      name: string;
+      campaign_id?: string;
+      playlist_id?: string;
+      artist_id?: string;
+    }[]
+  >([]);
+  const [campaignSummary, setCampaignSummary] = useState(null);
+  const [topTracksData, setTopTracksData] = useState([]); // State for top tracks data
+  const [timeSeriesData, setTimeSeriesData] = useState([]); // State for time series data
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  
-  const playlists = [
-    { id: "all", name: "All Playlists" },
-    { id: "indie2024", name: "Indie Rock 2024" },
-    { id: "popfinds", name: "Fresh Pop Finds" },
-    { id: "chillvibes", name: "Chill Vibes" },
-  ];
-  
-  const activeCampaigns = [
-    {
-      name: "Indie Rock 2024",
-      budget: "$150/month",
-      progress: 75,
-      daysLeft: 21
-    },
-    {
-      name: "Fresh Pop Finds",
-      budget: "$75/month",
-      progress: 25,
-      daysLeft: 7
-    }
-  ];
+
+  // Fetch jobs
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const response = await apiFetch("user/playlist/jobs");
+        if (!response.ok) {
+          throw new Error("Failed to fetch jobs");
+        }
+        const data: Job[] = await response.json();
+
+        const jobCounters: Record<string, number> = {};
+        const uniqueJobs = Array.from(
+          new Map(
+            data.map((job) => [`${job.playlist_id}-${job.campaign_id}`, job])
+          ).values()
+        ).map((job) => {
+          jobCounters[job.playlist_id] =
+            (jobCounters[job.playlist_id] || 0) + 1;
+
+          const campaignSuffix =
+            jobCounters[job.playlist_id] > 1
+              ? ` (Campaign ${jobCounters[job.playlist_id]})`
+              : "";
+
+          return {
+            id: `${job.playlist_id}-${job.campaign_id}`,
+            name: `${job.playlist_name}${campaignSuffix}`,
+            campaign_id: job.campaign_id,
+            playlist_id: job.playlist_id,
+            artist_id: job.artist_id, // Include artist_id
+          };
+        });
+
+        setJobs([...uniqueJobs]);
+        if (uniqueJobs.length > 0) {
+          setSelectedJob(uniqueJobs[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  // Fetch campaign summary and time series data
+  useEffect(() => {
+    const fetchCampaignSummary = async () => {
+      if (selectedJob === "all") {
+        setCampaignSummary(null);
+        setTimeSeriesData([]); // Reset time series data
+        return;
+      }
+
+      const selected = jobs.find((job) => job.id === selectedJob);
+      if (selected?.campaign_id) {
+        try {
+          // Fetch campaign summary
+          const summary = await fetchCampaignSummaryData(
+            selected.playlist_id,
+            selected.campaign_id
+          );
+          console.log("Campaign Summary:", summary);
+          setCampaignSummary(summary);
+
+          // Fetch time series data
+          const timeSeries = await fetchTimeSeriesData(
+            selected.playlist_id,
+            selected.campaign_id
+          );
+          setTimeSeriesData(timeSeries);
+        } catch (error) {
+          console.error(
+            "Error fetching campaign summary or time series data:",
+            error
+          );
+        }
+      }
+    };
+
+    fetchCampaignSummary();
+  }, [selectedJob, jobs]);
+
+  // Fetch artist's top tracks when a job with an artist_id is selected
+  useEffect(() => {
+    const fetchTopTracks = async () => {
+      const selected = jobs.find((job) => job.id === selectedJob);
+      if (selected?.artist_id) {
+        try {
+          const tracks = await fetchArtistTopTracks(selected.artist_id);
+          setTopTracksData(tracks);
+          console.log("Top Tracks Data:", tracks);
+        } catch (error) {
+          console.error("Error fetching artist's top tracks:", error);
+        }
+      } else {
+        setTopTracksData([]); // Reset if no artist_id
+      }
+    };
+
+    fetchTopTracks();
+  }, [selectedJob, jobs]);
 
   return (
-    <PageLayout showSidebar={true} className="bg-musinova-cream/30 py-4 md:py-8">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-8">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-musinova-navy mb-2">
-            Welcome, {user?.name || 'Musician'}!
-          </h1>
-          <p className="text-sm md:text-base text-gray-600">
-            Here's an overview of your campaigns
-          </p>
-        </div>
-        
-        <Link to="/campaigns/new" className="mt-3 md:mt-0">
-          <Button className="w-full md:w-auto bg-musinova-brown hover:bg-musinova-brown/90 text-white">
-            <Play className="mr-2 h-4 w-4" /> Start Campaign
-          </Button>
-        </Link>
+    <PageLayout
+      showSidebar={true}
+      className="bg-musinova-cream/30 py-4 md:py-8"
+    >
+      <div className="mb-4 md:mb-8">
+        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+        <h2 className="text-sm text-gray-600">
+          Welcome back, {user?.email || "Musician"}! Here’s your dashboard.
+        </h2>
       </div>
-      
+
+      {/* Job Selector */}
       <div className="mb-4 md:mb-8">
         <div className="flex items-center gap-2 md:gap-4">
-          <label htmlFor="playlist-select" className="font-medium text-sm md:text-base">Playlist:</label>
-          <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist}>
-            <SelectTrigger className="w-full md:w-56 text-sm">
-              <SelectValue placeholder="Select playlist" />
+          <label
+            htmlFor="job-select"
+            className="font-medium text-sm md:text-base"
+          >
+            Job:
+          </label>
+          <Select value={selectedJob} onValueChange={setSelectedJob}>
+            <SelectTrigger className="w-full md:w-80 text-sm">
+              <SelectValue placeholder="Select job" />
             </SelectTrigger>
             <SelectContent>
-              {playlists.map(playlist => (
-                <SelectItem key={playlist.id} value={playlist.id}>
-                  {playlist.name}
+              {jobs.map((job) => (
+                <SelectItem key={job.id} value={job.id}>
+                  {job.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6 mb-4 md:mb-8">
-        <Card className="bg-white border-0 shadow-sm">
-          <CardContent className="pt-4 md:pt-6 p-2 md:p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm font-medium text-musinova-darkgray/70">Active Campaigns</p>
-                <h3 className="text-xl md:text-3xl font-bold text-musinova-darkgray mt-1">2</h3>
-              </div>
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-musinova-cream rounded-full flex items-center justify-center">
-                <Music size={isMobile ? 16 : 24} className="text-musinova-brown" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border-0 shadow-sm">
-          <CardContent className="pt-4 md:pt-6 p-2 md:p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm font-medium text-musinova-darkgray/70">Total Plays</p>
-                <h3 className="text-xl md:text-3xl font-bold text-musinova-darkgray mt-1">1,234</h3>
-              </div>
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-musinova-cream rounded-full flex items-center justify-center">
-                <Play size={isMobile ? 16 : 24} className="text-musinova-green" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border-0 shadow-sm">
-          <CardContent className="pt-4 md:pt-6 p-2 md:p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm font-medium text-musinova-darkgray/70">New Followers</p>
-                <h3 className="text-xl md:text-3xl font-bold text-musinova-darkgray mt-1">56</h3>
-              </div>
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-musinova-cream rounded-full flex items-center justify-center">
-                <Users size={isMobile ? 16 : 24} className="text-musinova-navy" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border-0 shadow-sm">
-          <CardContent className="pt-4 md:pt-6 p-2 md:p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm font-medium text-musinova-darkgray/70">Growth Rate</p>
-                <h3 className="text-xl md:text-3xl font-bold text-green-600 mt-1">+12%</h3>
-              </div>
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-musinova-cream rounded-full flex items-center justify-center">
-                <TrendingUp size={isMobile ? 16 : 24} className="text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-3">
-        <Card className="md:col-span-2 bg-white border-0 shadow-sm">
-          <CardHeader className="p-3 md:p-6">
-            <CardTitle className="text-lg md:text-xl font-semibold">Campaign Performance</CardTitle>
-            <p className="text-xs md:text-sm text-gray-500">Daily plays and engagement metrics</p>
-          </CardHeader>
-          <CardContent className="p-3 md:p-6">
-            <div className="h-48 md:h-80 flex items-center justify-center bg-gray-50 rounded-md">
-              <div className="text-center text-gray-500">
-                <BarChart3 size={isMobile ? 32 : 48} className="mx-auto mb-2 text-gray-400" />
-                <p className="text-sm">Performance chart will appear here</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border-0 shadow-sm">
-          <CardHeader className="p-3 md:p-6">
-            <CardTitle className="text-lg md:text-xl font-semibold">Active Campaigns</CardTitle>
-            <p className="text-xs md:text-sm text-gray-500">Currently running promotions</p>
-          </CardHeader>
-          <CardContent className="p-3 md:p-6">
-            <div className="space-y-3 md:space-y-6">
-              {activeCampaigns.map((campaign, index) => (
-                <div key={index} className="border border-gray-100 rounded-lg p-3 md:p-4 bg-gray-50">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-sm md:text-base text-musinova-brown">{campaign.name}</h3>
-                    <span className="text-xs md:text-sm text-gray-600">{campaign.budget}</span>
-                  </div>
-                  <Progress value={campaign.progress} className="h-2 my-2" />
-                  <div className="flex justify-between text-xs md:text-sm">
-                    <span>{campaign.progress}% complete</span>
-                    <span>{campaign.daysLeft} days left</span>
-                  </div>
+
+      {/* Render Campaign Summary */}
+      {campaignSummary && (
+        <div className="mb-4">
+          <h2 className="text-lg font-bold mb-4">Campaign Summary</h2>
+          <Card className="bg-white p-4 rounded shadow-md">
+            <CardContent>
+              <div className="flex items-center gap-4 mb-4">
+                <img
+                  src={campaignSummary.playlist_image_url}
+                  alt={campaignSummary.playlist_name}
+                  className="w-20 h-20 rounded-md object-cover"
+                />
+                <div>
+                  <h3 className="text-xl font-bold">
+                    {campaignSummary.playlist_name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {campaignSummary.playlist_description}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Total Spend
+                  </h4>
+                  <p className="text-lg font-bold text-gray-800">
+                    ${campaignSummary.spend}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Total Followers
+                  </h4>
+                  <p className="text-lg font-bold text-gray-800">
+                    {campaignSummary.playlist_followers_total}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Tabs for Charts */}
+      {timeSeriesData.length > 0 && (
+        <div className="mb-4">
+          <h2 className="text-lg font-bold mb-4">Time Series Data</h2>
+          <Tabs defaultValue="followers-vs-spend">
+            <TabsList>
+              <TabsTrigger value="followers-vs-spend">
+                Followers vs Spend
+              </TabsTrigger>
+              <TabsTrigger value="impressions-vs-clicks">
+                Impressions vs Clicks
+              </TabsTrigger>
+              <TabsTrigger value="top-tracks">Top Tracks</TabsTrigger>
+            </TabsList>
+            <TabsContent value="followers-vs-spend">
+              <ResponsiveContainer width="100%" height={400}>
+                <AreaChart
+                  data={timeSeriesData}
+                  margin={{
+                    top: 10,
+                    right: isMobile ? 10 : 20,
+                    left: isMobile ? 0 : 10,
+                    bottom: isMobile ? 40 : 20,
+                  }}
+                >
+                  <defs>
+                    <linearGradient
+                      id="colorFollowers"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#5EA47C" stopOpacity={0.8} />
+                      <stop
+                        offset="95%"
+                        stopColor="#5EA47C"
+                        stopOpacity={0.1}
+                      />
+                    </linearGradient>
+                    <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8B5A2B" stopOpacity={0.8} />
+                      <stop
+                        offset="95%"
+                        stopColor="#8B5A2B"
+                        stopOpacity={0.1}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="created_at"
+                    tickFormatter={(tick) =>
+                      new Date(tick).toLocaleDateString()
+                    }
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    angle={isMobile ? -45 : 0}
+                    textAnchor={isMobile ? "end" : "middle"}
+                    height={isMobile ? 60 : 30}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    width={isMobile ? 40 : 60}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    label={{
+                      value: "Followers",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    width={isMobile ? 40 : 60}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    label={{
+                      value: "Spend ($)",
+                      angle: -90,
+                      position: "insideRight",
+                    }}
+                  />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="followers_total"
+                    stroke="#5EA47C"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorFollowers)"
+                    yAxisId="left"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="spend"
+                    stroke="#8B5A2B"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorSpend)"
+                    yAxisId="right"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </TabsContent>
+            <TabsContent value="impressions-vs-clicks">
+              <ResponsiveContainer width="100%" height={400}>
+                <AreaChart
+                  data={timeSeriesData}
+                  margin={{
+                    top: 10,
+                    right: isMobile ? 10 : 20,
+                    left: isMobile ? 0 : 10,
+                    bottom: isMobile ? 40 : 20,
+                  }}
+                >
+                  <defs>
+                    <linearGradient
+                      id="colorImpressions"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                      <stop
+                        offset="95%"
+                        stopColor="#8884d8"
+                        stopOpacity={0.1}
+                      />
+                    </linearGradient>
+                    <linearGradient
+                      id="colorClicks"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+                      <stop
+                        offset="95%"
+                        stopColor="#82ca9d"
+                        stopOpacity={0.1}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="created_at"
+                    tickFormatter={(tick) =>
+                      new Date(tick).toLocaleDateString()
+                    }
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    angle={isMobile ? -45 : 0}
+                    textAnchor={isMobile ? "end" : "middle"}
+                    height={isMobile ? 60 : 30}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    width={isMobile ? 40 : 60}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    label={{
+                      value: "Impressions",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    width={isMobile ? 40 : 60}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    label={{
+                      value: "Clicks",
+                      angle: -90,
+                      position: "insideRight",
+                    }}
+                  />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="impressions"
+                    stroke="#8884d8"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorImpressions)"
+                    yAxisId="left"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="clicks"
+                    stroke="#82ca9d"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorClicks)"
+                    yAxisId="right"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </TabsContent>
+            <TabsContent value="top-tracks">
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart
+                  data={topTracksData}
+                  margin={{
+                    top: 10,
+                    right: isMobile ? 10 : 20,
+                    left: isMobile ? 0 : 10,
+                    bottom: isMobile ? 40 : 20,
+                  }}
+                >
+                  <XAxis
+                    dataKey="created_at"
+                    tickFormatter={(tick) =>
+                      new Date(tick).toLocaleDateString()
+                    }
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    angle={isMobile ? -45 : 0}
+                    textAnchor={isMobile ? "end" : "middle"}
+                    height={isMobile ? 60 : 30}
+                  />
+                  <YAxis
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    label={{
+                      value: "Popularity",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                  />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Legend />
+                  {Array.from(
+                    new Map(
+                      topTracksData.map((track) => [track.track_id, track])
+                    ).keys()
+                  ).map((trackId) => {
+                    const track = topTracksData.find(
+                      (t) => t.track_id === trackId
+                    );
+                    return (
+                      <Line
+                        key={trackId}
+                        type="monotone"
+                        dataKey={(data) =>
+                          data.track_id === trackId
+                            ? data.track_popularity
+                            : null
+                        }
+                        name={track?.track_name || "Unknown Track"} // Use track_name for the legend
+                        stroke={`#${Math.floor(
+                          Math.random() * 16777215
+                        ).toString(16)}`} // Random color for each line
+                        strokeWidth={2}
+                        connectNulls
+                      />
+                    );
+                  })}
+                </LineChart>
+              </ResponsiveContainer>
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
     </PageLayout>
   );
 };

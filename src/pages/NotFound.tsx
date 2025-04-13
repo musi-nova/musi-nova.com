@@ -23,8 +23,17 @@ const NotFound = () => {
           <h1 className="text-4xl font-bold mb-4 text-musinova-darkgray">404</h1>
           <h2 className="text-2xl font-semibold mb-2 text-musinova-darkgray">Page not found</h2>
           <p className="text-gray-600 mb-8">
-            Sorry, we couldn't find the page you're looking for. It might have been moved or deleted.
+            Sorry, we couldn't find the page you're looking for. We are probably working on it!!!
           </p>
+
+          {/* Add the fun .gif */}
+          <div className="mb-8">
+            <img 
+              src="/assets/working-on-it.gif" 
+              alt="We are working on it" 
+              className="w-full max-w-xs mx-auto rounded-lg shadow-md"
+            />
+          </div>
           
           <div className="flex flex-col gap-4">
             <Link to="/">
@@ -33,11 +42,11 @@ const NotFound = () => {
               </Button>
             </Link>
             
-            <Link to="/campaigns/new">
+            {/* <Link to="/campaigns/new">
               <Button variant="outline" className="btn-outline-brown w-full">
                 Create Campaign
               </Button>
-            </Link>
+            </Link> */}
           </div>
         </div>
       </main>

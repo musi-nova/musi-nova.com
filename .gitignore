@@ -25,3 +25,5 @@ yarn-error.log*
 .vscode/
 *.swp
 bun.lockb
+package-lock.json
+.env
