@@ -9,6 +9,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write # Allow the workflow to write the repository contents
+      pages: write # Allow the workflow to write to GitHub Pages
+
     steps:
       # Checkout the repository
       - name: Checkout code
