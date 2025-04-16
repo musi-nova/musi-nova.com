@@ -38,18 +38,58 @@ type Job = {
   artist_id: string; // Added artist_id
 };
 
+const cache: Record<string, any> = {}; // In-memory cache object
+
+// Function to fetch data with caching
+const fetchWithCache = async (key: string, fetcher: () => Promise<any>) => {
+  if (cache[key]) {
+    console.log(`Cache hit for key: ${key}`);
+    return cache[key];
+  }
+
+  console.log(`Cache miss for key: ${key}`);
+  const data = await fetcher();
+  cache[key] = data; // Store the result in the cache
+  return data;
+};
+
 // Function to fetch campaign summary
 const fetchCampaignSummaryData = async (
   playlist_id: string,
   campaign_id: string
 ) => {
-  const response = await apiFetch(
-    `user/playlist/${playlist_id}/campaign/${campaign_id}/summary`
-  );
-  if (!response.ok) {
-    throw new Error("Failed to fetch campaign summary");
-  }
-  return response.json();
+  const cacheKey = `campaign-summary-${playlist_id}-${campaign_id}`;
+  return fetchWithCache(cacheKey, async () => {
+    try {
+      const response = await apiFetch(
+        `user/playlist/${playlist_id}/campaign/${campaign_id}/summary`
+      );
+
+      if (response.status === 401) {
+        console.error("Unauthorized access to campaign summary");
+        window.location.href = "/login";
+        return;
+      }
+
+      if (!response.ok) {
+        console.error("Failed to fetch campaign summary");
+        throw new Error("Failed to fetch campaign summary");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching campaign summary:", error);
+
+      // Return a placeholder object if the API call fails
+      return {
+        playlist_name: "Unavailable",
+        playlist_description: "Spotify data is currently unavailable.",
+        playlist_image_url: "/placeholder-image.png", // Replace with a valid placeholder image path
+        spend: 0,
+        playlist_followers_total: 0,
+      };
+    }
+  });
 };
 
 // Function to fetch time series data
@@ -57,22 +97,28 @@ const fetchTimeSeriesData = async (
   playlist_id: string,
   campaign_id: string
 ) => {
-  const response = await apiFetch(
-    `user/playlist/${playlist_id}/campaign/${campaign_id}`
-  );
-  if (!response.ok) {
-    throw new Error("Failed to fetch time series data");
-  }
-  return response.json();
+  const cacheKey = `time-series-${playlist_id}-${campaign_id}`;
+  return fetchWithCache(cacheKey, async () => {
+    const response = await apiFetch(
+      `user/playlist/${playlist_id}/campaign/${campaign_id}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch time series data");
+    }
+    return response.json();
+  });
 };
 
 // Function to fetch artist's top tracks
 const fetchArtistTopTracks = async (artist_id: string) => {
-  const response = await apiFetch(`user/artist/${artist_id}/top-tracks`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch artist's top tracks");
-  }
-  return response.json();
+  const cacheKey = `artist-top-tracks-${artist_id}`;
+  return fetchWithCache(cacheKey, async () => {
+    const response = await apiFetch(`user/artist/${artist_id}/top-tracks`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch artist's top tracks");
+    }
+    return response.json();
+  });
 };
 
 const Dashboard = () => {
@@ -145,7 +191,7 @@ const Dashboard = () => {
         setTimeSeriesData([]); // Reset time series data
         return;
       }
-
+  
       const selected = jobs.find((job) => job.id === selectedJob);
       if (selected?.campaign_id) {
         try {
@@ -156,7 +202,7 @@ const Dashboard = () => {
           );
           console.log("Campaign Summary:", summary);
           setCampaignSummary(summary);
-
+  
           // Fetch time series data
           const timeSeries = await fetchTimeSeriesData(
             selected.playlist_id,
@@ -171,11 +217,10 @@ const Dashboard = () => {
         }
       }
     };
-
+  
     fetchCampaignSummary();
   }, [selectedJob, jobs]);
-
-  // Fetch artist's top tracks when a job with an artist_id is selected
+  
   useEffect(() => {
     const fetchTopTracks = async () => {
       const selected = jobs.find((job) => job.id === selectedJob);
@@ -191,7 +236,7 @@ const Dashboard = () => {
         setTopTracksData([]); // Reset if no artist_id
       }
     };
-
+  
     fetchTopTracks();
   }, [selectedJob, jobs]);
 
@@ -530,6 +575,7 @@ const Dashboard = () => {
                         ).toString(16)}`} // Random color for each line
                         strokeWidth={2}
                         connectNulls
+                        dot={false}
                       />
                     );
                   })}

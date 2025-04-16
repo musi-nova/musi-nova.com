@@ -37,8 +37,8 @@ const Pricing = () => {
               </li>
             </ul>
             <div className="text-center">
-              <Link to="/subscribe">
-                <Button className="bg-musinova-green text-white hover:bg-opacity-90 font-medium py-2 px-6 rounded-md transition-all w-full">Subscribe Now</Button>
+              <Link to="/campaigns/new">
+                <Button className="bg-musinova-green text-white hover:bg-opacity-90 font-medium py-2 px-6 rounded-md transition-all w-full">Create Campaign</Button>
               </Link>
             </div>
           </div>
@@ -69,7 +69,7 @@ const Pricing = () => {
               </li>
             </ul>
             <div className="text-center">
-              <Link to="/campaign/one-time">
+              <Link to="/campaigns/new">
                 <Button variant="outline" className="border border-musinova-brown text-musinova-brown hover:bg-musinova-brown hover:text-white font-medium py-2 px-6 rounded-md transition-all w-full">Create Campaign</Button>
               </Link>
             </div>

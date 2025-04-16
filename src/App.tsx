@@ -37,12 +37,12 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/try-for-free" element={<TryForFree />} />
+            {/* <Route path="/try-for-free" element={<TryForFree />} /> */}
             
             {/* Public informational page */}
             {/* <Route path="/smart-url" element={<SmartUrl />} /> */}
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/help" element={<Help />} />
+            {/* <Route path="/blog" element={<Blog />} /> */}
+            {/* <Route path="/help" element={<Help />} /> */}
             <Route path="/playlist-checker" element={<PlaylistChecker />} />
             {/* <Route path="/playlist-creator" element={<PlaylistCreator />} /> */}
             <Route path="/playlist-tips" element={<PlaylistTips />} />

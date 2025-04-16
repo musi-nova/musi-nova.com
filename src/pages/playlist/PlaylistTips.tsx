@@ -71,7 +71,7 @@ const PlaylistTips = () => {
           ))}
         </div>
         
-        <Card className="border border-musinova-lightyellow bg-musinova-cream">
+        {/* <Card className="border border-musinova-lightyellow bg-musinova-cream">
           <CardContent className="p-6 md:p-8">
             <h2 className="text-xl font-bold mb-4 text-center">Expert Playlist Consultation</h2>
             <p className="text-gray-700 text-center mb-6">
@@ -81,7 +81,7 @@ const PlaylistTips = () => {
               <button className="btn-primary">Book a Consultation</button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </PageLayout>
   );

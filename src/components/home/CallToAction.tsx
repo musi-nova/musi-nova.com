@@ -10,7 +10,7 @@ const CallToAction = () => {
         <h2 className="text-3xl font-bold mb-4">Ready to Boost Your Music Career?</h2>
         <p className="text-xl mb-8 max-w-2xl mx-auto">Join Musi-Nova today and start promoting your music in a fair and organic way.</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/try-for-free">
+          <Link to="/register">
             <Button className="bg-musinova-green text-white hover:bg-opacity-90 font-medium py-2 px-6 rounded-md transition-all">
               Start Now <ArrowRight size={18} className="ml-2" />
             </Button>
