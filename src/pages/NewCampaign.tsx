@@ -23,6 +23,7 @@ const NewCampaign = () => {
   const [hasArtist, setHasArtist] = useState<string | null>(null);
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [artistUrl, setArtistUrl] = useState('');
+  const [trackUrl, setTrackUrl] = useState('');
   const [campaignName, setCampaignName] = useState('');
   const [paymentType, setPaymentType] = useState<'subscription' | 'one-time'>('subscription');
   const [subscriptionAmount, setSubscriptionAmount] = useState(150);
@@ -36,13 +37,17 @@ const NewCampaign = () => {
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
-    // Check if user is authenticated
-    if (!isAuthenticated) {
+// Check if the user is authenticated
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+      // Redirect to the /register page if no access token is found
+      navigate('/login');
+    } else if (!isAuthenticated) {
       setShowAuthStep(true);
     } else {
       setShowAuthStep(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigate]);
 
   const extractPlaylistId = (url: string): string | null => {
     try {
@@ -66,6 +71,18 @@ const NewCampaign = () => {
     }
   };
 
+  const extractTrackId = (url: string): string | null => {
+    try {
+      const regex = /track\/([a-zA-Z0-9]+)/; // Match "playlist/" followed by alphanumeric characters
+      const match = url.match(regex);
+      return match ? match[1] : null; // Return the playlist ID if found, otherwise null
+    }
+    catch (error) {
+      console.error('Error extracting playlist ID:', error);
+      return null;
+    }
+  };
+
   const handleNext = () => {
     setCurrentStep(currentStep + 1);
     window.scrollTo(0, 0);
@@ -84,6 +101,7 @@ const NewCampaign = () => {
       campaignName,
       playlistId: extractPlaylistId(playlistUrl),
       artistId: extractArtistId(artistUrl),
+      trackId: extractTrackId(trackUrl),
       paymentType,
       subscriptionAmount,
       oneTimeAmount,
@@ -152,7 +170,7 @@ const NewCampaign = () => {
             <h1 className="text-3xl font-bold text-musinova-navy mb-2">Create New Campaign</h1>
             <p className="text-gray-600">
               Let's set up your music promotion campaign in a few simple steps.
-              {user && <span className="ml-1">Welcome, {user.name}!</span>}
+              {user && <span className="ml-1">Welcome, {user?.email || "Musician"}!</span>}
             </p>
           </div>
           
@@ -198,12 +216,12 @@ const NewCampaign = () => {
                 <span className="text-xs">Details</span>
               </div>
               
-              <div className={`flex flex-col items-center ${currentStep >= (showAuthStep ? 6 : 5) ? 'text-musinova-green' : 'text-gray-400'}`}>
+              {/* <div className={`flex flex-col items-center ${currentStep >= (showAuthStep ? 6 : 5) ? 'text-musinova-green' : 'text-gray-400'}`}>
                 <div className={`w-10 h-10 flex items-center justify-center rounded-full font-medium mb-1 ${currentStep >= (showAuthStep ? 6 : 5) ? 'bg-musinova-green text-white' : 'bg-gray-200 text-gray-500'}`}>
                   {showAuthStep ? 6 : 5}
                 </div>
                 <span className="text-xs">Payment</span>
-              </div>
+              </div> */}
               
               <div className={`flex flex-col items-center ${currentStep >= totalSteps ? 'text-musinova-green' : 'text-gray-400'}`}>
                 <div className={`w-10 h-10 flex items-center justify-center rounded-full font-medium mb-1 ${currentStep >= totalSteps ? 'bg-musinova-green text-white' : 'bg-gray-200 text-gray-500'}`}>
@@ -325,24 +343,44 @@ const NewCampaign = () => {
                         </div>
                       </div>
                       
-                      <div className="mb-6">
-                        <label htmlFor="playlistUrl" className="block text-sm font-medium mb-2">
-                          Paste your Spotify playlist link
-                        </label>
-                        <Input
-                          id="playlistUrl"
-                          type="url" 
-                          placeholder="https://open.spotify.com/playlist/..."
-                          value={playlistUrl}
-                          onChange={(e) => setPlaylistUrl(e.target.value)}
-                          className="w-full"
-                        />
-                      </div>
+                      {hasPlaylist === 'yes' && (
+                        <div className="mb-8">
+                          <label htmlFor="playlistUrl" className="block text-sm font-medium mb-2">
+                            Paste your Spotify playlist link <span className="text-red-500">*</span>
+                          </label>
+                          <Input
+                            id="playlistUrl"
+                            type="url"
+                            placeholder="https://open.spotify.com/playlist/..."
+                            value={playlistUrl}
+                            onChange={(e) => setPlaylistUrl(e.target.value)}
+                            className="w-full"
+                          />
+                          {!playlistUrl && (
+                            <p className="text-sm text-red-500 mt-1">Playlist URL is required.</p>
+                          )}
+                        </div>
+                      )}
                       
                       <div className="text-sm text-gray-600">
                         <p>Want to check if your playlist is optimized for promotion?</p>
                         <Link to="/playlist-checker" className="text-musinova-green hover:underline">Use our Playlist Checker tool</Link>
                       </div>
+                      <h3 className="font-medium mt-8 mb-4">Want us to direct the adverts to a specific track (optional)?</h3>
+                      <div className="mb-6">
+                        <label htmlFor="trackUrl" className="block text-sm font-medium mb-2">
+                          Paste your Spotify track link
+                        </label>
+                        <Input
+                          id="trackUrl"
+                          type="url" 
+                          placeholder="https://open.spotify.com/track/..."
+                          value={trackUrl}
+                          onChange={(e) => setTrackUrl(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                      
                     </div>
                   )}
                   
@@ -422,11 +460,10 @@ const NewCampaign = () => {
               {currentStep === (showAuthStep ? 4 : 3) && hasPlaylist === 'yes' && (
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Artist Details</h2>
-                  
                   <div className="space-y-4 mb-8">
                     <div>
                       <label htmlFor="artistUrl" className="block text-sm font-medium mb-2">
-                        Paste your Spotify artist link
+                        Paste your Spotify artist link <span className="text-red-500">*</span>
                       </label>
                       <Input
                         id="artistUrl"
@@ -436,18 +473,19 @@ const NewCampaign = () => {
                         onChange={(e) => setArtistUrl(e.target.value)}
                         className="w-full"
                       />
+                      {!artistUrl && (
+                        <p className="text-sm text-red-500 mt-1">Artist URL is required.</p>
+                      )}
                     </div>
                   </div>
-                  
                   <div className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>
                       <ArrowLeft size={16} className="mr-2" /> Back
                     </Button>
-                    
-                    <Button 
+                    <Button
                       className="btn-primary"
                       onClick={handleNext}
-                      disabled={!artistUrl}
+                      disabled={!artistUrl} // Disable button if artist URL is missing
                     >
                       Continue <ArrowRight size={16} className="ml-2" />
                     </Button>
@@ -500,6 +538,23 @@ const NewCampaign = () => {
                             Change
                           </Button>
                         </div>
+                        {/* if the trackUrl is filled in show it here */}
+                        {trackUrl && (
+                          <div>
+                            <p className="text-sm font-medium mb-2">Track URL</p>
+                            <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                              <span className="text-gray-700 truncate flex-1">{trackUrl}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-musinova-green"
+                                onClick={() => setCurrentStep(2)}
+                              >
+                                Change
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                     
@@ -531,7 +586,7 @@ const NewCampaign = () => {
               )}
               
               {/* Step 5: Payment */}
-              {currentStep === (showAuthStep ? 6 : 5) && (
+              {/* {currentStep === (showAuthStep ? 6 : 5) && (
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Choose Payment Option</h2>
                   
@@ -724,7 +779,7 @@ const NewCampaign = () => {
                     </div>
                   </form>
                 </div>
-              )}
+              )} */}
               
               {/* Step 6: Confirmation */}
               {currentStep === totalSteps && (
@@ -779,6 +834,7 @@ const NewCampaign = () => {
                         setCurrentStep(1);
                         setHasPlaylist(null);
                         setPlaylistUrl('');
+                        setTrackUrl('');
                         setCampaignName('');
                         setPaymentType('subscription');
                         setSubscriptionAmount(150);

@@ -50,7 +50,7 @@ const App = () => (
             {/* Protected routes */}
             <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
             <Route path="/playlists" element={<AuthGuard><Playlists /></AuthGuard>} />
-            {/* <Route path="/campaigns/new" element={<AuthGuard><NewCampaign /></AuthGuard>} /> */}
+            <Route path="/campaigns/new" element={<AuthGuard redirectTo="/register"><NewCampaign /></AuthGuard>} />
             {/* <Route path="/dashboard/smart-url" element={<AuthGuard><SmartUrlDashboard /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/create" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/list" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
