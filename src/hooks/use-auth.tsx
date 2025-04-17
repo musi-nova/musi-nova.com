@@ -4,7 +4,7 @@ import { apiFetch } from '@/lib/api';
 
 interface User {
   id: string;
-  name: string;
+  user_name: string;
   email: string;
   isAuthenticated: boolean;
   isEmailVerified?: boolean;
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Extract user data and token from the response
       const userData: User = {
         id: responseData.user.id,
-        name: '', // Add name if available in the response
+        user_name: responseData.user.user_name, // Add name if available in the response
         email: responseData.user.email,
         isAuthenticated: true,
         isEmailVerified: false, // Adjust based on your API response

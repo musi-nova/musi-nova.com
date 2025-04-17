@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import Register from './auth/Register';
 import { apiFetch } from '@/lib/api';
-import { sub } from 'date-fns';
+import { set, sub } from 'date-fns';
 
 
 const NewCampaign = () => {
@@ -102,11 +102,6 @@ const NewCampaign = () => {
       playlistId: extractPlaylistId(playlistUrl),
       artistId: extractArtistId(artistUrl),
       trackId: extractTrackId(trackUrl),
-      paymentType,
-      subscriptionAmount,
-      oneTimeAmount,
-      oneTimeDuration,
-      subscriptionDuration: paymentType === 'subscription' ? 30 : null,
       createdAt: new Date().toISOString(),
     };
     console.log('Campaign Data:', campaignData);
@@ -150,7 +145,7 @@ const NewCampaign = () => {
   };
 
   // Calculate the correct total number of steps
-  const totalSteps = showAuthStep ? 7 : 6;
+  const totalSteps = showAuthStep ? 6 : 5;
   
   // Adjust currentStep display for the additional auth step
   const displayStep = (step: number) => {
@@ -169,8 +164,9 @@ const NewCampaign = () => {
           <div className="mb-4">
             <h1 className="text-3xl font-bold text-musinova-navy mb-2">Create New Campaign</h1>
             <p className="text-gray-600">
-              Let's set up your music promotion campaign in a few simple steps.
-              {user && <span className="ml-1">Welcome, {user?.email || "Musician"}!</span>}
+              Alrighty{user && <span className="ml-1">{user?.user_name || "Musician"}</span>},
+              let's set up your music promotion campaign in a few simple steps!
+              
             </p>
           </div>
           
@@ -576,7 +572,7 @@ const NewCampaign = () => {
                     
                     <Button 
                       className="btn-primary"
-                      onClick={handleNext}
+                      onClick={handleSubmit}
                       disabled={!campaignName}
                     >
                       Continue <ArrowRight size={16} className="ml-2" />
@@ -835,6 +831,7 @@ const NewCampaign = () => {
                         setHasPlaylist(null);
                         setPlaylistUrl('');
                         setTrackUrl('');
+                        setArtistUrl('');
                         setCampaignName('');
                         setPaymentType('subscription');
                         setSubscriptionAmount(150);

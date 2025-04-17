@@ -65,12 +65,6 @@ const fetchCampaignSummaryData = async (
         `user/playlist/${playlist_id}/campaign/${campaign_id}/summary`
       );
 
-      if (response.status === 401) {
-        console.error("Unauthorized access to campaign summary");
-        window.location.href = "/login";
-        return;
-      }
-
       if (!response.ok) {
         console.error("Failed to fetch campaign summary");
         throw new Error("Failed to fetch campaign summary");
@@ -143,6 +137,11 @@ const Dashboard = () => {
     const fetchJobs = async () => {
       try {
         const response = await apiFetch("user/playlist/jobs");
+        if (response.status === 401) {
+          console.error("Unauthorized access to campaign summary");
+          window.location.href = "/login";
+          return;
+        }
         if (!response.ok) {
           throw new Error("Failed to fetch jobs");
         }
@@ -248,7 +247,7 @@ const Dashboard = () => {
       <div className="mb-4 md:mb-8">
         <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
         <h2 className="text-sm text-gray-600">
-          Welcome back, {user?.email || "Musician"}! Here’s your dashboard.
+          Welcome back, {user?.user_name || "Musician"}! Here’s your dashboard.
         </h2>
       </div>
 
