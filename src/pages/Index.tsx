@@ -15,7 +15,7 @@ import CallToAction from '@/components/home/CallToAction';
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <Navbar resizable={true} />
       
       <main className="flex-grow">
         <Hero />

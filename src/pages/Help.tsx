@@ -74,7 +74,7 @@ const Help = () => {
     <PageLayout>
       <div className="max-w-4xl mx-auto px-4 md:px-0 py-8 md:py-12">
         {/* FAQ Section */}
-        <section className="mb-16">
+        {/* <section className="mb-16">
           <div className="mb-6 md:mb-8 text-center">
             <h1 className="text-2xl md:text-3xl font-bold text-musinova-darkgray mb-2">Help Center</h1>
             <p className="text-gray-600">
@@ -118,7 +118,7 @@ const Help = () => {
               </Card>
             ))}
           </div>
-        </section>
+        </section> */}
         
         {/* Contact Form Section */}
         <section className="mb-16">

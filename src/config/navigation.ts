@@ -8,11 +8,11 @@ export const playlistCheckerTabs = [
     path: "/playlist-checker",
     value: "check"
   },
-  {
-    label: "Playlist Creator",
-    path: "/playlist-creator",
-    value: "create"
-  },
+  // {
+  //   label: "Playlist Creator",
+  //   path: "/playlist-creator",
+  //   value: "create"
+  // },
   {
     label: "Optimization Tips",
     path: "/playlist-tips",

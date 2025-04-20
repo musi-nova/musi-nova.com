@@ -13,11 +13,16 @@ import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import Register from './auth/Register';
+import { apiFetch } from '@/lib/api';
+import { sub } from 'date-fns';
+
 
 const NewCampaign = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [hasPlaylist, setHasPlaylist] = useState<string | null>(null);
+  const [hasArtist, setHasArtist] = useState<string | null>(null);
   const [playlistUrl, setPlaylistUrl] = useState('');
+  const [artistUrl, setArtistUrl] = useState('');
   const [campaignName, setCampaignName] = useState('');
   const [paymentType, setPaymentType] = useState<'subscription' | 'one-time'>('subscription');
   const [subscriptionAmount, setSubscriptionAmount] = useState(150);
@@ -39,6 +44,28 @@ const NewCampaign = () => {
     }
   }, [isAuthenticated]);
 
+  const extractPlaylistId = (url: string): string | null => {
+    try {
+      const regex = /playlist\/([a-zA-Z0-9]+)/; // Match "playlist/" followed by alphanumeric characters
+      const match = url.match(regex);
+      return match ? match[1] : null; // Return the playlist ID if found, otherwise null
+    } catch (error) {
+      console.error('Error extracting playlist ID:', error);
+      return null;
+    }
+  };
+
+  const extractArtistId = (url: string): string | null => {
+    try {
+      const regex = /artist\/([a-zA-Z0-9]+)/; // Match "playlist/" followed by alphanumeric characters
+      const match = url.match(regex);
+      return match ? match[1] : null; // Return the playlist ID if found, otherwise null
+    } catch (error) {
+      console.error('Error extracting playlist ID:', error);
+      return null;
+    }
+  };
+
   const handleNext = () => {
     setCurrentStep(currentStep + 1);
     window.scrollTo(0, 0);
@@ -49,26 +76,63 @@ const NewCampaign = () => {
     window.scrollTo(0, 0);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate API call to create campaign
-    setTimeout(() => {
-      setIsSubmitting(false);
+  
+    const campaignData = {
+      campaignName,
+      playlistId: extractPlaylistId(playlistUrl),
+      artistId: extractArtistId(artistUrl),
+      paymentType,
+      subscriptionAmount,
+      oneTimeAmount,
+      oneTimeDuration,
+      subscriptionDuration: paymentType === 'subscription' ? 30 : null,
+      createdAt: new Date().toISOString(),
+    };
+    console.log('Campaign Data:', campaignData);
+  
+    try {
+      // Post the campaign data to the API
+      const response = await apiFetch('user/campaign/new', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(campaignData),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to create campaign: ${response.statusText}`);
+      }
+  
+      const responseData = await response.json();
+  
       toast({
         title: "Campaign created!",
         description: "Your new campaign has been successfully launched.",
       });
-      
-      // Would redirect to dashboard or campaign details page in a real app
+  
+      console.log('Campaign created successfully:', responseData);
+  
+      // Move to the next step
       setCurrentStep(currentStep + 1);
       window.scrollTo(0, 0);
-    }, 1500);
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      toast({
+        title: "Error",
+        description: "There was an issue creating your campaign. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Calculate the correct total number of steps
-  const totalSteps = showAuthStep ? 6 : 5;
+  const totalSteps = showAuthStep ? 7 : 6;
   
   // Adjust currentStep display for the additional auth step
   const displayStep = (step: number) => {
@@ -119,17 +183,24 @@ const NewCampaign = () => {
                 </div>
                 <span className="text-xs">Playlist</span>
               </div>
-              
+
               <div className={`flex flex-col items-center ${currentStep >= (showAuthStep ? 4 : 3) ? 'text-musinova-green' : 'text-gray-400'}`}>
                 <div className={`w-10 h-10 flex items-center justify-center rounded-full font-medium mb-1 ${currentStep >= (showAuthStep ? 4 : 3) ? 'bg-musinova-green text-white' : 'bg-gray-200 text-gray-500'}`}>
                   {showAuthStep ? 4 : 3}
                 </div>
-                <span className="text-xs">Details</span>
+                <span className="text-xs">Artist</span>
               </div>
               
               <div className={`flex flex-col items-center ${currentStep >= (showAuthStep ? 5 : 4) ? 'text-musinova-green' : 'text-gray-400'}`}>
                 <div className={`w-10 h-10 flex items-center justify-center rounded-full font-medium mb-1 ${currentStep >= (showAuthStep ? 5 : 4) ? 'bg-musinova-green text-white' : 'bg-gray-200 text-gray-500'}`}>
                   {showAuthStep ? 5 : 4}
+                </div>
+                <span className="text-xs">Details</span>
+              </div>
+              
+              <div className={`flex flex-col items-center ${currentStep >= (showAuthStep ? 6 : 5) ? 'text-musinova-green' : 'text-gray-400'}`}>
+                <div className={`w-10 h-10 flex items-center justify-center rounded-full font-medium mb-1 ${currentStep >= (showAuthStep ? 6 : 5) ? 'bg-musinova-green text-white' : 'bg-gray-200 text-gray-500'}`}>
+                  {showAuthStep ? 6 : 5}
                 </div>
                 <span className="text-xs">Payment</span>
               </div>
@@ -180,6 +251,7 @@ const NewCampaign = () => {
               )}
               
               {/* Step 2/3: Playlist */}
+              {/* TODO: Optional specific song to promote */}
               {currentStep === (showAuthStep ? 3 : 2) && (
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Do you already have a playlist on Spotify?</h2>
@@ -282,7 +354,7 @@ const NewCampaign = () => {
                           <div className="font-medium text-gray-700">1.</div>
                           <div>
                             <p>Find artists that are like you and put them in a playlist.</p>
-                            <p className="text-sm text-gray-600">Don't know similar artists? <Link to="/similar-artists" className="text-musinova-green hover:underline">Find them here</Link></p>
+                            <p className="text-sm text-gray-600">Don't know similar artists? <Link to="https://musiccrab.com/similar-music-artists-finder-tool/" className="text-musinova-green hover:underline">Find them here</Link></p>
                           </div>
                         </div>
                         
@@ -345,9 +417,46 @@ const NewCampaign = () => {
                   </div>
                 </div>
               )}
+
+              {/* Step 3: Artist details */}
+              {currentStep === (showAuthStep ? 4 : 3) && hasPlaylist === 'yes' && (
+                <div>
+                  <h2 className="text-xl font-semibold mb-6">Artist Details</h2>
+                  
+                  <div className="space-y-4 mb-8">
+                    <div>
+                      <label htmlFor="artistUrl" className="block text-sm font-medium mb-2">
+                        Paste your Spotify artist link
+                      </label>
+                      <Input
+                        id="artistUrl"
+                        type="url"
+                        placeholder="https://open.spotify.com/artist/..."
+                        value={artistUrl}
+                        onChange={(e) => setArtistUrl(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <Button variant="outline" onClick={handleBack}>
+                      <ArrowLeft size={16} className="mr-2" /> Back
+                    </Button>
+                    
+                    <Button 
+                      className="btn-primary"
+                      onClick={handleNext}
+                      disabled={!artistUrl}
+                    >
+                      Continue <ArrowRight size={16} className="ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
               
-              {/* Step 3: Campaign Details */}
-              {currentStep === (showAuthStep ? 4 : 3) && (
+              {/* Step 4: Campaign Details */}
+              {currentStep === (showAuthStep ? 5 : 4) && (
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Campaign Details</h2>
                   
@@ -375,6 +484,18 @@ const NewCampaign = () => {
                             size="sm" 
                             className="text-musinova-green"
                             onClick={() => setCurrentStep(2)}
+                          >
+                            Change
+                          </Button>
+                        </div>
+                        <p className="text-sm font-medium mb-2">Artist URL</p>
+                        <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                          <span className="text-gray-700 truncate flex-1">{artistUrl}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-musinova-green"
+                            onClick={() => setCurrentStep(3)}
                           >
                             Change
                           </Button>
@@ -409,8 +530,8 @@ const NewCampaign = () => {
                 </div>
               )}
               
-              {/* Step 4: Payment */}
-              {currentStep === (showAuthStep ? 5 : 4) && (
+              {/* Step 5: Payment */}
+              {currentStep === (showAuthStep ? 6 : 5) && (
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Choose Payment Option</h2>
                   
@@ -605,7 +726,7 @@ const NewCampaign = () => {
                 </div>
               )}
               
-              {/* Step 5: Confirmation */}
+              {/* Step 6: Confirmation */}
               {currentStep === totalSteps && (
                 <div className="text-center py-6">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -651,7 +772,22 @@ const NewCampaign = () => {
                       </Button>
                     </Link>
                     
-                    <Link to="/campaigns/new">
+                    <Link
+                      to="/campaigns/new"
+                      onClick={() => {
+                        // Reset all state variables to their initial values
+                        setCurrentStep(1);
+                        setHasPlaylist(null);
+                        setPlaylistUrl('');
+                        setCampaignName('');
+                        setPaymentType('subscription');
+                        setSubscriptionAmount(150);
+                        setOneTimeAmount(150);
+                        setOneTimeDuration(30);
+                        setIsSubmitting(false);
+                        setShowAuthStep(!isAuthenticated); // Reset auth step based on authentication status
+                      }}
+                    >
                       <Button variant="outline" className="btn-outline w-full sm:w-auto">
                         Create Another Campaign
                       </Button>
