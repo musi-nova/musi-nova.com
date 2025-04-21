@@ -15,7 +15,7 @@ import CallToAction from '@/components/home/CallToAction';
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar resizable={true} />
+      <Navbar />
       
       <main className="flex-grow">
         <Hero />
@@ -24,8 +24,8 @@ const Index = () => {
         <Benefits />
         <GenreStats />
         <AdExamples />
-        <Testimonials />
-        <Pricing />
+        {/* <Testimonials /> */}
+        {/* <Pricing /> */}
         <CallToAction />
       </main>
       

@@ -122,14 +122,6 @@ const Sidebar = () => {
         <MobileTrigger />
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetContent side="left" className="p-0 w-64 border-r-0">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="absolute top-4 right-4 z-50 text-white"
-              onClick={() => setIsOpen(false)}
-            >
-              <X size={20} />
-            </Button>
             <SidebarContent />
           </SheetContent>
         </Sheet>

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -38,7 +37,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             {/* <Route path="/try-for-free" element={<TryForFree />} /> */}
-            
+
             {/* Public informational page */}
             {/* <Route path="/smart-url" element={<SmartUrl />} /> */}
             {/* <Route path="/blog" element={<Blog />} /> */}
@@ -46,17 +45,31 @@ const App = () => (
             <Route path="/playlist-checker" element={<PlaylistChecker />} />
             {/* <Route path="/playlist-creator" element={<PlaylistCreator />} /> */}
             <Route path="/playlist-tips" element={<PlaylistTips />} />
-            
+
             {/* Protected routes */}
-            <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
-            <Route path="/playlists" element={<AuthGuard><Playlists /></AuthGuard>} />
+            <Route
+              path="/dashboard"
+              element={
+                <AuthGuard>
+                  <Dashboard />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/playlists"
+              element={
+                <AuthGuard>
+                  <Playlists />
+                </AuthGuard>
+              }
+            />
             {/* <Route path="/campaigns/new" element={<AuthGuard><NewCampaign /></AuthGuard>} /> */}
             {/* <Route path="/dashboard/smart-url" element={<AuthGuard><SmartUrlDashboard /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/create" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/list" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/analytics" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
             {/* <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} /> */}
-            
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
