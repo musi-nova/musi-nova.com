@@ -35,7 +35,7 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Contact</h3>
             <ul className="space-y-2">
               <li className="text-gray-300">support@musinova.com</li>
-              <li><Link to="/contact" className="text-gray-300 hover:text-white">Contact Form</Link></li>
+              <li><Link to="/help" className="text-gray-300 hover:text-white">Contact Form</Link></li>
             </ul>
           </div>
         </div>

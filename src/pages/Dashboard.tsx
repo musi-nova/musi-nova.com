@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
 import { Music, Play, Users, TrendingUp, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -20,8 +19,6 @@ import {
   AreaChart,
   CartesianGrid,
   Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -34,8 +31,8 @@ type Job = {
   id: string;
   playlist_id: string;
   playlist_name: string;
-  campaign_id: string;
-  artist_id: string; // Added artist_id
+  campaign_id?: string;
+  artist_id?: string;
 };
 
 const cache: Record<string, any> = {}; // In-memory cache object
@@ -56,13 +53,13 @@ const fetchWithCache = async (key: string, fetcher: () => Promise<any>) => {
 // Function to fetch campaign summary
 const fetchCampaignSummaryData = async (
   playlist_id: string,
-  campaign_id: string
+  campaign_id?: string
 ) => {
-  const cacheKey = `campaign-summary-${playlist_id}-${campaign_id}`;
+  const cacheKey = `campaign-summary-${playlist_id}-${campaign_id || "none"}`;
   return fetchWithCache(cacheKey, async () => {
     try {
       const response = await apiFetch(
-        `user/playlist/${playlist_id}/campaign/${campaign_id}/summary`
+        `user/playlist/${playlist_id}/campaign/${campaign_id || "none"}/summary`
       );
 
       if (!response.ok) {
@@ -89,12 +86,12 @@ const fetchCampaignSummaryData = async (
 // Function to fetch time series data
 const fetchTimeSeriesData = async (
   playlist_id: string,
-  campaign_id: string
+  campaign_id?: string
 ) => {
-  const cacheKey = `time-series-${playlist_id}-${campaign_id}`;
+  const cacheKey = `time-series-${playlist_id}-${campaign_id || "none"}`;
   return fetchWithCache(cacheKey, async () => {
     const response = await apiFetch(
-      `user/playlist/${playlist_id}/campaign/${campaign_id}`
+      `user/playlist/${playlist_id}/campaign/${campaign_id || "none"}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch time series data");
@@ -117,18 +114,10 @@ const fetchArtistTopTracks = async (artist_id: string) => {
 
 const Dashboard = () => {
   const [selectedJob, setSelectedJob] = useState("all");
-  const [jobs, setJobs] = useState<
-    {
-      id: string;
-      name: string;
-      campaign_id?: string;
-      playlist_id?: string;
-      artist_id?: string;
-    }[]
-  >([]);
-  const [campaignSummary, setCampaignSummary] = useState(null);
-  const [topTracksData, setTopTracksData] = useState([]); // State for top tracks data
-  const [timeSeriesData, setTimeSeriesData] = useState([]); // State for time series data
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [campaignSummary, setCampaignSummary] = useState<any>(null);
+  const [topTracksData, setTopTracksData] = useState<any[]>([]);
+  const [timeSeriesData, setTimeSeriesData] = useState<any[]>([]);
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
@@ -146,6 +135,7 @@ const Dashboard = () => {
           throw new Error("Failed to fetch jobs");
         }
         const data: Job[] = await response.json();
+        console.log("Jobs Data:", data);
 
         const jobCounters: Record<string, number> = {};
         const uniqueJobs = Array.from(
@@ -166,7 +156,7 @@ const Dashboard = () => {
             name: `${job.playlist_name}${campaignSuffix}`,
             campaign_id: job.campaign_id,
             playlist_id: job.playlist_id,
-            artist_id: job.artist_id, // Include artist_id
+            artist_id: job.artist_id,
           };
         });
 
@@ -187,22 +177,20 @@ const Dashboard = () => {
     const fetchCampaignSummary = async () => {
       if (selectedJob === "all") {
         setCampaignSummary(null);
-        setTimeSeriesData([]); // Reset time series data
+        setTimeSeriesData([]);
         return;
       }
-  
+
       const selected = jobs.find((job) => job.id === selectedJob);
-      if (selected?.campaign_id) {
+      if (selected?.playlist_id) {
         try {
-          // Fetch campaign summary
           const summary = await fetchCampaignSummaryData(
             selected.playlist_id,
             selected.campaign_id
           );
           console.log("Campaign Summary:", summary);
           setCampaignSummary(summary);
-  
-          // Fetch time series data
+
           const timeSeries = await fetchTimeSeriesData(
             selected.playlist_id,
             selected.campaign_id
@@ -214,12 +202,16 @@ const Dashboard = () => {
             error
           );
         }
+      } else {
+        console.warn("Missing playlist_id for the selected job.");
+        setCampaignSummary(null);
+        setTimeSeriesData([]);
       }
     };
-  
+
     fetchCampaignSummary();
   }, [selectedJob, jobs]);
-  
+
   useEffect(() => {
     const fetchTopTracks = async () => {
       const selected = jobs.find((job) => job.id === selectedJob);
@@ -232,10 +224,11 @@ const Dashboard = () => {
           console.error("Error fetching artist's top tracks:", error);
         }
       } else {
-        setTopTracksData([]); // Reset if no artist_id
+        console.warn("Missing artist_id for the selected job.");
+        setTopTracksData([]);
       }
     };
-  
+
     fetchTopTracks();
   }, [selectedJob, jobs]);
 
@@ -272,6 +265,12 @@ const Dashboard = () => {
               ))}
             </SelectContent>
           </Select>
+          <Button
+            className="text-sm md:text-base"
+            onClick={() => (window.location.href = "/payment")}
+          >
+            Top-Up/Subscribe
+          </Button>
         </div>
       </div>
 
@@ -421,164 +420,6 @@ const Dashboard = () => {
                     yAxisId="right"
                   />
                 </AreaChart>
-              </ResponsiveContainer>
-            </TabsContent>
-            <TabsContent value="impressions-vs-clicks">
-              <ResponsiveContainer width="100%" height={400}>
-                <AreaChart
-                  data={timeSeriesData}
-                  margin={{
-                    top: 10,
-                    right: isMobile ? 10 : 20,
-                    left: isMobile ? 0 : 10,
-                    bottom: isMobile ? 40 : 20,
-                  }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="colorImpressions"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                      <stop
-                        offset="95%"
-                        stopColor="#8884d8"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                    <linearGradient
-                      id="colorClicks"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-                      <stop
-                        offset="95%"
-                        stopColor="#82ca9d"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey="created_at"
-                    tickFormatter={(tick) =>
-                      new Date(tick).toLocaleDateString()
-                    }
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
-                    angle={isMobile ? -45 : 0}
-                    textAnchor={isMobile ? "end" : "middle"}
-                    height={isMobile ? 60 : 30}
-                  />
-                  <YAxis
-                    yAxisId="left"
-                    width={isMobile ? 40 : 60}
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
-                    label={{
-                      value: "Impressions",
-                      angle: -90,
-                      position: "insideLeft",
-                    }}
-                  />
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    width={isMobile ? 40 : 60}
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
-                    label={{
-                      value: "Clicks",
-                      angle: -90,
-                      position: "insideRight",
-                    }}
-                  />
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="impressions"
-                    stroke="#8884d8"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorImpressions)"
-                    yAxisId="left"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="clicks"
-                    stroke="#82ca9d"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorClicks)"
-                    yAxisId="right"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </TabsContent>
-            <TabsContent value="top-tracks">
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart
-                  data={topTracksData}
-                  margin={{
-                    top: 10,
-                    right: isMobile ? 10 : 20,
-                    left: isMobile ? 0 : 10,
-                    bottom: isMobile ? 40 : 20,
-                  }}
-                >
-                  <XAxis
-                    dataKey="created_at"
-                    tickFormatter={(tick) =>
-                      new Date(tick).toLocaleDateString()
-                    }
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
-                    angle={isMobile ? -45 : 0}
-                    textAnchor={isMobile ? "end" : "middle"}
-                    height={isMobile ? 60 : 30}
-                  />
-                  <YAxis
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
-                    label={{
-                      value: "Popularity",
-                      angle: -90,
-                      position: "insideLeft",
-                    }}
-                  />
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip />
-                  <Legend />
-                  {Array.from(
-                    new Map(
-                      topTracksData.map((track) => [track.track_id, track])
-                    ).keys()
-                  ).map((trackId) => {
-                    const track = topTracksData.find(
-                      (t) => t.track_id === trackId
-                    );
-                    return (
-                      <Line
-                        key={trackId}
-                        type="monotone"
-                        dataKey={(data) =>
-                          data.track_id === trackId
-                            ? data.track_popularity
-                            : null
-                        }
-                        name={track?.track_name || "Unknown Track"} // Use track_name for the legend
-                        stroke={`#${Math.floor(
-                          Math.random() * 16777215
-                        ).toString(16)}`} // Random color for each line
-                        strokeWidth={2}
-                        connectNulls
-                        dot={false}
-                      />
-                    );
-                  })}
-                </LineChart>
               </ResponsiveContainer>
             </TabsContent>
           </Tabs>

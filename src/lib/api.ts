@@ -25,10 +25,22 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   };
 
   const response = await fetch(url, config);
+  console.log('API Request:', {
+    url,
+    method: config.method,
+    headers: config.headers,
+    body: config.body,
+  });
 
   if (!response.ok) {
     const errorText = await response.text(); // Get the error message from the response
     console.error('API Error Response:', errorText);
+    // redirect to login if 401 Unauthorized
+    if (response.status === 401) {
+      localStorage.removeItem('access_token'); // Remove the token
+      localStorage.removeItem('musinova_user'); // Remove user data
+      window.location.href = '/login'; // Redirect to login page
+    }
     throw new Error(`API error: ${response.status} ${response.statusText}`);
   }
 

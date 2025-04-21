@@ -22,6 +22,7 @@ import Register from "./pages/auth/Register";
 import TryForFree from "./pages/auth/TryForFree";
 import Playlists from "./pages/Playlists";
 import SmartUrlDashboard from "./pages/dashboard/SmartUrlDashboard";
+import Payment from "./pages/Payment";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +42,7 @@ const App = () => (
             {/* Public informational page */}
             {/* <Route path="/smart-url" element={<SmartUrl />} /> */}
             {/* <Route path="/blog" element={<Blog />} /> */}
-            {/* <Route path="/help" element={<Help />} /> */}
+            <Route path="/help" element={<Help />} />
             <Route path="/playlist-checker" element={<PlaylistChecker />} />
             {/* <Route path="/playlist-creator" element={<PlaylistCreator />} /> */}
             <Route path="/playlist-tips" element={<PlaylistTips />} />
@@ -63,7 +64,23 @@ const App = () => (
                 </AuthGuard>
               }
             />
-            {/* <Route path="/campaigns/new" element={<AuthGuard><NewCampaign /></AuthGuard>} /> */}
+            <Route
+              path="/campaigns/new"
+              element={
+                <AuthGuard>
+                  <NewCampaign />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/payment"
+              element={
+                // <AuthGuard>
+                  <Payment />
+                // </AuthGuard>
+              }
+            />
+
             {/* <Route path="/dashboard/smart-url" element={<AuthGuard><SmartUrlDashboard /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/create" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/list" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
