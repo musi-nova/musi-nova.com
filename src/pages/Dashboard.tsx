@@ -19,6 +19,8 @@ import {
   AreaChart,
   CartesianGrid,
   Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -29,9 +31,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 // Define a type for the job data
 type Job = {
   id: string;
+  name: string;
   playlist_id: string;
   playlist_name: string;
   campaign_id?: string;
+  campaign_name?: string;
   artist_id?: string;
 };
 
@@ -59,7 +63,7 @@ const fetchCampaignSummaryData = async (
   return fetchWithCache(cacheKey, async () => {
     try {
       const response = await apiFetch(
-        `user/playlist/${playlist_id}/campaign/${campaign_id || "none"}/summary`
+        `team/playlist/${playlist_id}/campaign/${campaign_id || "none"}/summary`
       );
 
       if (!response.ok) {
@@ -91,7 +95,7 @@ const fetchTimeSeriesData = async (
   const cacheKey = `time-series-${playlist_id}-${campaign_id || "none"}`;
   return fetchWithCache(cacheKey, async () => {
     const response = await apiFetch(
-      `user/playlist/${playlist_id}/campaign/${campaign_id || "none"}`
+      `team/playlist/${playlist_id}/campaign/${campaign_id || "none"}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch time series data");
@@ -104,7 +108,7 @@ const fetchTimeSeriesData = async (
 const fetchArtistTopTracks = async (artist_id: string) => {
   const cacheKey = `artist-top-tracks-${artist_id}`;
   return fetchWithCache(cacheKey, async () => {
-    const response = await apiFetch(`user/artist/${artist_id}/top-tracks`);
+    const response = await apiFetch(`team/artist/${artist_id}/top-tracks`);
     if (!response.ok) {
       throw new Error("Failed to fetch artist's top tracks");
     }
@@ -125,7 +129,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await apiFetch("user/playlist/jobs");
+        const response = await apiFetch("team/jobs");
         if (response.status === 401) {
           console.error("Unauthorized access to campaign summary");
           window.location.href = "/login";
@@ -140,7 +144,7 @@ const Dashboard = () => {
         const jobCounters: Record<string, number> = {};
         const uniqueJobs = Array.from(
           new Map(
-            data.map((job) => [`${job.playlist_id}-${job.campaign_id}`, job])
+            data.map((job) => [`${job.campaign_name}-${job.campaign_id}`, job])
           ).values()
         ).map((job) => {
           jobCounters[job.playlist_id] =
@@ -153,7 +157,8 @@ const Dashboard = () => {
 
           return {
             id: `${job.playlist_id}-${job.campaign_id}`,
-            name: `${job.playlist_name}${campaignSuffix}`,
+            name: `${job.campaign_name}${campaignSuffix}`,
+            campaign_name: job.campaign_name,
             campaign_id: job.campaign_id,
             playlist_id: job.playlist_id,
             artist_id: job.artist_id,
@@ -218,8 +223,37 @@ const Dashboard = () => {
       if (selected?.artist_id) {
         try {
           const tracks = await fetchArtistTopTracks(selected.artist_id);
-          setTopTracksData(tracks);
-          console.log("Top Tracks Data:", tracks);
+
+          // Preprocess the data to round `created_at` to just the date
+          const processedTracks = tracks.map((track) => ({
+            ...track,
+            created_at: new Date(track.created_at).toISOString().split("T")[0], // Extract only the date part
+          }));
+
+          // Get all unique dates
+          const allDates = Array.from(
+            new Set(processedTracks.map((track) => track.created_at))
+          ).sort();
+
+          // Get all unique track names
+          const trackNames = Array.from(
+            new Set(processedTracks.map((track) => track.track_name))
+          );
+
+          // Normalize the data
+          const normalizedData = allDates.map((date) => {
+            const dataPoint: Record<string, any> = { created_at: date };
+            trackNames.forEach((trackName) => {
+              const track = processedTracks.find(
+                (t) => t.created_at === date && t.track_name === trackName
+              );
+              dataPoint[trackName] = track ? track.track_popularity : 0; // Fill missing values with 0
+            });
+            return dataPoint;
+          });
+
+          setTopTracksData(normalizedData);
+          console.log("Normalized Top Tracks Data:", normalizedData);
         } catch (error) {
           console.error("Error fetching artist's top tracks:", error);
         }
@@ -420,6 +454,126 @@ const Dashboard = () => {
                     yAxisId="right"
                   />
                 </AreaChart>
+              </ResponsiveContainer>
+            </TabsContent>
+            <TabsContent value="impressions-vs-clicks">
+              <ResponsiveContainer width="100%" height={400}>
+                <AreaChart
+                  data={timeSeriesData}
+                  margin={{
+                    top: 10,
+                    right: isMobile ? 10 : 20,
+                    left: isMobile ? 0 : 10,
+                    bottom: isMobile ? 40 : 20,
+                  }}
+                >
+                  <defs>
+                    <linearGradient id="colorImpressions" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1} />
+                    </linearGradient>
+                    <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="created_at"
+                    tickFormatter={(tick) => new Date(tick).toLocaleDateString()}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    angle={isMobile ? -45 : 0}
+                    textAnchor={isMobile ? "end" : "middle"}
+                    height={isMobile ? 60 : 30}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    width={isMobile ? 40 : 60}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    label={{
+                      value: "Impressions",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    width={isMobile ? 40 : 60}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    label={{
+                      value: "Clicks",
+                      angle: -90,
+                      position: "insideRight",
+                    }}
+                  />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="impressions"
+                    stroke="#3B82F6"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorImpressions)"
+                    yAxisId="left"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="clicks"
+                    stroke="#EF4444"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorClicks)"
+                    yAxisId="right"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </TabsContent>
+            <TabsContent value="top-tracks">
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart
+                  data={topTracksData} // Use the normalized data
+                  margin={{
+                    top: 10,
+                    right: isMobile ? 10 : 20,
+                    left: isMobile ? 0 : 10,
+                    bottom: isMobile ? 40 : 20,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="created_at"
+                    tickFormatter={(tick) => new Date(tick).toLocaleDateString()}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    angle={isMobile ? -45 : 0}
+                    textAnchor={isMobile ? "end" : "middle"}
+                    height={isMobile ? 60 : 30}
+                  />
+                  <YAxis
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                    label={{
+                      value: "Track Popularity",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                  />
+                  <Tooltip />
+                  <Legend />
+                  {Object.keys(topTracksData[0] || {})
+                    .filter((key) => key !== "created_at") // Exclude the `created_at` field
+                    .map((trackName) => (
+                      <Line
+                        key={trackName}
+                        type="monotone"
+                        dataKey={trackName} // Use the track name as the data key
+                        name={trackName}
+                        stroke={`#${Math.floor(Math.random() * 16777215).toString(16)}`} // Generate random hex color
+                        strokeWidth={2}
+                        dot={{ r: 0 }}
+                      />
+                    ))}
+                </LineChart>
               </ResponsiveContainer>
             </TabsContent>
           </Tabs>
