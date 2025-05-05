@@ -12,6 +12,7 @@ type Job = {
   id: string;
   playlist_id: string;
   playlist_name: string;
+  campaign_name: string;
   campaign_id?: string;
   artist_id?: string;
 };
@@ -32,7 +33,7 @@ const PaymentPage = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await apiFetch("user/playlist/jobs");
+        const response = await apiFetch("team/jobs");
         if (response.status === 401) {
           console.error("Unauthorized access to campaign summary");
           window.location.href = "/login";
@@ -59,8 +60,8 @@ const PaymentPage = () => {
               : "";
 
           return {
-            id: `${job.playlist_id}-${job.campaign_id}`,
-            name: `${job.playlist_name}${campaignSuffix}`,
+            id: `${job.campaign_name}-${job.campaign_id}`,
+            name: `${job.campaign_name}${campaignSuffix}`,
             campaign_id: job.campaign_id,
             playlist_id: job.playlist_id,
             artist_id: job.artist_id,
@@ -91,12 +92,12 @@ const PaymentPage = () => {
     };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+  
     let paymentDetails;
-
+  
     if (paymentType === "subscription") {
       const breakdown = calculateBreakdown(subscriptionAmount);
       paymentDetails = {
@@ -115,10 +116,35 @@ const PaymentPage = () => {
         breakdown,
       };
     }
-
+  
     console.log("Form submitted with values:", paymentDetails);
-
-    setTimeout(() => setIsSubmitting(false), 2000); // Simulate submission delay
+  
+    try {
+      const endpoint =
+        paymentType === "subscription"
+          ? "stripe/create-checkout-session-subscription"
+          : "stripe/create-checkout-session";
+  
+      const response = await apiFetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(paymentDetails),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+  
+      const { url } = await response.json();
+      window.location.href = url; // Redirect to Stripe checkout
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      alert("An error occurred while processing your payment. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {
@@ -211,6 +237,7 @@ const PaymentPage = () => {
 
               <TabsContent value="one-time">
                 <div className="space-y-6 mb-8">
+                  {/* amount of money */}
                   <div>
                     <div className="flex justify-between mb-2">
                       <label className="text-sm font-medium">
@@ -233,6 +260,33 @@ const PaymentPage = () => {
                     <div className="flex justify-between text-xs text-gray-500">
                       <span>$50</span>
                       <span>$10,000</span>
+                    </div>
+                  </div>
+                  {/* duration of campaign */}
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <label className="text-sm font-medium">
+                        Campaign Duration (days)
+                      </label>
+                      <span className="text-lg font-bold text-musinova-green">
+                        {oneTimeDuration} days
+                      </span>
+                    </div>
+
+                    <Slider
+                      defaultValue={[oneTimeDuration]}
+                      max={30}
+                      min={1}
+                      step={1}
+                      onValueChange={(values) =>
+                        setOneTimeDuration(values[0])
+                      }
+                      className="my-4"
+                    />
+
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>1 day</span>
+                      <span>30 days</span>
                     </div>
                   </div>
                 </div>

@@ -31,6 +31,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
   const isDashboard = location.pathname === '/dashboard' || 
                       location.pathname === '/playlists' || 
                       location.pathname.includes('/settings') || 
+                      location.pathname.includes('/admin') ||
                       location.pathname.includes('/dashboard/smart-url');
   
   return (

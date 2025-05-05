@@ -1,11 +1,42 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { apiFetch } from '@/lib/api'; // Replace with your actual API fetch utility
 
 const Settings = () => {
+  const [settingsData, setSettingsData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await apiFetch('user/settings'); // Use apiFetch instead of fetch
+        if (!response.ok) {
+          throw new Error('Failed to fetch settings data');
+        }
+        const data = await response.json();
+        console.log('Settings data:', data); // Debugging line
+        setSettingsData(data);
+      } catch (err: any) {
+        setError(err.message || 'An error occurred while fetching settings data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>Error: {error}</p>;
+  }
+
   return (
     <PageLayout showSidebar={true} className="bg-musinova-cream/30 py-8">
       <div className="mb-8">
@@ -14,73 +45,81 @@ const Settings = () => {
           Manage your account and application preferences
         </p>
       </div>
-      
-      <Card className="bg-white border-0 shadow-sm">
-        <CardContent className="p-6">
-          <Tabs defaultValue="account" className="w-full">
-            <TabsList className="mb-6">
-              <TabsTrigger value="account">Account</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="preferences">Preferences</TabsTrigger>
-              <TabsTrigger value="billing">Billing</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="account">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-medium mb-4">Personal Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Name</label>
-                      <Input defaultValue="John Doe" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Email</label>
-                      <Input defaultValue="john.doe@example.com" />
-                    </div>
+
+      {settingsData && (
+        <Tabs defaultValue="account">
+          <TabsList>
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="team_members">Team Members</TabsTrigger> {/* New Tab */}
+          </TabsList>
+
+          <TabsContent value="account">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p><strong>Name:</strong> {settingsData.user_name}</p>
+                <p><strong>Email:</strong> {settingsData.email}</p>
+                <p><strong>Team:</strong> {settingsData.team.name}</p>
+                <p><strong>User Created:</strong> {new Date(settingsData.created_at).toLocaleDateString()}</p>
+                <p><strong>Team Created:</strong> {new Date(settingsData.team.created_at).toLocaleDateString()}</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="payments">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {settingsData.payments.map((payment: any) => (
+                  <div key={payment.id} className="mb-4 border-b pb-4">
+                    <p><strong>Payment Type:</strong> {payment.payment_type}</p>
+                    <p><strong>Campaign:</strong> {payment.campaign_name}</p>
+                    <p><strong>Musi Nova Fee:</strong> ${payment.breakdown_musi_nova_fee}</p>
+                    <p><strong>Ad Spend:</strong> ${payment.breakdown_ad_spend}</p>
+                    <p><strong>Total Charge:</strong> ${payment.breakdown_total_charge}</p>
+                    <p><strong>Paid:</strong> {payment.paid ? 'Yes' : 'No'}</p>
+                    <p><strong>Created At:</strong> {new Date(payment.created_at).toLocaleDateString()}</p>
+                    {payment.updated_at && (
+                      <p><strong>Updated At:</strong> {new Date(payment.updated_at).toLocaleDateString()}</p>
+                    )}
                   </div>
+                ))}
+                {/* Add a button linking to the /help page */}
+                <div className="mt-4">
+                  <a
+                    href="/help"
+                    className="inline-block px-4 py-2 bg-musinova-navy text-white rounded hover:bg-musinova-navy/90"
+                  >
+                    Need help stopping a subscription?
+                  </a>
                 </div>
-                
-                <div>
-                  <h3 className="font-medium mb-4">Change Password</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Current Password</label>
-                      <Input type="password" />
-                    </div>
-                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1 block">New Password</label>
-                        <Input type="password" />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1 block">Confirm New Password</label>
-                        <Input type="password" />
-                      </div>
-                    </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="team_members"> {/* New Tab Content */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Team Members</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {settingsData.team_members.map((member: any) => (
+                  <div key={member.id} className="mb-4 border-b pb-4">
+                    <p><strong>Name:</strong> {member.user_name}</p>
+                    <p><strong>Email:</strong> {member.email}</p>
+                    <p><strong>Joined:</strong> {new Date(member.created_at).toLocaleDateString()}</p>
                   </div>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button className="bg-musinova-green hover:bg-musinova-green/90">Save Changes</Button>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="notifications">
-              <p className="text-center py-20 text-gray-500">Notification settings will appear here</p>
-            </TabsContent>
-            
-            <TabsContent value="preferences">
-              <p className="text-center py-20 text-gray-500">User preferences will appear here</p>
-            </TabsContent>
-            
-            <TabsContent value="billing">
-              <p className="text-center py-20 text-gray-500">Billing details will appear here</p>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </PageLayout>
   );
 };

@@ -1,28 +1,49 @@
-
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   BarChart3, 
   FileText, 
   HelpCircle, 
-  Settings, 
+  Settings,
+  ShieldCheck,
   LogOut,
   Link2,
   CheckCircle,
   Menu,
-  X
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from './ui/button';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Sheet, SheetContent } from './ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
-  const { logout } = useAuth();
+  const { logout, getUser } = useAuth(); // Use the new getUser function
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
+  const [teamId, setTeamId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get the user from localStorage
+    const user = getUser();
+
+    // Redirect to /login if no user is found
+    if (!user) {
+      console.error('No user found in localStorage');
+      return;
+    }
+
+    // Set the team ID from the user data
+    if (user.team_id) {
+      setTeamId(user.team_id);
+    } else {
+      console.error('No team ID found for the user');
+      logout(); // Log out the user if no team ID is found
+      navigate('/login');
+    }
+  }, [getUser, navigate, logout]);
 
   const menuItems = [
     { 
@@ -56,6 +77,15 @@ const Sidebar = () => {
       icon: <Settings size={20} /> 
     },
   ];
+
+  // Conditionally add the Admin menu item
+  if (teamId === '3d19423e-d150-4819-9a63-20714899f425') {
+    menuItems.push({
+      label: 'Admin',
+      path: '/admin',
+      icon: <ShieldCheck size={20} />, // Replace with a more appropriate icon if needed
+    });
+  }
 
   const MobileTrigger = () => (
     <Button 

@@ -23,6 +23,9 @@ import TryForFree from "./pages/auth/TryForFree";
 import Playlists from "./pages/Playlists";
 import SmartUrlDashboard from "./pages/dashboard/SmartUrlDashboard";
 import Payment from "./pages/Payment";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -76,16 +79,42 @@ const App = () => (
               path="/payment"
               element={
                 // <AuthGuard>
-                  <Payment />
+                <Payment />
                 // </AuthGuard>
               }
             />
+            <Route
+              path="/payment-success"
+              element={
+                <AuthGuard>
+                  <PaymentSuccess />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/payment-failed"
+              element={
+                <AuthGuard>
+                  <PaymentFailed />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AuthGuard>
+                  <Admin />
+                </AuthGuard>
+              }
+            />
+
+
 
             {/* <Route path="/dashboard/smart-url" element={<AuthGuard><SmartUrlDashboard /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/create" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/list" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
             {/* <Route path="/smart-url/analytics" element={<AuthGuard><SmartUrl /></AuthGuard>} /> */}
-            {/* <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} /> */}
+            <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
