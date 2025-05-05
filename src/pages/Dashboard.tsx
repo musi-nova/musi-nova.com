@@ -305,6 +305,20 @@ const Dashboard = () => {
           >
             Top-Up/Subscribe
           </Button>
+          <Button
+            className="text-sm md:text-base"
+            onClick={() => {
+              const selected = jobs.find((job) => job.id === selectedJob);
+              if (selected?.playlist_id) {
+                const smartUrl = `https://mn-api.jms.rocks/spotify/playlist/${selected.playlist_id}/smart-url`;
+                window.open(smartUrl, "_blank"); // Open the Smart URL in a new tab
+              } else {
+                alert("Please select a valid playlist to generate a Smart URL.");
+              }
+            }}
+          >
+            Get Smart-URL
+          </Button>
         </div>
       </div>
 

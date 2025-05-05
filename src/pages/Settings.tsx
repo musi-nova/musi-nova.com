@@ -76,8 +76,11 @@ const Settings = () => {
               </CardHeader>
               <CardContent>
                 {settingsData.payments.map((payment: any) => (
-                  <div key={payment.id} className="mb-4 border-b pb-4">
-                    <p><strong>Payment Type:</strong> {payment.payment_type}</p>
+                  <div
+                    key={payment.id}
+                    className={`mb-4 border-b pb-4 p-6 rounded-lg ${!payment.paid ? 'bg-red-100' : ''
+                      }`} // Apply red background if payment is not paid
+                  >                    <p><strong>Payment Type:</strong> {payment.payment_type}</p>
                     <p><strong>Campaign:</strong> {payment.campaign_name}</p>
                     <p><strong>Musi Nova Fee:</strong> ${payment.breakdown_musi_nova_fee}</p>
                     <p><strong>Ad Spend:</strong> ${payment.breakdown_ad_spend}</p>

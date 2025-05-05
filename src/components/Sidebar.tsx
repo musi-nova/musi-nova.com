@@ -56,11 +56,11 @@ const Sidebar = () => {
       path: '/campaigns/new', 
       icon: <FileText size={20} /> 
     },
-    { 
-      label: 'Smart URL', 
-      path: '/dashboard/smart-url', 
-      icon: <Link2 size={20} /> 
-    },
+    // { 
+    //   label: 'Smart URL', 
+    //   path: '/dashboard/smart-url', 
+    //   icon: <Link2 size={20} /> 
+    // },
     { 
       label: 'Playlist Checker', 
       path: '/playlist-checker', 

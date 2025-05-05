@@ -158,7 +158,7 @@ const PlaylistChecker = () => {
               
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <p className="text-gray-600 text-sm">
-                  Don't have a playlist yet? <Link to="/playlist-creator" className="text-musinova-green hover:underline">Learn how to create an effective playlist</Link>
+                  Don't have a playlist yet? <Link to="/playlist-tips" className="text-musinova-green hover:underline">Learn how to create an effective playlist</Link>
                 </p>
               </div>
             </CardContent>

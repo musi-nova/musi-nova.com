@@ -86,17 +86,13 @@ const App = () => (
             <Route
               path="/payment-success"
               element={
-                <AuthGuard>
-                  <PaymentSuccess />
-                </AuthGuard>
+                <PaymentSuccess />
               }
             />
             <Route
               path="/payment-failed"
               element={
-                <AuthGuard>
-                  <PaymentFailed />
-                </AuthGuard>
+                <PaymentFailed />
               }
             />
             <Route
