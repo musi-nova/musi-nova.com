@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  BarChart3, 
-  FileText, 
-  HelpCircle, 
+import { useAuth } from '@/hooks/use-auth';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  BarChart3,
+  CheckCircle,
+  FileText,
+  HelpCircle,
+  Link2,
+  LogOut,
+  Menu,
   Settings,
   ShieldCheck,
-  LogOut,
-  Link2,
-  CheckCircle,
-  Menu,
 } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Sheet, SheetContent } from './ui/sheet';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -56,11 +56,11 @@ const Sidebar = () => {
       path: '/campaigns/new', 
       icon: <FileText size={20} /> 
     },
-    // { 
-    //   label: 'Smart URL', 
-    //   path: '/dashboard/smart-url', 
-    //   icon: <Link2 size={20} /> 
-    // },
+    { 
+      label: 'Smart URL', 
+      path: '/dashboard/smart-url', 
+      icon: <Link2 size={20} /> 
+    },
     { 
       label: 'Playlist Checker', 
       path: '/playlist-checker', 

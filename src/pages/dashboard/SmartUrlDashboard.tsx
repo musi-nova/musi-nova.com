@@ -1,308 +1,219 @@
-
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import PageLayout from '@/components/PageLayout';
-import { dashboardTabs } from '@/config/navigation';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Link2, PlusCircle, BarChart3, Trash2, ExternalLink, Eye, Copy } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from '@/hooks/use-toast';
+import { apiFetch } from '@/lib/api';
+import { useEffect, useState } from 'react';
+
+
+// Cache object to store fetched data
+const cache: Record<string, any> = {};
+
+type MetaMetadata = {
+  ad_account_id: string;
+  business_id: string;
+  pixel_id: string;
+}
+
+
+// Function to fetch data with caching
+const fetchWithCache = async (key: string, fetcher: () => Promise<any>) => {
+  if (cache[key]) {
+    console.log(`Cache hit for key: ${key}`);
+    return cache[key];
+  }
+
+  console.log(`Cache miss for key: ${key}`);
+  const data = await fetcher();
+  cache[key] = data; // Store the result in the cache
+  return data;
+};
+
 
 const SmartUrlDashboard = () => {
-  const [urlInput, setUrlInput] = useState('');
-  const [customAlias, setCustomAlias] = useState('');
-  const [selectedTag, setSelectedTag] = useState('all');
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
+  const [error, setError] = useState<string | null>(null);
+  const [metaMetadata, setMetaMetadata] = useState<MetaMetadata[]>([]);
+  const [selectedMetaMetadata, setSelectedMetaMetadata] = useState<string>('all');
+  const [loadingMetaMetadata, setLoadingMetaMetadata] = useState(true);
+  const [playlistId, setPlaylistId] = useState('');
+  const [playlistUrl, setPlaylistUrl] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Mock data for demo purposes
-  const smartUrlStats = [
-    { title: 'Total Smart URLs', value: '12', icon: <Link2 className="text-musinova-green" size={24} /> },
-    { title: 'Total Clicks', value: '1,458', icon: <ExternalLink className="text-musinova-brown" size={24} /> },
-    { title: 'Avg. Click Rate', value: '24%', icon: <BarChart3 className="text-musinova-navy" size={24} /> }
-  ];
+  const extractPlaylistId = (url: string): string | null => {
+    try {
+      const regex = /playlist\/([a-zA-Z0-9]+)/; // Match "playlist/" followed by alphanumeric characters
+      const match = url.match(regex);
+      return match ? match[1] : null; // Return the playlist ID if found, otherwise null
+    } catch (error) {
+      console.error('Error extracting playlist ID:', error);
+      return null;
+    }
+  };
 
-  const smartUrlList = [
-    { 
-      id: 1, 
-      name: 'Summer Vibes', 
-      originalUrl: 'https://spotify.com/playlist/12345678901234', 
-      shortUrl: 'msnv.to/summer', 
-      clicks: 342, 
-      dateCreated: '2023-04-01', 
-      tag: 'playlist'
-    },
-    { 
-      id: 2, 
-      name: 'New Release - Single', 
-      originalUrl: 'https://spotify.com/track/abcdefghijk1234', 
-      shortUrl: 'msnv.to/newrelease', 
-      clicks: 156, 
-      dateCreated: '2023-04-15', 
-      tag: 'track'
-    },
-    { 
-      id: 3, 
-      name: 'Underground Mix', 
-      originalUrl: 'https://spotify.com/playlist/567890abcdef', 
-      shortUrl: 'msnv.to/underground', 
-      clicks: 89, 
-      dateCreated: '2023-05-10', 
-      tag: 'playlist'
-    },
-  ];
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const tags = [
-    { id: 'all', name: 'All URLs' },
-    { id: 'playlist', name: 'Playlists' },
-    { id: 'track', name: 'Tracks' },
-    { id: 'album', name: 'Albums' },
-  ];
+    // Find the selected metadata object
+    const selectedMetadata = metaMetadata.find(
+      (metadata) => metadata.ad_account_id === selectedMetaMetadata
+    );
 
-  const handleCreateUrl = () => {
-    if (!urlInput) {
+    const playlistId = extractPlaylistId(playlistUrl);
+    if (!playlistId) {
       toast({
-        title: "URL Required",
-        description: "Please enter a Spotify URL to continue",
+        title: "Error",
+        description: "Invalid playlist URL. Please provide a valid Spotify playlist link.",
         variant: "destructive",
       });
       return;
     }
 
-    // Validation logic would normally go here
-    toast({
-      title: "Smart URL Created",
-      description: `Your smart URL ${customAlias ? `(${customAlias})` : ''} has been created successfully!`,
-    });
+    if (!selectedMetadata || !playlistId) {
+      toast({
+        title: 'Error',
+        description: 'All fields are required. Please fill out the form completely.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-    // Reset form
-    setUrlInput('');
-    setCustomAlias('');
+    setIsSubmitting(true);
+
+    try {
+      // Make an API call to add the Meta Metadata
+      const postResponse = await apiFetch(`team/meta-metadata`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          business_id: selectedMetadata.business_id,
+          ad_account_id: selectedMetadata.ad_account_id,
+          pixel_id: selectedMetadata.pixel_id,
+        }),
+      });
+
+      const response = await apiFetch(
+        `spotify/playlist/${playlistId}/smart-url?ad_account_id=${selectedMetadata.ad_account_id}&pixel_id=${selectedMetadata.pixel_id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      toast({
+        title: 'Success',
+        description: 'Smart URL created successfully!',
+        variant: 'default',
+      });
+
+      // Open the Smart URL in a new window
+      const smartUrl = `https://mn-api.jms.rocks/spotify/playlist/${playlistId}/smart-url?ad_account_id=${selectedMetadata.ad_account_id}&pixel_id=${selectedMetadata.pixel_id}`;
+      window.open(smartUrl, '_blank');
+    } catch (error) {
+      console.error('Error creating Smart URL:', error);
+      toast({
+        title: 'Error',
+        description: (
+          <>
+            <p>Your Facebook business is not registered with Musi-Nova.</p>
+            <p>Please send us your business ID, pixel ID, and ad account ID.</p>
+            <a href="/help" className="text-musinova-green underline">
+              Contact Support
+            </a>
+          </>
+        ),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    toast({
-      title: "URL Deleted",
-      description: "The smart URL has been deleted successfully",
-    });
-  };
+  // Fetch meta-metadata from `team/meta-metadata` with caching
+  useEffect(() => {
+    const fetchMetaMetadata = async () => {
+      try {
+        const data = await fetchWithCache('team/meta-metadata', async () => {
+          const response = await apiFetch('team/meta-metadata');
+          if (!response.ok) {
+            throw new Error('Failed to fetch meta-metadata');
+          }
+          return response.json();
+        });
+        setMetaMetadata(data);
 
-  const handleCopy = (url: string) => {
-    navigator.clipboard.writeText(`https://${url}`);
-    toast({
-      title: "URL Copied",
-      description: "The smart URL has been copied to clipboard",
-    });
-  };
+        // Set the default selected metadata to the first item in the list
+        if (data.length > 0) {
+          setSelectedMetaMetadata(data[0].ad_account_id);
+        }
+      } catch (err: any) {
+        setError(err.message || 'An error occurred while fetching meta-metadata');
+      } finally {
+        setLoadingMetaMetadata(false);
+      }
+    };
 
-  // Mobile URL card for the responsive list view
-  const MobileUrlCard = ({ url }: { url: typeof smartUrlList[0] }) => (
-    <Card key={url.id} className="mb-3 bg-white border-0 shadow-sm">
-      <CardContent className="p-4">
-        <div className="mb-2">
-          <h3 className="font-semibold text-base">{url.name}</h3>
-          <div 
-            className="flex items-center text-musinova-navy hover:text-musinova-brown text-sm mt-1 mb-2"
-            onClick={() => handleCopy(url.shortUrl)}
-          >
-            <span className="truncate">{url.shortUrl}</span>
-            <Copy className="ml-1 h-3 w-3 cursor-pointer" />
-          </div>
-        </div>
-        <div className="flex justify-between text-sm text-gray-500">
-          <div>Clicks: {url.clicks}</div>
-          <div>{url.dateCreated}</div>
-        </div>
-        <div className="flex justify-end gap-2 mt-3">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <Eye size={16} />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0 text-red-500"
-            onClick={() => handleDelete(url.id)}
-          >
-            <Trash2 size={16} />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+    fetchMetaMetadata();
+  }, []);
 
   return (
-    <PageLayout showSidebar={true} className="bg-musinova-cream/30 py-4 md:py-8">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-6">
-        <h1 className="text-xl md:text-3xl font-bold text-musinova-navy mb-2">
-          Smart URLs
-        </h1>
-        <Button className="bg-musinova-green hover:bg-musinova-green/90 text-white">
-          <PlusCircle className="mr-2 h-4 w-4" /> New Smart URL
-        </Button>
+    <PageLayout showSidebar={true} className="bg-musinova-cream/30 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-musinova-navy mb-2">Smart Url Page</h1>
       </div>
-
-      {/* Stats Cards - Responsive grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
-        {smartUrlStats.map((stat, index) => (
-          <Card key={index} className="bg-white border-0 shadow-sm">
-            <CardContent className={`p-3 md:p-4 ${isMobile ? 'pt-4' : 'pt-6'}`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-musinova-darkgray/70">{stat.title}</p>
-                  <h3 className="text-lg md:text-3xl font-bold text-musinova-darkgray mt-1">{stat.value}</h3>
-                </div>
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-musinova-cream rounded-full flex items-center justify-center">
-                  {stat.icon}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Create URL Section - Responsive layout */}
-      <Card className="bg-white border-0 shadow-sm mb-4 md:mb-6">
-        <CardHeader className="p-4 pb-0 md:pb-0">
-          <CardTitle className="text-lg md:text-xl font-semibold">Create Smart URL</CardTitle>
-          <CardDescription>Turn your Spotify links into memorable, trackable URLs</CardDescription>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-            <div className="md:col-span-2">
-              <label htmlFor="spotify-url" className="block text-sm font-medium mb-1 md:mb-2">Spotify URL</label>
-              <Input 
-                id="spotify-url" 
-                placeholder="https://open.spotify.com/..." 
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                className="bg-musinova-cream/50"
-              />
-            </div>
-            <div>
-              <label htmlFor="custom-alias" className="block text-sm font-medium mb-1 md:mb-2">Custom Alias (Optional)</label>
-              <Input 
-                id="custom-alias" 
-                placeholder="e.g., mysong" 
-                value={customAlias}
-                onChange={(e) => setCustomAlias(e.target.value)}
-                className="bg-musinova-cream/50"
-              />
-            </div>
-          </div>
+      <Card>
+        <CardContent className='p-6'>
+          <Select value={selectedMetaMetadata} onValueChange={setSelectedMetaMetadata}>
+            <label className="block text-sm font-medium mb-2">
+              Select Metadata
+            </label>
+            <SelectTrigger className="w-full md:w-80 text-sm">
+              <SelectValue placeholder="Select Metadata" />
+            </SelectTrigger>
+            <SelectContent>
+              {metaMetadata.map((metadata) => (
+                <SelectItem key={metadata.ad_account_id} value={metadata.ad_account_id}>
+                  {metadata.ad_account_id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </CardContent>
-        <CardFooter className="flex justify-end p-4 pt-0">
-          <Button 
-            className="bg-musinova-green hover:bg-musinova-green/90 text-white"
-            onClick={handleCreateUrl}
-          >
-            Create Smart URL
-          </Button>
-        </CardFooter>
+        <CardContent className='p-6'>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="mb-8">
+              <label htmlFor="playlistUrl" className="block text-sm font-medium mb-2">
+                Paste your Spotify playlist link <span className="text-red-500">*</span>
+              </label>
+              <Input
+                id="playlistUrl"
+                type="url"
+                placeholder="https://open.spotify.com/playlist/..."
+                value={playlistUrl}
+                onChange={(e) => setPlaylistUrl(e.target.value)}
+                className="w-full"
+              />
+              {!playlistUrl && (
+                <p className="text-sm text-red-500 mt-1">Playlist URL is required.</p>
+              )}
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-musinova-green text-white hover:bg-opacity-90 font-medium py-2 px-6 rounded-md transition-all"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating...' : 'Create Smart URL'}
+            </Button>
+          </form>
+        </CardContent>
+
       </Card>
 
-      {/* URL List Section - Responsive handling */}
-      <Card className="bg-white border-0 shadow-sm">
-        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between p-4 pb-2 md:pb-4">
-          <div>
-            <CardTitle className="text-lg md:text-xl font-semibold">Your Smart URLs</CardTitle>
-            <CardDescription>Manage all your custom links</CardDescription>
-          </div>
-          <div className="mt-3 md:mt-0">
-            <Select value={selectedTag} onValueChange={setSelectedTag}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Select filter" />
-              </SelectTrigger>
-              <SelectContent>
-                {tags.map((tag) => (
-                  <SelectItem key={tag.id} value={tag.id}>{tag.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          {/* Desktop view: Table */}
-          {!isMobile && (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Smart URL</TableHead>
-                    <TableHead className="text-right">Clicks</TableHead>
-                    <TableHead className="text-right">Date Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {smartUrlList
-                    .filter(url => selectedTag === 'all' || url.tag === selectedTag)
-                    .map((url) => (
-                      <TableRow key={url.id}>
-                        <TableCell className="font-medium">{url.name}</TableCell>
-                        <TableCell>
-                          <div 
-                            className="text-musinova-navy hover:text-musinova-brown flex items-center cursor-pointer"
-                            onClick={() => handleCopy(url.shortUrl)}
-                          >
-                            {url.shortUrl}
-                            <Copy className="ml-1" size={14} />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">{url.clicks}</TableCell>
-                        <TableCell className="text-right">{url.dateCreated}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <Eye size={16} />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-red-500"
-                              onClick={() => handleDelete(url.id)}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-          
-          {/* Mobile view: Card-based list */}
-          {isMobile && (
-            <div>
-              {smartUrlList
-                .filter(url => selectedTag === 'all' || url.tag === selectedTag)
-                .map((url) => (
-                  <MobileUrlCard key={url.id} url={url} />
-                ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </PageLayout>
   );
 };

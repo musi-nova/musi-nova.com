@@ -1,10 +1,30 @@
-import React, { useEffect, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiFetch } from '@/lib/api';
+import { useEffect, useState } from 'react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
+
+// Cache object to store fetched data
+const cache: Record<string, any> = {};
+
+
+// Function to fetch data with caching
+const fetchWithCache = async (key: string, fetcher: () => Promise<any>) => {
+  if (cache[key]) {
+    console.log(`Cache hit for key: ${key}`);
+    return cache[key];
+  }
+
+  console.log(`Cache miss for key: ${key}`);
+  const data = await fetcher();
+  cache[key] = data; // Store the result in the cache
+  return data;
+};
+
 
 const Admin = () => {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -15,15 +35,17 @@ const Admin = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [loadingPayments, setLoadingPayments] = useState(true);
 
-  // Fetch payments from `admin/payments`
+  // Fetch payments from `admin/payments` with caching
   useEffect(() => {
     const fetchPayments = async () => {
       try {
-        const response = await apiFetch('admin/payments');
-        if (!response.ok) {
-          throw new Error('Failed to fetch payments');
-        }
-        const data = await response.json();
+        const data = await fetchWithCache('admin/payments', async () => {
+          const response = await apiFetch('admin/payments');
+          if (!response.ok) {
+            throw new Error('Failed to fetch payments');
+          }
+          return response.json();
+        });
         setPayments(data);
       } catch (err: any) {
         setError(err.message || 'An error occurred while fetching payments');
@@ -121,14 +143,12 @@ const Admin = () => {
                       <th className="border-b py-2">Campaign Name</th>
                       <th className="border-b py-2">Payment Type</th>
                       <th className="border-b py-2">Breakdown Ad Spend</th>
+                      <th className='border-b py-2'>Campaign Spend (til now)</th>
+                      <th className="border-b py-2">Campaign Start Date</th>
                       <th className="border-b py-2">Ad duration (days)</th>
-                      {/* <th className="border-b py-2">Breakdown Musi Nova Fee</th> */}
-                      {/* <th className="border-b py-2">Breakdown Total Charge</th> */}
-                      {/* <th className="border-b py-2">Stripe Checkout Session Id</th> */}
-                      {/* <th className="border-b py-2">Stripe Payment Id</th> */}
-                      {/* <th className="border-b py-2">Stripe Subscription Id</th> */}
                       <th className="border-b py-2">Paid</th>
                       <th className="border-b py-2">Created At</th>
+                      <th className="border-b py-2">Smart URL</th>
                       <th className="border-b py-2">Stripe Payment Link</th>
                     </tr>
                   </thead>
@@ -138,41 +158,51 @@ const Admin = () => {
                         <td className="border-b py-2">{payment.campaign_name}</td>
                         <td className="border-b py-2">{payment.payment_type}</td>
                         <td className="border-b py-2">${payment.breakdown_ad_spend}</td>
+                        <td className="border-b py-2">${payment.campaign_spend ? payment.campaign_spend : 'N/A'}</td>
+                        <td className="border-b py-2">{payment.campaign_start_date}</td>
                         <td className="border-b py-2">{payment.one_time_duration}</td>
-                        {/* Uncomment if needed */}
-                        {/* <td className="border-b py-2">${payment.breakdown_musi_nova_fee}</td> */}
-                        {/* <td className="border-b py-2">${payment.breakdown_total_charge}</td> */}
-                        {/* <td className="border-b py-2">{payment.stripe_checkout_session_id}</td> */}
-                        {/* <td className="border-b py-2">{payment.stripe_payment_id}</td> */}
-                        {/* <td className="border-b py-2">{payment.stripe_subscription_id}</td> */}
                         <td
-                          className={`border-b py-2 ${!payment.paid ? 'bg-red-100 text-red-600 font-bold' : ''
-                            }`}
+                          className={`border-b py-2 ${!payment.paid ? 'bg-red-100 text-red-600 font-bold' : ''}`}
                         >
                           {payment.paid ? 'Yes' : 'No'}
                         </td>
                         <td className="border-b py-2">{new Date(payment.created_at).toLocaleDateString()}</td>
                         <td className="border-b py-2">
-                          {payment.stripe_payment_id ? (
-                            <a
-                              href={`https://dashboard.stripe.com/payments/${payment.stripe_payment_id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-500 underline hover:text-blue-700"
+                          {payment.playlist_id ? (
+                            <Button
+                              className="text-sm md:text-base"
+                              onClick={() => {
+                                const smartUrl = `https://mn-api.jms.rocks/spotify/playlist/${payment.playlist_id}/smart-url`;
+                                window.open(smartUrl, '_blank'); // Open the Smart URL in a new tab
+                              }}
                             >
-                              View in Stripe
-                            </a>
+                              Get Smart-URL
+                            </Button>
                           ) : (
                             'N/A'
                           )}
                         </td>
-
+                        <td className="border-b py-2">
+                          {payment.stripe_payment_id ? (
+                            <Button
+                              className="text-sm md:text-base"
+                              onClick={() => {
+                                const stripeUrl = `https://dashboard.stripe.com/payments/${payment.stripe_payment_id}`;
+                                window.open(stripeUrl, '_blank'); // Open the Stripe payment link in a new tab
+                              }}
+                            >
+                              Get Stripe Payment Link
+                            </Button>
+                          ) : (
+                            'N/A'
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <p>No payments found.</p>
+                <p>No payments found/ Loading...</p>
               )}
             </CardContent>
           </Card>

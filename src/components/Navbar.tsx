@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, UserCircle } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useAuth } from '@/hooks/use-auth';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from '@/hooks/use-auth';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Menu, UserCircle, X } from 'lucide-react';
+import React from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -50,6 +50,14 @@ const Navbar: React.FC = () => {
                 } text-sm`}
               >
                 Playlist Checker
+              </Link>
+              <Link
+                to="/smart-url"
+                className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
+                  isActive('/smart-url') ? 'font-bold text-musinova-green' : ''
+                } text-sm`}
+              >
+                Smart URL
               </Link>
               <Link
                 to="/help"

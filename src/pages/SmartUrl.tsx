@@ -1,192 +1,186 @@
-
-import React from 'react';
 import PageLayout from '@/components/PageLayout';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
-import { Link2, Music, CheckCircle, BarChart3, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { smartUrlTabs } from '@/config/navigation';
+import { apiFetch } from '@/lib/api';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const SmartUrl = () => {
-  const { isAuthenticated } = useAuth();
+  const [businessId, setBusinessId] = useState('');
+  const [adAccountId, setAdAccountId] = useState('');
+  const [pixelId, setPixelId] = useState('');
+  const [playlistId, setPlaylistId] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleCreateUrl = () => {
-    if (isAuthenticated) {
-      navigate('/smart-url/create');
-    } else {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!businessId || !adAccountId || !pixelId || !playlistId) {
       toast({
-        title: "Authentication Required",
-        description: "Please log in or register to create smart URLs",
-        variant: "default",
+        title: 'Error',
+        description: 'All fields are required. Please fill out the form completely.',
+        variant: 'destructive',
       });
-      navigate('/login', { state: { from: '/smart-url' } });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // make an API call to add the Meta Metadata
+      const postResponse = await apiFetch(
+        `team/meta-metadata`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            business_id: businessId,
+            ad_account_id: adAccountId,
+            pixel_id: pixelId,
+          }),
+        }
+      );
+
+      const response = await apiFetch(
+        `spotify/playlist/${playlistId}/smart-url?ad_account_id=${adAccountId}&pixel_id=${pixelId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      toast({
+        title: 'Success',
+        description: 'Smart URL created successfully!',
+        variant: 'default',
+      });
+
+
+      // Open the Smart URL in a new window
+      const smartUrl = `https://mn-api.jms.rocks/spotify/playlist/${playlistId}/smart-url?ad_account_id=${adAccountId}&pixel_id=${pixelId}`;
+      window.open(smartUrl, '_blank');
+    } catch (error) {
+      console.error('Error creating Smart URL:', error);
+      toast({
+        title: 'Error',
+        description: (
+          <>
+            <p>Your facebook business is not registered with Musi-Nova.</p>
+            <p>Please send us your business id, pixel id, and ad account id.</p>
+            <a href="/help" className="text-musinova-green underline">
+              Contact Support
+            </a>
+          </>
+        ),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <PageLayout tabs={smartUrlTabs} className="bg-white py-0">
-      <div className="w-full bg-gray-50 py-16 border-b mb-12">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-            Smart URL
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
-            Find answers to common questions or search for specific help articles.
-          </p>
-        </div>
-      </div>
-      
-      <div className="max-w-5xl mx-auto px-4 md:px-6">
-        <div className="mb-20">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-musinova-navy">What You Can Do With Smart URLs</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="bg-white border-0 p-6 rounded-xl shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-              <div className="mb-6">
-                <div className="w-14 h-14 bg-musinova-cream rounded-full flex items-center justify-center">
-                  <Music size={28} className="text-musinova-green" />
-                </div>
+    <PageLayout className="bg-gray-50 py-12">
+      <div className="max-w-3xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-center mb-8">Create Smart URL</h1>
+        <p className="text-center text-gray-600 mb-6">
+          To be able to create a smart URL, we need to get access permissions from your Facebook Business account.
+          For more information, please check our tutorial on how to create a smart URL, and contact support with the required information.
+        </p>
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <Button
+                variant="outline"
+                className="flex-1 bg-musinova-green text-white hover:bg-opacity-90 font-medium py-2 px-6 rounded-md transition-all"
+                onClick={() => {
+                  window.open('https://www.youtube.com/watch?v=FhHpHJ7dg6o', '_blank');
+                }}
+              >
+                Tutorial
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 bg-musinova-green text-white hover:bg-opacity-90 font-medium py-2 px-6 rounded-md transition-all"
+                onClick={() => {
+                  window.open('/help', '_blank');
+                }}
+              >
+                Contact Support
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className='p-6'>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="businessId" className="block text-sm font-medium mb-2">
+                  Business ID
+                </label>
+                <input
+                  id="businessId"
+                  type="text"
+                  value={businessId}
+                  onChange={(e) => setBusinessId(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-musinova-navy">Share Spotify Links</h3>
-              <p className="text-gray-600">
-                Create branded, short links for your Spotify playlists, albums, or tracks that are easy to remember and share.
-              </p>
-            </Card>
-            
-            <Card className="bg-white border-0 p-6 rounded-xl shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-              <div className="mb-6">
-                <div className="w-14 h-14 bg-musinova-cream rounded-full flex items-center justify-center">
-                  <Link2 size={28} className="text-musinova-green" />
-                </div>
+              <div>
+                <label htmlFor="adAccountId" className="block text-sm font-medium mb-2">
+                  Ad Account ID
+                </label>
+                <input
+                  id="adAccountId"
+                  type="text"
+                  value={adAccountId}
+                  onChange={(e) => setAdAccountId(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-musinova-navy">Custom URLs</h3>
-              <p className="text-gray-600">
-                Create memorable, branded URLs that align with your artist or playlist identity for better recognition.
-              </p>
-            </Card>
-            
-            <Card className="bg-white border-0 p-6 rounded-xl shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-              <div className="mb-6">
-                <div className="w-14 h-14 bg-musinova-cream rounded-full flex items-center justify-center">
-                  <BarChart3 size={28} className="text-musinova-green" />
-                </div>
+              <div>
+                <label htmlFor="pixelId" className="block text-sm font-medium mb-2">
+                  Pixel ID
+                </label>
+                <input
+                  id="pixelId"
+                  type="text"
+                  value={pixelId}
+                  onChange={(e) => setPixelId(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-musinova-navy">Track Analytics</h3>
-              <p className="text-gray-600">
-                Monitor click-through rates, geographic data, and user engagement to optimize your music promotion.
-              </p>
-            </Card>
-          </div>
-        </div>
-        
-        <div className="mb-20">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-musinova-navy">Simple, Transparent Pricing</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="bg-white border-0 p-8 rounded-xl shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-              <div className="mb-6">
-                <div className="w-14 h-14 bg-musinova-cream rounded-full flex items-center justify-center">
-                  <Music size={28} className="text-musinova-green" />
-                </div>
+              <div>
+                <label htmlFor="playlistId" className="block text-sm font-medium mb-2">
+                  Playlist ID
+                </label>
+                <input
+                  id="playlistId"
+                  type="text"
+                  value={playlistId}
+                  onChange={(e) => setPlaylistId(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-musinova-navy">For Musi-Nova Customers</h3>
-              <div className="text-center mb-6">
-                <span className="text-3xl font-bold text-musinova-green">Free</span>
-                <span className="text-gray-600"> forever</span>
-              </div>
-              <p className="text-gray-600 mb-6">
-                All Musi-Nova campaign customers get unlimited smart URLs as part of their service.
-              </p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={18} className="text-musinova-green" />
-                  <span className="text-gray-600">Unlimited smart URLs</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={18} className="text-musinova-green" />
-                  <span className="text-gray-600">Performance analytics</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={18} className="text-musinova-green" />
-                  <span className="text-gray-600">Custom short links</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={18} className="text-musinova-green" />
-                  <span className="text-gray-600">Link to Spotify</span>
-                </li>
-              </ul>
-              <Link to="/campaigns/new">
-                <Button className="w-full bg-musinova-green text-white hover:bg-opacity-90 font-medium py-2 px-6 rounded-md transition-all">
-                  Start a Campaign
-                </Button>
-              </Link>
-            </Card>
-            
-            <Card className="bg-white border-0 p-8 rounded-xl shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1">
-              <div className="mb-6">
-                <div className="w-14 h-14 bg-musinova-cream rounded-full flex items-center justify-center">
-                  <Link2 size={28} className="text-musinova-green" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-musinova-navy">Monthly Subscription</h3>
-              <div className="text-center mb-6">
-                <span className="text-3xl font-bold text-musinova-brown">$10</span>
-                <span className="text-gray-600"> /month</span>
-              </div>
-              <p className="text-gray-600 mb-6">
-                Just need smart URLs? Our affordable monthly subscription has you covered.
-              </p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={18} className="text-musinova-green" />
-                  <span className="text-gray-600">Up to 25 smart URLs</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={18} className="text-musinova-green" />
-                  <span className="text-gray-600">Basic analytics</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={18} className="text-musinova-green" />
-                  <span className="text-gray-600">Custom short links</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={18} className="text-musinova-green" />
-                  <span className="text-gray-600">Cancel anytime</span>
-                </li>
-              </ul>
-              <Link to="/subscribe">
-                <Button variant="outline" className="w-full border border-musinova-brown text-musinova-brown hover:bg-musinova-brown hover:text-white font-medium py-2 px-6 rounded-md transition-all">
-                  Subscribe Now
-                </Button>
-              </Link>
-            </Card>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-musinova-cream to-musinova-lightyellow rounded-2xl p-10 text-center mb-8 border-0 shadow-lg">
-          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-musinova-navy">Ready to Simplify Your Music Promotion?</h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto text-gray-700">
-            Join artists and curators who are using Musi-Nova Smart URLs to connect with fans more effectively.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={handleCreateUrl} 
-              className="bg-musinova-green hover:bg-musinova-green/90 text-white text-lg px-8 py-4 h-auto rounded-xl shadow-md hover:shadow-lg transition-all"
-            >
-              {isAuthenticated ? "Create Your First Smart URL" : "Sign In to Get Started"}
-            </Button>
-            {!isAuthenticated && (
-              <Link to="/register">
-                <Button variant="outline" className="border-musinova-green text-musinova-green hover:bg-musinova-green hover:text-white text-lg px-8 py-4 h-auto rounded-xl shadow-sm hover:shadow-md transition-all">
-                  Register for Free
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
+              <Button
+                type="submit"
+                className="w-full bg-musinova-green text-white hover:bg-opacity-90 font-medium py-2 px-6 rounded-md transition-all"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Creating...' : 'Create Smart URL'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </PageLayout>
   );

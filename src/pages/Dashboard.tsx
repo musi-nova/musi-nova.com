@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -10,10 +8,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Music, Play, Users, TrendingUp, BarChart3 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { apiFetch } from "@/lib/api";
+import { useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -26,7 +25,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 // Define a type for the job data
 type Job = {
@@ -78,8 +76,8 @@ const fetchCampaignSummaryData = async (
       // Return a placeholder object if the API call fails
       return {
         playlist_name: "Unavailable",
-        playlist_description: "Spotify data is currently unavailable.",
-        playlist_image_url: "/placeholder-image.png", // Replace with a valid placeholder image path
+        playlist_description: "Live Spotify data is currently unavailable.",
+        playlist_image_url: "/placeholder.svg", // Replace with a valid placeholder image path
         spend: 0,
         playlist_followers_total: 0,
       };
@@ -341,15 +339,16 @@ const Dashboard = () => {
                   <p className="text-sm text-gray-600">
                     {campaignSummary.playlist_description}
                   </p>
+                  <p className="text-sm text-gray-500">
+                    <strong>Owner:</strong> {campaignSummary.playlist_owner}
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-600">
-                    Total Spend
-                  </h4>
+                  <h4 className="text-sm font-medium text-gray-600">Total Spend</h4>
                   <p className="text-lg font-bold text-gray-800">
-                    ${campaignSummary.spend}
+                    ${campaignSummary.spend || 0}
                   </p>
                 </div>
                 <div>
@@ -358,6 +357,26 @@ const Dashboard = () => {
                   </h4>
                   <p className="text-lg font-bold text-gray-800">
                     {campaignSummary.playlist_followers_total}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Total Tracks
+                  </h4>
+                  <p className="text-lg font-bold text-gray-800">
+                    {campaignSummary.playlist_tracks_total}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600">Genre</h4>
+                  <p className="text-lg font-bold text-gray-800">
+                    {campaignSummary.campaign_genre || "N/A"}
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <h4 className="text-sm font-medium text-gray-600">Moods</h4>
+                  <p className="text-lg font-bold text-gray-800">
+                    {campaignSummary.campaign_moods?.join(", ") || "N/A"}
                   </p>
                 </div>
               </div>
