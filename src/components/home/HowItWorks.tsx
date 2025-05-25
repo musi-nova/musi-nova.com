@@ -1,6 +1,5 @@
 
-import React from 'react';
-import { CheckCircle, Music, BarChart3 } from 'lucide-react';
+import { BarChart3, CheckCircle, Music } from 'lucide-react';
 
 const HowItWorks = () => {
   return <section className="py-16 bg-white">
@@ -32,9 +31,9 @@ const HowItWorks = () => {
             <div className="w-16 h-16 bg-musinova-green rounded-full flex items-center justify-center text-white mb-4 mx-auto">
               <BarChart3 size={28} />
             </div>
-            <h3 className="text-xl font-bold text-center mb-3 text-musinova-darkgray">3. Monitor Results</h3>
+            <h3 className="text-xl font-bold text-center mb-3 text-musinova-darkgray">3. Boost your streams</h3>
             <p className="text-gray-600 text-center">
-              Track your campaign's performance with our detailed dashboard and watch your playlist grow.
+              Watch how your music gains the attention it deserves.
             </p>
           </div>
         </div>

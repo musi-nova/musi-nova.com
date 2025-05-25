@@ -1,34 +1,31 @@
 
-import React from 'react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import Hero from '@/components/home/Hero';
-import PainPoints from '@/components/home/PainPoints';
-import HowItWorks from '@/components/home/HowItWorks';
-import Benefits from '@/components/home/Benefits';
-import GenreStats from '@/components/home/GenreStats';
 import AdExamples from '@/components/home/AdExamples';
-import Testimonials from '@/components/home/Testimonials';
-import Pricing from '@/components/home/Pricing';
+import Benefits from '@/components/home/Benefits';
 import CallToAction from '@/components/home/CallToAction';
+import Hero from '@/components/home/Hero';
+import HowItWorks from '@/components/home/HowItWorks';
+import PainPoints from '@/components/home/PainPoints';
+import Navbar from '@/components/Navbar';
 
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <main className="flex-grow">
         <Hero />
         <PainPoints />
-        <HowItWorks />
         <Benefits />
+        <HowItWorks />
+
         {/* <GenreStats /> */}
         <AdExamples />
         {/* <Testimonials /> */}
         {/* <Pricing /> */}
         <CallToAction />
       </main>
-      
+
       <Footer />
     </div>
   );

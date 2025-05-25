@@ -1,9 +1,23 @@
-import React from 'react';
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
+import PhoneOutline from '@/components/ui/PhoneOutline';
+import { useCallback, useState } from "react";
+
+const adExamples = [
+  { src: "/assets/alt-pop-example.gif", alt: "Alternative Pop Campaign" },
+  { src: "/assets/electronic-example.gif", alt: "Electronic Music Campaign" },
+  { src: "/assets/indie-pop-example.gif", alt: "Indie Pop Campaign" },
+];
 
 const AdExamples = () => {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [emblaApi, setEmblaApi] = useState<CarouselApi | null>(null);
+
+  const onSelect = useCallback((api: CarouselApi) => {
+    setSelectedIndex(api.selectedScrollSnap());
+  }, []);
+
   return (
-    <section className="py-16 bg-white">
+    <section className="py-16 bg-gradient-to-br from-musinova-lightyellow to-musinova-lightgreen text-musinova-darkgray">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center text-musinova-darkgray mb-4">
           Our Ad Campaigns in Action
@@ -12,50 +26,47 @@ const AdExamples = () => {
           See examples of Meta campaigns we've created for artists just like you.
         </p>
 
-        <div className="max-w-6xl mx-auto">
-          <Carousel className="w-full">
+        <div className="max-w-6xl mx-auto relative">
+          <Carousel
+            className="w-full"
+            setApi={api => {
+              setEmblaApi(api);
+              if (api) api.on("select", () => onSelect(api));
+            }}
+            opts={{
+              axis: "x",
+              slidesToScroll: 1,
+              containScroll: "trimSnaps",
+              loop: false,
+            }}
+          >
             <CarouselContent>
-              <CarouselItem className="basis-full md:basis-1/3 p-1">
-                <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all">
-                  <div className="aspect-[9/16] relative">
-                    <img src="/assets/alt-pop-example.gif" alt="Alternative Pop Campaign" className="w-full h-full object-cover" />
+              {adExamples.map((ad, idx) => (
+                <CarouselItem
+                  key={ad.alt}
+                  className={`transition-all duration-300 flex justify-center items-center
+    ${idx === selectedIndex
+                      ? "z-10"
+                      : "z-0 opacity-60"
+                    }
+  `}
+                  style={{
+                    pointerEvents: idx === selectedIndex ? "auto" : "none",
+                  }}
+                >
+                  <div className="relative aspect-[9/16] w-[220px] md:w-[320px] flex items-center justify-center">
+                    {idx === selectedIndex && (
+                      <PhoneOutline />
+                    )}
+                    <img
+                      src={ad.src}
+                      alt={ad.alt}
+                      className="absolute inset-0 w-full h-full object-cover rounded-3xl shadow-lg"
+                      style={{ zIndex: 0 }}
+                    />
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2 text-musinova-darkgray text-center">Alternative Pop Campaign</h3>
-                    <p className="text-gray-600 mb-4 text-center">
-                      This campaign introduced alternative pop music to a wider audience, boosting streams and engagement significantly.
-                    </p>
-                  </div>
-                </div>
-              </CarouselItem>
-
-              <CarouselItem className="basis-full md:basis-1/3 p-1">
-                <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all">
-                  <div className="aspect-[9/16] relative">
-                    <img src="/assets/electronic-example.gif" alt="Electronic Music Campaign" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2 text-musinova-darkgray text-center">Electronic Music Campaign</h3>
-                    <p className="text-gray-600 mb-4 text-center">
-                      This campaign helped an electronic music producer grow their audience and increase listener engagement.
-                    </p>
-                  </div>
-                </div>
-              </CarouselItem>
-
-              <CarouselItem className="basis-full md:basis-1/3 p-1">
-                <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all">
-                  <div className="aspect-[9/16] relative">
-                    <img src="/assets/indie-pop-example.gif" alt="Indie Pop Campaign" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2 text-musinova-darkgray text-center">Indie Pop Campaign</h3>
-                    <p className="text-gray-600 mb-4 text-center">
-                      This campaign connected an indie pop band with new fans and increased their playlist presence.
-                    </p>
-                  </div>
-                </div>
-              </CarouselItem>
+                </CarouselItem>
+              ))}
             </CarouselContent>
             <CarouselPrevious />
             <CarouselNext />

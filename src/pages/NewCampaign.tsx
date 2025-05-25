@@ -451,7 +451,7 @@ const NewCampaign = () => {
                         <div className="flex gap-2">
                           <div className="mt-0.5">✅</div>
                           <div>
-                            <p>Did you create a profile picture?</p>
+                            <p>Did you create a playlist picture?</p>
                             <p className="text-sm text-gray-600">An attractive cover image helps your playlist stand out.</p>
                           </div>
                         </div>
@@ -472,6 +472,11 @@ const NewCampaign = () => {
                           </div>
                         </div>
                       </div>
+                      <div className="text-sm text-gray-600">
+                        <p>Want to check if your playlist is optimized for promotion?</p>
+                        <Link to="/playlist-checker" className="text-musinova-green hover:underline">Use our Playlist Checker tool</Link>
+                      </div>
+                      <br></br>
 
                       {hasPlaylist === 'yes' && (
                         <div className="mb-8">
@@ -492,10 +497,6 @@ const NewCampaign = () => {
                         </div>
                       )}
 
-                      <div className="text-sm text-gray-600">
-                        <p>Want to check if your playlist is optimized for promotion?</p>
-                        <Link to="/playlist-checker" className="text-musinova-green hover:underline">Use our Playlist Checker tool</Link>
-                      </div>
                       <h3 className="font-medium mt-8 mb-4">Want us to direct the adverts to a specific track (optional)?</h3>
                       <div className="mb-6">
                         <label htmlFor="trackUrl" className="block text-sm font-medium mb-2">
@@ -538,8 +539,8 @@ const NewCampaign = () => {
                         <div className="flex gap-2">
                           <div className="font-medium text-gray-700">3.</div>
                           <div>
-                            <p>Create a profile picture.</p>
-                            <p className="text-sm text-gray-600">You can do it yourself or <Link to="/playlist-cover-creator" className="text-musinova-green hover:underline">use our tool here</Link></p>
+                            <p>Create a playlist picture.</p>
+                            <p className="text-sm text-gray-600">You can do it yourself or <Link to="https://www.spotlistr.com/create/cover" className="text-musinova-green hover:underline">use this online tool</Link></p>
                           </div>
                         </div>
 
@@ -557,14 +558,14 @@ const NewCampaign = () => {
                             <p>Add your own songs to the playlist.</p>
                             <p className="text-sm text-gray-600">At least around 4 and maximum around 10 is suggested.</p>
                             <p className="text-sm text-gray-600">Don't put them at the first place but spread them out nicely throughout the playlist.</p>
+                            <p className="text-sm text-gray-600"><Link to="/playlist-checker" className="text-musinova-green hover:underline">Use our Playlist Checker tool</Link> to see if your playlist is optimized for promotion.</p>
                           </div>
                         </div>
                       </div>
 
                       <div className="text-sm text-gray-600">
-                        <p>Once you've created your playlist, come back here to continue!</p>
                         <p className="mt-2">
-                          Need more help? <Link to="/help" className="text-musinova-green hover:underline">Visit our help center</Link>
+                          Need more help? <Link to="/help" className="text-musinova-green hover:underline">Send us a message.</Link>
                         </p>
                       </div>
                     </div>
@@ -575,13 +576,26 @@ const NewCampaign = () => {
                       <ArrowLeft size={16} className="mr-2" /> Back
                     </Button>
 
-                    <Button
-                      className="btn-primary"
-                      onClick={handleNext}
-                      disabled={!hasPlaylist || (hasPlaylist === 'yes' && !playlistUrl)}
-                    >
-                      Continue <ArrowRight size={16} className="ml-2" />
-                    </Button>
+                    {hasPlaylist === "yes" && (
+                      <Button
+                        className="btn-primary"
+                        onClick={handleNext}
+                        disabled={!playlistUrl}
+                      >
+                        Continue <ArrowRight size={16} className="ml-2" />
+                      </Button>
+                    )}
+
+                    {hasPlaylist === "no" && (
+                      <Button
+                        className="btn-primary"
+                        onClick={() => {
+                          setHasPlaylist("yes");
+                        }}
+                      >
+                        Continue <ArrowRight size={16} className="ml-2" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
@@ -763,202 +777,6 @@ const NewCampaign = () => {
                 </div>
               )}
 
-              {/* Step 5: Payment */}
-              {/* {currentStep === (showAuthStep ? 6 : 5) && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-6">Choose Payment Option</h2>
-                  
-                  <Tabs defaultValue="subscription" onValueChange={(value) => setPaymentType(value as any)}>
-                    <TabsList className="grid w-full grid-cols-2 mb-6">
-                      <TabsTrigger value="subscription">Monthly Subscription</TabsTrigger>
-                      <TabsTrigger value="one-time">One-Time Payment</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="subscription">
-                      <div className="space-y-6 mb-8">
-                        <div>
-                          <div className="flex justify-between mb-2">
-                            <label className="text-sm font-medium">Monthly Budget</label>
-                            <span className="text-lg font-bold text-musinova-green">${subscriptionAmount}</span>
-                          </div>
-                          
-                          <Slider
-                            defaultValue={[subscriptionAmount]}
-                            max={10000}
-                            min={50}
-                            step={50}
-                            onValueChange={(values) => setSubscriptionAmount(values[0])}
-                            className="my-4"
-                          />
-                          
-                          <div className="flex justify-between text-xs text-gray-500">
-                            <span>$50</span>
-                            <span>$10,000</span>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <h3 className="font-medium mb-2">Subscription Details</h3>
-                          <ul className="space-y-2 text-sm">
-                            <li className="flex justify-between">
-                              <span>Monthly budget:</span>
-                              <span className="font-medium">${subscriptionAmount}</span>
-                            </li>
-                            <li className="flex justify-between">
-                              <span>MusiNova fee ({subscriptionAmount <= 100 ? '45%' : '35%'}):</span>
-                              <span className="font-medium">
-                                ${subscriptionAmount <= 100 
-                                  ? (subscriptionAmount * 0.45).toFixed(2) 
-                                  : (subscriptionAmount * 0.35).toFixed(2)}
-                              </span>
-                            </li>
-                            <li className="flex justify-between">
-                              <span>Ad spend:</span>
-                              <span className="font-medium">
-                                ${subscriptionAmount <= 100 
-                                  ? (subscriptionAmount * 0.55).toFixed(2) 
-                                  : (subscriptionAmount * 0.65).toFixed(2)}
-                              </span>
-                            </li>
-                            <li className="flex justify-between pt-2 border-t border-gray-200 mt-2">
-                              <span>Total monthly charge:</span>
-                              <span className="font-bold">${subscriptionAmount}</span>
-                            </li>
-                          </ul>
-                          <p className="mt-4 text-xs text-gray-500">Cancel anytime. You'll be billed monthly until canceled.</p>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="one-time">
-                      <div className="space-y-6 mb-8">
-                        <div>
-                          <div className="flex justify-between mb-2">
-                            <label className="text-sm font-medium">Campaign Budget</label>
-                            <span className="text-lg font-bold text-musinova-green">${oneTimeAmount}</span>
-                          </div>
-                          
-                          <Slider
-                            defaultValue={[oneTimeAmount]}
-                            max={10000}
-                            min={50}
-                            step={50}
-                            onValueChange={(values) => setOneTimeAmount(values[0])}
-                            className="my-4"
-                          />
-                          
-                          <div className="flex justify-between text-xs text-gray-500">
-                            <span>$50</span>
-                            <span>$10,000</span>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div className="flex justify-between mb-2">
-                            <label className="text-sm font-medium">Campaign Duration</label>
-                            <span className="text-lg font-bold text-musinova-green">{oneTimeDuration} days</span>
-                          </div>
-                          
-                          <RadioGroup 
-                            value={oneTimeDuration.toString()} 
-                            onValueChange={(value) => setOneTimeDuration(parseInt(value))}
-                            className="grid grid-cols-3 gap-2"
-                          >
-                            <div>
-                              <RadioGroupItem value="14" id="days-14" className="sr-only" />
-                              <Label
-                                htmlFor="days-14"
-                                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                              >
-                                <span className="mb-1">14 days</span>
-                                <span className="text-xs text-muted-foreground">Quick boost</span>
-                              </Label>
-                            </div>
-                            
-                            <div>
-                              <RadioGroupItem value="30" id="days-30" className="sr-only" />
-                              <Label
-                                htmlFor="days-30"
-                                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                              >
-                                <span className="mb-1">30 days</span>
-                                <span className="text-xs text-muted-foreground">Recommended</span>
-                              </Label>
-                            </div>
-                            
-                            <div>
-                              <RadioGroupItem value="60" id="days-60" className="sr-only" />
-                              <Label
-                                htmlFor="days-60"
-                                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                              >
-                                <span className="mb-1">60 days</span>
-                                <span className="text-xs text-muted-foreground">Long term</span>
-                              </Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-                        
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <h3 className="font-medium mb-2">Campaign Summary</h3>
-                          <ul className="space-y-2 text-sm">
-                            <li className="flex justify-between">
-                              <span>One-time budget:</span>
-                              <span className="font-medium">${oneTimeAmount}</span>
-                            </li>
-                            <li className="flex justify-between">
-                              <span>Campaign duration:</span>
-                              <span className="font-medium">{oneTimeDuration} days</span>
-                            </li>
-                            <li className="flex justify-between">
-                              <span>MusiNova fee ({oneTimeAmount <= 100 ? '45%' : '35%'}):</span>
-                              <span className="font-medium">
-                                ${oneTimeAmount <= 100 
-                                  ? (oneTimeAmount * 0.45).toFixed(2) 
-                                  : (oneTimeAmount * 0.35).toFixed(2)}
-                              </span>
-                            </li>
-                            <li className="flex justify-between">
-                              <span>Ad spend:</span>
-                              <span className="font-medium">
-                                ${oneTimeAmount <= 100 
-                                  ? (oneTimeAmount * 0.55).toFixed(2) 
-                                  : (oneTimeAmount * 0.65).toFixed(2)}
-                              </span>
-                            </li>
-                            <li className="flex justify-between pt-2 border-t border-gray-200 mt-2">
-                              <span>Total charge:</span>
-                              <span className="font-bold">${oneTimeAmount}</span>
-                            </li>
-                          </ul>
-                          <p className="mt-4 text-xs text-gray-500">One-time payment. No recurring charges.</p>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                  
-                  <form onSubmit={handleSubmit}>
-                    <div className="flex justify-between">
-                      <Button type="button" variant="outline" onClick={handleBack}>
-                        <ArrowLeft size={16} className="mr-2" /> Back
-                      </Button>
-                      
-                      <Button type="submit" className="btn-primary" disabled={isSubmitting}>
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 size={16} className="mr-2 animate-spin" /> Processing...
-                          </>
-                        ) : (
-                          <>
-                            Launch Campaign <ArrowRight size={16} className="ml-2" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              )} */}
-
               {/* Step 6: Confirmation */}
               {currentStep === totalSteps && (
                 <div className="text-center py-6">
@@ -971,9 +789,7 @@ const NewCampaign = () => {
                   <h2 className="text-2xl font-bold mb-4">Campaign Successfully Created!</h2>
 
                   <p className="text-gray-600 mb-8">
-                    {user && <span>Thank you, {user.name}! </span>}
                     Your campaign <span className="font-medium">{campaignName || "New Campaign"}</span> is now being set up.
-                    <br />Our team will create custom ads for your playlist.
                   </p>
 
                   <div className="bg-musinova-cream p-6 rounded-lg mb-8">
@@ -981,19 +797,19 @@ const NewCampaign = () => {
                     <ol className="text-left space-y-2 text-sm">
                       <li className="flex gap-2">
                         <span className="font-medium">1.</span>
-                        <span>Our team will review your playlist and create optimized ads.</span>
+                        <span>We will start tracking the performance of your playlist.</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="font-medium">2.</span>
-                        <span>Your ads will be launched within 24 hours.</span>
+                        <span>You can see your progress over time in the <Link to="/dashboard" className="text-musinova-green hover:underline">
+                          dashboard
+                         </Link></span>
                       </li>
                       <li className="flex gap-2">
                         <span className="font-medium">3.</span>
-                        <span>You can track performance on your dashboard.</span>
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="font-medium">4.</span>
-                        <span>We'll optimize your campaign daily for best results.</span>
+                        <span><Link to="/payment" className="text-musinova-green hover:underline">
+                          Top up/ subscribe
+                         </Link> to get started with our advertising service.</span>
                       </li>
                     </ol>
                   </div>
