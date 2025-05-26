@@ -73,7 +73,8 @@ export default {
 					gold: '#F5D26A',
 					darkgray: '#333333',
 					lightyellow: '#F7F8CB',
-					lightgreen: '#73AB81'
+					lightgreen: '#73AB81',
+					red: '#C9536E',
 				}
 			},
 			borderRadius: {
