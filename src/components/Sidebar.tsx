@@ -1,18 +1,19 @@
 import { useAuth } from '@/hooks/use-auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
-  BarChart3,
-  CheckCircle,
-  FileText,
-  HelpCircle,
-  Link2,
-  LogOut,
-  Menu,
-  Settings,
-  ShieldCheck,
+    BarChart3,
+    CheckCircle,
+    FileText,
+    HelpCircle,
+    Link2,
+    LogOut,
+    Menu,
+    Settings,
+    ShieldCheck,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import "./SidebarTopupBtn.css";
 import { Button } from './ui/button';
 import { Sheet, SheetContent } from './ui/sheet';
 
@@ -102,7 +103,7 @@ const Sidebar = () => {
     <div className="w-full h-full bg-musinova-green/90 text-white flex flex-col">
       <div className="p-4 flex-grow">
         {/* Logo at the top */}
-        <div className="mb-8 flex justify-center">
+        <div className="mb-4 flex justify-center">
           <Link to="/" className="flex items-center gap-2" onClick={() => isMobile && setIsOpen(false)}>
             <img 
               src="/logo.png" 
@@ -111,7 +112,22 @@ const Sidebar = () => {
             />
           </Link>
         </div>
-        
+
+        {/* Top Up / Subscribe button - prominent and above nav */}
+        <div className="mb-6 flex justify-center">
+          <Link to="/pricing" onClick={() => isMobile && setIsOpen(false)} className="w-full">
+            <Button
+              className="w-full py-3 px-4 rounded-xl bg-musinova-brown text-white font-bold text-lg shadow-lg border-2 border-musinova-brown hover:bg-white hover:text-musinova-brown transition-all flex items-center gap-2 sidebar-topup-btn"
+              style={{ boxShadow: '0 0 0 2px #8B5A2B, 0 2px 8px 0 rgba(0,0,0,0.08)' }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Top Up / Subscribe</span>
+            </Button>
+          </Link>
+        </div>
+
         <nav>
           <ul className="space-y-1">
             {menuItems.map((item) => (
@@ -131,7 +147,7 @@ const Sidebar = () => {
           </ul>
         </nav>
       </div>
-      
+
       {/* Logout button at the bottom */}
       <div className="p-4 mt-auto border-t border-white/10">
         <Button

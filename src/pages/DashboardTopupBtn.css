@@ -1,0 +1,8 @@
+/* Custom animation for the dashboard Top Up / Subscribe button */
+.dashboard-topup-btn {
+  transition: transform 0.15s cubic-bezier(0.4,0,0.2,1), background 0.2s, color 0.2s;
+}
+.dashboard-topup-btn:hover {
+  transform: translateY(-4px) scale(1.04) rotate(-1deg);
+  box-shadow: 0 8px 24px 0 rgba(139,90,43,0.18), 0 0 0 2px #8B5A2B;
+}

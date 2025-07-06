@@ -25,6 +25,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import "./DashboardTopupBtn.css";
+
 
 // Define a type for the job data
 type Job = {
@@ -278,7 +280,7 @@ const Dashboard = () => {
 
       {/* Job Selector */}
       <div className="mb-4 md:mb-8">
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex flex-wrap items-center gap-2 md:gap-4">
           <label
             htmlFor="job-select"
             className="font-medium text-sm md:text-base"
@@ -298,11 +300,16 @@ const Dashboard = () => {
             </SelectContent>
           </Select>
           <Button
-            className="text-sm md:text-base"
+            className="text-sm md:text-base bg-musinova-brown text-white font-bold px-6 py-3 rounded-xl shadow-lg border-2 border-musinova-brown hover:bg-white hover:text-musinova-brown transition-all flex items-center gap-2 dashboard-topup-btn"
+            style={{ boxShadow: '0 0 0 2px #8B5A2B, 0 2px 8px 0 rgba(0,0,0,0.08)' }}
             onClick={() => (window.location.href = "/payment")}
           >
-            Top-Up/Subscribe
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Top Up / Subscribe</span>
           </Button>
+
           <Button
             className="text-sm md:text-base"
             onClick={() => {
@@ -316,6 +323,24 @@ const Dashboard = () => {
             }}
           >
             Get Smart-URL
+          </Button>
+          <Button
+            className="text-sm md:text-base bg-white border border-musinova-green text-musinova-green hover:bg-musinova-green hover:text-white transition-all"
+            onClick={async () => {
+              try {
+                const response = await apiFetch("stripe/customer-portal", {
+                  method: "GET",
+                  headers: { "Content-Type": "application/json" },
+                });
+                if (!response.ok) throw new Error("Failed to open Stripe portal");
+                const { url } = await response.json();
+                window.open(url, "_blank");
+              } catch (err) {
+                alert("Could not open Stripe customer portal. Please try again later.");
+              }
+            }}
+          >
+            Manage Subscription
           </Button>
         </div>
       </div>

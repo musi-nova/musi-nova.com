@@ -165,6 +165,14 @@ const Navbar: React.FC = () => {
               Smart URL
             </Link>
             <Link
+              to="/pricing"
+              className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
+                isActive('/pricing') ? 'font-bold text-musinova-green' : ''
+              } text-sm`}
+            >
+              Pricing
+            </Link>
+            <Link
               to="/help"
               className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
                 isActive('/help') ? 'font-bold text-musinova-green' : ''

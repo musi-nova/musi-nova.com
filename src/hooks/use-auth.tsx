@@ -1,6 +1,6 @@
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { apiFetch } from '@/lib/api';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 interface User {
   id: string;
@@ -14,10 +14,12 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>; // Fixed signature
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   updateUserStatus: (updates: Partial<User>) => void;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (token: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -114,8 +116,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Request password reset
+  const requestPasswordReset = async (email: string) => {
+    const response = await apiFetch('forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to send reset email');
+    }
+  };
+
+  // Reset password with token
+  const resetPassword = async (token: string, new_password: string) => {
+    const response = await apiFetch('reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, new_password }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to reset password');
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, updateUserStatus }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, updateUserStatus, requestPasswordReset, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
