@@ -115,7 +115,7 @@ const Sidebar = () => {
 
         {/* Top Up / Subscribe button - prominent and above nav */}
         <div className="mb-6 flex justify-center">
-          <Link to="/pricing" onClick={() => isMobile && setIsOpen(false)} className="w-full">
+          <Link to="/payment" onClick={() => isMobile && setIsOpen(false)} className="w-full">
             <Button
               className="w-full py-3 px-4 rounded-xl bg-musinova-brown text-white font-bold text-lg shadow-lg border-2 border-musinova-brown hover:bg-white hover:text-musinova-brown transition-all flex items-center gap-2 sidebar-topup-btn"
               style={{ boxShadow: '0 0 0 2px #8B5A2B, 0 2px 8px 0 rgba(0,0,0,0.08)' }}
