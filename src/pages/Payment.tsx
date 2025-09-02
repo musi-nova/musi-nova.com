@@ -219,8 +219,8 @@ const PaymentPage = () => {
                     <Slider
                       defaultValue={[subscriptionAmount]}
                       max={10000}
-                      min={50}
-                      step={50}
+                      min={25}
+                      step={5}
                       onValueChange={(values) =>
                         setSubscriptionAmount(values[0])
                       }
@@ -228,7 +228,7 @@ const PaymentPage = () => {
                     />
 
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>$50</span>
+                      <span>$25</span>
                       <span>$10,000</span>
                     </div>
                   </div>
@@ -251,14 +251,14 @@ const PaymentPage = () => {
                     <Slider
                       defaultValue={[oneTimeAmount]}
                       max={10000}
-                      min={50}
-                      step={50}
+                      min={25}
+                      step={5}
                       onValueChange={(values) => setOneTimeAmount(values[0])}
                       className="my-4"
                     />
 
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>$50</span>
+                      <span>$25</span>
                       <span>$10,000</span>
                     </div>
                   </div>
