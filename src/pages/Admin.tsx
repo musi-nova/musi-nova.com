@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
+const baseUrl = import.meta.env.VITE_MN_API_BASE_URL;
 
 // Cache object to store fetched data
 const cache: Record<string, any> = {};
@@ -172,7 +173,7 @@ const Admin = () => {
                             <Button
                               className="text-sm md:text-base"
                               onClick={() => {
-                                const smartUrl = `https://mn-api.jms.rocks/spotify/playlist/${payment.playlist_id}/smart-url`;
+                                const smartUrl = `${baseUrl}spotify/playlist/${payment.playlist_id}/smart-url`;
                                 window.open(smartUrl, '_blank'); // Open the Smart URL in a new tab
                               }}
                             >

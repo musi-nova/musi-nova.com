@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
 import { useEffect, useState } from 'react';
 
+const baseUrl = import.meta.env.VITE_MN_API_BASE_URL;
 
 // Cache object to store fetched data
 const cache: Record<string, any> = {};
@@ -112,7 +113,7 @@ const SmartUrlDashboard = () => {
       });
 
       // Open the Smart URL in a new window
-      const smartUrl = `https://mn-api.jms.rocks/spotify/playlist/${playlistId}/smart-url?ad_account_id=${selectedMetadata.ad_account_id}&pixel_id=${selectedMetadata.pixel_id}`;
+      const smartUrl = `${baseUrl}spotify/playlist/${playlistId}/smart-url?ad_account_id=${selectedMetadata.ad_account_id}&pixel_id=${selectedMetadata.pixel_id}`;
       window.open(smartUrl, '_blank');
     } catch (error) {
       console.error('Error creating Smart URL:', error);

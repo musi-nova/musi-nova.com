@@ -27,6 +27,7 @@ import {
 } from "recharts";
 import "./DashboardTopupBtn.css";
 
+const baseUrl = import.meta.env.VITE_MN_API_BASE_URL;
 
 // Define a type for the job data
 type Job = {
@@ -315,7 +316,7 @@ const Dashboard = () => {
             onClick={() => {
               const selected = jobs.find((job) => job.id === selectedJob);
               if (selected?.playlist_id) {
-                const smartUrl = `https://mn-api.jms.rocks/spotify/playlist/${selected.playlist_id}/smart-url`;
+                const smartUrl = `${baseUrl}spotify/playlist/${selected.playlist_id}/smart-url`;
                 window.open(smartUrl, "_blank"); // Open the Smart URL in a new tab
               } else {
                 alert("Please select a valid playlist to generate a Smart URL.");

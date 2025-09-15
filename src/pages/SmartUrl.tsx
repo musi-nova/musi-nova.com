@@ -6,6 +6,8 @@ import { apiFetch } from '@/lib/api';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const baseUrl = import.meta.env.VITE_MN_API_BASE_URL;
+
 const SmartUrl = () => {
   const [businessId, setBusinessId] = useState('');
   const [adAccountId, setAdAccountId] = useState('');
@@ -62,7 +64,7 @@ const SmartUrl = () => {
 
 
       // Open the Smart URL in a new window
-      const smartUrl = `https://mn-api.jms.rocks/spotify/playlist/${playlistId}/smart-url?ad_account_id=${adAccountId}&pixel_id=${pixelId}`;
+      const smartUrl = `${baseUrl}spotify/playlist/${playlistId}/smart-url?ad_account_id=${adAccountId}&pixel_id=${pixelId}`;
       window.open(smartUrl, '_blank');
     } catch (error) {
       console.error('Error creating Smart URL:', error);
