@@ -44,15 +44,15 @@ const Help = () => {
     try {
       // Send email using EmailJS
       const result = await emailjs.send(
-        'service_jw2ueaq', // Replace with your EmailJS Service ID
-        'template_6xsrb8h', // Replace with your EmailJS Template ID
+        'service_eb7lk07', // Replace with your EmailJS Service ID
+        'template_ql95iyi', // Replace with your EmailJS Template ID
         {
           from_name: values.name,
           from_email: values.email,
           subject: values.subject,
           message: values.message,
         },
-        'LUAEvB-3M6E1uXFBo' // Replace with your EmailJS Public Key
+        '_CHPDq319SYn4P4PK' // Replace with your EmailJS Public Key
       );
 
       if (result.status === 200) {
