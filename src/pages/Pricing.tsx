@@ -136,11 +136,11 @@ const Pricing = () => {
 										</span>
 									</li>
 									<li className="flex items-center gap-4 mt-1" style={{ marginLeft: '24px', position: 'relative' }}>
-                    <span className="flex-shrink-0" style={{ position: 'absolute', left: '0px', top: '-4px' }}>
-                      <CurvedArrow width={38} height={24} fill="#000" stroke="#222" strokeWidth={2} />
-                    </span>
-                    <span className="text-sm font-bold text-black ml-10" style={{ position: 'relative', top: '1px' }}>Higher budget = more streams.</span>
-                  </li>
+										<span className="flex-shrink-0" style={{ position: 'absolute', left: '0px', top: '-4px' }}>
+											<CurvedArrow width={38} height={24} fill="#000" stroke="#222" strokeWidth={2} />
+										</span>
+										<span className="text-sm font-bold text-black ml-10" style={{ position: 'relative', top: '1px' }}>Higher budget = more streams.</span>
+									</li>
 									<li className="flex items-center gap-2">
 										<svg
 											className="text-musinova-green flex-shrink-0"
@@ -199,7 +199,7 @@ const Pricing = () => {
 										<svg
 											className="text-musinova-green flex-shrink-0"
 											width="20"
-										height="20"
+											height="20"
 											fill="none"
 											viewBox="0 0 20 20"
 										>
@@ -214,21 +214,6 @@ const Pricing = () => {
 										Priority support
 									</li>
 								</ul>
-								<div className="w-full mb-4 text-sm text-gray-700">
-									<div>Our fee:</div>
-									<div>
-										• 45% if budget{" "}
-										<span className="font-semibold">
-											below $100/mo
-										</span>
-									</div>
-									<div>
-										• 35% if budget{" "}
-										<span className="font-semibold">
-											above $100/mo
-										</span>
-									</div>
-								</div>
 								<Link to="/register" className="w-full mt-auto">
 									<Button className="w-full font-bold text-lg py-3 rounded-xl bg-musinova-green text-white hover:bg-musinova-green/90 transition-all shadow">
 										Start Subscription
@@ -270,11 +255,11 @@ const Pricing = () => {
 										</span>
 									</li>
 									<li className="flex items-center gap-4 mt-1" style={{ marginLeft: '24px', position: 'relative' }}>
-                    <span className="flex-shrink-0" style={{ position: 'absolute', left: '0px', top: '-4px' }}>
-                      <CurvedArrow width={38} height={24} fill="#000" stroke="#222" strokeWidth={2} />
-                    </span>
-                    <span className="text-sm font-bold text-black ml-10" style={{ position: 'relative', top: '1px' }}>Higher budget = more streams.</span>
-                  </li>
+										<span className="flex-shrink-0" style={{ position: 'absolute', left: '0px', top: '-4px' }}>
+											<CurvedArrow width={38} height={24} fill="#000" stroke="#222" strokeWidth={2} />
+										</span>
+										<span className="text-sm font-bold text-black ml-10" style={{ position: 'relative', top: '1px' }}>Higher budget = more streams.</span>
+									</li>
 									<li className="flex items-center gap-2">
 										<svg
 											className="text-musinova-green flex-shrink-0"
@@ -348,21 +333,6 @@ const Pricing = () => {
 										Priority support
 									</li>
 								</ul>
-								<div className="w-full mb-4 text-sm text-gray-700">
-									<div>Our fee:</div>
-									<div>
-										• 45% if budget{" "}
-										<span className="font-semibold">
-											below $100/mo
-										</span>
-									</div>
-									<div>
-										• 35% if budget{" "}
-										<span className="font-semibold">
-											above $100/mo
-										</span>
-									</div>
-								</div>
 								<Link to="/register" className="w-full mt-auto">
 									<Button className="w-full font-bold text-lg py-3 rounded-xl border border-musinova-green text-musinova-green bg-white hover:bg-musinova-green hover:text-white transition-all shadow">
 										Try One-Time
@@ -372,7 +342,8 @@ const Pricing = () => {
 						</div>
 					</div>
 					<div className="text-center text-xs text-gray-700 mt-10">
-						All pricing is in USD.
+						All pricing is in USD. 45% of the total budget is used for operating
+						costs and fees, while 55% goes directly to ad spend.
 					</div>
 				</div>
 			</main>
