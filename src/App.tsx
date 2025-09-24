@@ -28,6 +28,7 @@ import Privacy from "./pages/Privacy";
 import Settings from "./pages/Settings";
 import SmartUrl from "./pages/SmartUrl";
 import Terms from "./pages/Terms";
+import Feedback from "./pages/Feedback";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/feedback" element={<Feedback />} />
 
             {/* Protected routes */}
             <Route
