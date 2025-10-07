@@ -20,29 +20,29 @@ interface PageLayoutProps {
   showSidebar?: boolean;
 }
 
-const PageLayout: React.FC<PageLayoutProps> = ({ 
-  children, 
-  tabs, 
+const PageLayout: React.FC<PageLayoutProps> = ({
+  children,
+  tabs,
   className = '',
   showSidebar = false
 }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const isDashboard = location.pathname === '/dashboard' || 
-                      location.pathname === '/playlists' || 
-                      location.pathname.includes('/settings') || 
-                      location.pathname.includes('/admin') ||
-                      location.pathname.includes('/dashboard/smart-url');
-  
+  const isDashboard = location.pathname === '/dashboard' ||
+    location.pathname === '/playlists' ||
+    location.pathname.includes('/settings') ||
+    location.pathname.includes('/admin') ||
+    location.pathname.includes('/dashboard/smart-url');
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Only show Navbar if not on dashboard */}
-      {!isDashboard && <Navbar />}
-      
+      {/* Only show Navbar if not on dashboard and sidebar is not being shown */}
+      {!isDashboard && !showSidebar && <Navbar />}
+
       <div className="flex flex-grow">
         {/* Only show sidebar when needed and not expanded on mobile by default */}
         {showSidebar && <Sidebar />}
-        
+
         <main className={`flex-grow ${className}`}>
           <div className={`mx-auto ${isMobile ? 'px-2 pt-16' : 'px-4'}`}>
             {tabs && <TabsNav tabs={tabs} className={`${isMobile ? 'mt-2' : 'mt-6'}`} />}
@@ -50,9 +50,9 @@ const PageLayout: React.FC<PageLayoutProps> = ({
           </div>
         </main>
       </div>
-      
-      {/* Only show Footer if not on dashboard */}
-      {!isDashboard && <Footer />}
+
+      {/* Only show Footer if not on dashboard and sidebar is not being shown */}
+      {!isDashboard && !showSidebar && <Footer />}
     </div>
   );
 };

@@ -29,6 +29,7 @@ import Settings from "./pages/Settings";
 import SmartUrl from "./pages/SmartUrl";
 import Terms from "./pages/Terms";
 import Feedback from "./pages/Feedback";
+import Submission from "./pages/Submission";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <Playlists />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/submissions"
+              element={
+                <AuthGuard>
+                  <Submission />
                 </AuthGuard>
               }
             />
