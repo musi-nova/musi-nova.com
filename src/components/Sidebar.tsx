@@ -25,6 +25,7 @@ const Sidebar = () => {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [teamId, setTeamId] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number | null>(null);
 
   useEffect(() => {
     // Get the user from localStorage
@@ -45,6 +46,52 @@ const Sidebar = () => {
       navigate('/login');
     }
   }, [getUser, navigate, logout]);
+
+  // Fetch user credits and show in sidebar. 404 => 0 credits.
+  useEffect(() => {
+    let cancelled = false;
+    const fetchCredits = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_MN_API_BASE_URL;
+        const url = `${baseUrl}team/credits`;
+        const accessToken = localStorage.getItem('access_token');
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+        const res = await fetch(url, { method: 'GET', headers });
+        if (cancelled) return;
+
+        if (res.status === 401) {
+          // mirror apiFetch behavior for unauthorized
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('musinova_user');
+          window.location.href = '/login';
+          return;
+        }
+
+        if (res.status === 404) {
+          setCredits(0);
+          return;
+        }
+
+        if (!res.ok) {
+          console.error('Failed fetching credits', await res.text());
+          setCredits(0);
+          return;
+        }
+
+        const data = await res.json();
+        const value = typeof data === 'number' ? data : (data?.credits ?? 0);
+        setCredits(Number(value) || 0);
+      } catch (err) {
+        console.error('Error fetching credits', err);
+        if (!cancelled) setCredits(0);
+      }
+    };
+
+    fetchCredits();
+    return () => { cancelled = true; };
+  }, []);
 
   const menuItems = [
     { 
@@ -162,15 +209,29 @@ const Sidebar = () => {
         </nav>
       </div>
 
-      {/* Logout button at the bottom */}
-      <div className="p-4 mt-auto border-t border-white/10">
-        <Button
-          onClick={() => logout()}
-          className="flex items-center justify-center w-full p-3 rounded-md bg-musinova-brown text-white hover:bg-musinova-brown/90 transition-colors"
-        >
-          <LogOut size={18} className="mr-2" />
-          <span>Logout</span>
-        </Button>
+      {/* Credits display and Logout button at the bottom */}
+      <div className="p-4 mt-auto border-t border-white/10 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-xs text-white/80">Credits</div>
+            <div className="text-lg font-bold">{credits === null ? '—' : `${credits} credits`}</div>
+          </div>
+          <div>
+            <Link to="/payment-credits" className="text-sm text-white/90 underline" onClick={() => isMobile && setIsOpen(false)}>
+              Buy
+            </Link>
+          </div>
+        </div>
+
+        <div>
+          <Button
+            onClick={() => logout()}
+            className="flex items-center justify-center w-full p-3 rounded-md bg-musinova-brown text-white hover:bg-musinova-brown/90 transition-colors"
+          >
+            <LogOut size={18} className="mr-2" />
+            <span>Logout</span>
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './DashboardTopupBtn.css';
 import PageLayout from '@/components/PageLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,54 +73,6 @@ const LazyImage: React.FC<{
     );
 };
 
-// Lazy mount an iframe only when it becomes visible
-const LazyIframe: React.FC<{
-    src: string;
-    title?: string;
-    className?: string;
-    style?: React.CSSProperties;
-    height?: number | string;
-}> = ({ src, title = '', className = '', style, height = '100%' }) => {
-    const ref = React.useRef<HTMLDivElement | null>(null);
-    const [visible, setVisible] = React.useState(false);
-
-    React.useEffect(() => {
-        const node = ref.current;
-        if (!node) return;
-        if ('IntersectionObserver' in window) {
-            const io = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setVisible(true);
-                        io.disconnect();
-                    }
-                });
-            });
-            io.observe(node);
-            return () => io.disconnect();
-        }
-        setVisible(true);
-    }, []);
-
-    return (
-        <div ref={ref} className={className} style={style}>
-            {visible ? (
-                <iframe
-                    title={title}
-                    src={src}
-                    width="100%"
-                    height={height}
-                    allowFullScreen
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    loading="lazy"
-                />
-            ) : (
-                <div className={`w-full h-full bg-gray-100 flex items-center justify-center ${className}`}></div>
-            )}
-        </div>
-    );
-};
-
 type Submission = {
     id: string;
     playlist_id: string;
@@ -134,6 +88,7 @@ type Submission = {
 };
 
 const SubmissionPage = () => {
+    const navigate = useNavigate();
     const [items, setItems] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -258,7 +213,7 @@ const SubmissionPage = () => {
             setSubsLoading(true);
             setSubsError(null);
             try {
-                const res = await apiFetch('user/submissions');
+                const res = await apiFetch('team/submissions');
                 if (!res.ok) throw new Error('Failed to fetch your submissions');
                 const data = await res.json();
                 setUserSubmissions(data);
@@ -293,14 +248,55 @@ const SubmissionPage = () => {
                 playlistId: values.playlistId,
             };
 
-            const res = await apiFetch('submission', {
+            // Use a direct fetch so we can inspect 404 responses (insufficient credits)
+            const baseUrl = import.meta.env.VITE_MN_API_BASE_URL;
+            const url = `${baseUrl}submission`;
+            const accessToken = localStorage.getItem('access_token');
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+            const res = await fetch(url, {
                 method: 'POST',
+                headers,
                 body: JSON.stringify(body),
             });
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(text || 'Failed to submit track');
+
+            if (res.status === 401) {
+                // mirror apiFetch behaviour: clear auth and redirect
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('musinova_user');
+                window.location.href = '/login';
+                return;
             }
+
+            // Helper: safely parse JSON error body or fallback to text
+            const parseErrorBody = async (r: Response) => {
+                try {
+                    const ct = r.headers.get('content-type') || '';
+                    if (ct.includes('application/json')) {
+                        const data = await r.json();
+                        if (typeof data === 'string') return data;
+                        // Common fields: detail, message, error
+                        return data.detail || data.message || data.error || JSON.stringify(data);
+                    }
+                    return await r.text();
+                } catch (e) {
+                    return 'An error occurred';
+                }
+            };
+
+            if (res.status === 404) {
+                // Backend uses 404 to indicate no/insufficient credits
+                const bodyMsg = await parseErrorBody(res);
+                toast({ title: 'Not enough credits', description: bodyMsg || 'You do not have enough credits to submit. Please top up.', variant: 'destructive' });
+                return;
+            }
+
+            if (!res.ok) {
+                const bodyMsg = await parseErrorBody(res);
+                throw new Error(bodyMsg || 'Failed to submit track');
+            }
+
             toast({ title: 'Submission sent', description: 'Your track has been submitted to the playlist.' });
             closeDialog();
         } catch (err: any) {
@@ -321,6 +317,16 @@ const SubmissionPage = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
+                        <Button
+                            className="text-sm md:text-base bg-musinova-brown text-white font-bold px-6 py-3 rounded-xl shadow-lg border-2 border-musinova-brown hover:bg-white hover:text-musinova-brown transition-all flex items-center gap-2 dashboard-topup-btn"
+                            style={{ boxShadow: '0 0 0 2px #8B5A2B, 0 2px 8px 0 rgba(0,0,0,0.08)' }}
+                            onClick={() => (window.location.href = "/payment-credits")}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Buy Credits</span>
+                        </Button>
                         <Button size="sm" variant={viewMode === 'playlists' ? undefined : 'outline'} onClick={() => setViewMode('playlists')}>Playlists</Button>
                         <Button size="sm" variant={viewMode === 'submissions' ? undefined : 'outline'} onClick={() => setViewMode('submissions')}>Your Submissions</Button>
                     </div>
@@ -328,30 +334,29 @@ const SubmissionPage = () => {
 
                 {/* Filters for playlists view */}
                 {viewMode === 'playlists' && (
-                    <div className="mb-4 bg-white p-4 rounded-md shadow-sm">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="flex flex-col gap-3">
-                                <input className="border p-2 rounded" placeholder="Search by name" value={filterName} onChange={(e) => setFilterName(e.target.value)} />
-                                    <div className="relative">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <button className="w-full text-left border p-2 rounded">{filterGenres.length > 0 ? filterGenres.join(', ') : 'Filter genres'}</button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuLabel>Genres</DropdownMenuLabel>
-                                                {uniqueGenres.map((g) => (
-                                                    <DropdownMenuCheckboxItem key={g} checked={filterGenres.includes(g)} onCheckedChange={(v) => toggleGenre(g, !!v)}>{g}</DropdownMenuCheckboxItem>
-                                                ))}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
-                            </div>
+                    <div className="mb-4 flex justify-center">
+                        <div className="w-full max-w-6xl bg-white p-4 rounded-md shadow-sm">
+                            <div className="flex flex-wrap items-center gap-3">
+                                <input className="flex-1 min-w-[160px] border p-2 rounded" placeholder="Search by name" value={filterName} onChange={(e) => setFilterName(e.target.value)} />
 
-                            <div className="flex flex-col gap-3">
                                 <div className="relative">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <button className="w-full text-left border p-2 rounded">{filterMoods.length > 0 ? filterMoods.join(', ') : 'Filter moods'}</button>
+                                            <button className="text-left border p-2 rounded">{filterGenres.length > 0 ? filterGenres.join(', ') : 'Filter genres'}</button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuLabel>Genres</DropdownMenuLabel>
+                                            {uniqueGenres.map((g) => (
+                                                <DropdownMenuCheckboxItem key={g} checked={filterGenres.includes(g)} onCheckedChange={(v) => toggleGenre(g, !!v)}>{g}</DropdownMenuCheckboxItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+
+                                <div className="relative">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button className="text-left border p-2 rounded">{filterMoods.length > 0 ? filterMoods.join(', ') : 'Filter moods'}</button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
                                             <DropdownMenuLabel>Moods</DropdownMenuLabel>
@@ -362,17 +367,15 @@ const SubmissionPage = () => {
                                     </DropdownMenu>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <select className="border p-2 rounded" value={filterInstrumental === null ? 'any' : filterInstrumental ? 'yes' : 'no'} onChange={(e) => setFilterInstrumental(e.target.value === 'any' ? null : e.target.value === 'yes')}>
-                                        <option value="any">Any instrumentality</option>
-                                        <option value="yes">Instrumental only</option>
-                                        <option value="no">Contains vocals only</option>
-                                    </select>
+                                <select className="border p-2 rounded" value={filterInstrumental === null ? 'any' : filterInstrumental ? 'yes' : 'no'} onChange={(e) => setFilterInstrumental(e.target.value === 'any' ? null : e.target.value === 'yes')}>
+                                    <option value="any">Any instrumentality</option>
+                                    <option value="yes">Instrumental only</option>
+                                    <option value="no">Contains vocals only</option>
+                                </select>
 
-                                    <input type="number" className="border p-2 rounded w-32" placeholder="Max credits" value={filterMaxCredits ?? ''} onChange={(e) => setFilterMaxCredits(e.target.value ? Number(e.target.value) : null)} />
+                                <input type="number" className="border p-2 rounded w-32" placeholder="Max credits" value={filterMaxCredits ?? ''} onChange={(e) => setFilterMaxCredits(e.target.value ? Number(e.target.value) : null)} />
 
-                                    <button className="ml-auto text-sm text-musinova-navy" onClick={() => { setFilterName(''); setFilterGenres([]); setFilterMoods([]); setFilterInstrumental(null); setFilterMaxCredits(null); }}>Clear</button>
-                                </div>
+                                <button className="ml-auto text-sm text-musinova-navy" onClick={() => { setFilterName(''); setFilterGenres([]); setFilterMoods([]); setFilterInstrumental(null); setFilterMaxCredits(null); }}>Clear</button>
                             </div>
                         </div>
                     </div>
@@ -389,126 +392,126 @@ const SubmissionPage = () => {
                             <div className="text-center py-12">No playlists found.</div>
                         )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {items
-                                    .filter(item => {
-                                        if (filterName && !item.playlist_name.toLowerCase().includes(filterName.toLowerCase())) return false;
-                                        if (filterGenres.length > 0) {
-                                            const lower = item.genres?.map((g: string) => g.toLowerCase()) || [];
-                                            if (!filterGenres.every(f => lower.includes(f.toLowerCase()))) return false;
-                                        }
-                                        if (filterMoods.length > 0) {
-                                            const lower = item.moods?.map((m: string) => m.toLowerCase()) || [];
-                                            if (!filterMoods.every(f => lower.includes(f.toLowerCase()))) return false;
-                                        }
-                                        if (filterInstrumental !== null) {
-                                            if (item.instrumental !== filterInstrumental) return false;
-                                        }
-                                        if (filterMaxCredits !== null) {
-                                            const c = item.credit_amount ?? 0;
-                                            if (c > filterMaxCredits) return false;
-                                        }
-                                        return true;
-                                    })
-                                    .map((item) => (
-                                <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                                    <div className="h-40 bg-gray-100 w-full flex items-center justify-center overflow-hidden">
-                                        {item.image_url ? (
-                                            <LazyImage src={item.image_url} alt={item.playlist_name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="text-gray-400">No image</div>
-                                        )}
-                                    </div>
-                                    <CardContent className="pt-4">
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <h3 className="font-semibold text-lg">{item.playlist_name}</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {items
+                                .filter(item => {
+                                    if (filterName && !item.playlist_name.toLowerCase().includes(filterName.toLowerCase())) return false;
+                                    if (filterGenres.length > 0) {
+                                        const lower = item.genres?.map((g: string) => g.toLowerCase()) || [];
+                                        if (!filterGenres.every(f => lower.includes(f.toLowerCase()))) return false;
+                                    }
+                                    if (filterMoods.length > 0) {
+                                        const lower = item.moods?.map((m: string) => m.toLowerCase()) || [];
+                                        if (!filterMoods.every(f => lower.includes(f.toLowerCase()))) return false;
+                                    }
+                                    if (filterInstrumental !== null) {
+                                        if (item.instrumental !== filterInstrumental) return false;
+                                    }
+                                    if (filterMaxCredits !== null) {
+                                        const c = item.credit_amount ?? 0;
+                                        if (c > filterMaxCredits) return false;
+                                    }
+                                    return true;
+                                })
+                                .map((item) => (
+                                    <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                                        <div className="h-40 bg-gray-100 w-full flex items-center justify-center overflow-hidden">
+                                            {item.image_url ? (
+                                                <LazyImage src={item.image_url} alt={item.playlist_name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="text-gray-400">No image</div>
+                                            )}
+                                        </div>
+                                        <CardContent className="pt-4">
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <h3 className="font-semibold text-lg">{item.playlist_name}</h3>
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                    <span className="inline-block text-xs bg-musinova-brown text-white px-2 py-1 rounded-full font-semibold border-2 border-musinova-brown hover:bg-white hover:text-musinova-brown transition-colors">{item.credit_amount ?? 0} credit</span>
+                                                </div>
                                             </div>
-                                            <div className="text-sm text-gray-500">
-                                                <span className="inline-block text-xs bg-musinova-brown text-white px-2 py-1 rounded-full font-semibold border-2 border-musinova-brown hover:bg-white hover:text-musinova-brown transition-colors">{item.credit_amount ?? 0} credit</span>
+
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                {item.genres?.map((g) => (
+                                                    <span key={g} className="text-xs bg-musinova-lightgreen/30 text-musinova-darkgray px-2 py-1 rounded-full">{g}</span>
+                                                ))}
+                                                {item.moods?.map((m) => (
+                                                    <span key={m} className="text-xs bg-musinova-lightyellow/30 text-musinova-darkgray px-2 py-1 rounded-full">{m}</span>
+                                                ))}
                                             </div>
-                                        </div>
 
-                                        <div className="mt-3 flex flex-wrap gap-2">
-                                            {item.genres?.map((g) => (
-                                                <span key={g} className="text-xs bg-musinova-lightgreen/30 text-musinova-darkgray px-2 py-1 rounded-full">{g}</span>
-                                            ))}
-                                            {item.moods?.map((m) => (
-                                                <span key={m} className="text-xs bg-musinova-lightyellow/30 text-musinova-darkgray px-2 py-1 rounded-full">{m}</span>
-                                            ))}
-                                        </div>
+                                            <div className="mt-4 flex items-center justify-between">
+                                                <div className="text-sm text-gray-600">{item.instrumental ? 'Instrumental' : 'Contains vocals'}</div>
+                                            </div>
 
-                                        <div className="mt-4 flex items-center justify-between">
-                                            <div className="text-sm text-gray-600">{item.instrumental ? 'Instrumental' : 'Contains vocals'}</div>
-                                        </div>
+                                            <div className="mt-4 flex gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => window.open(item.playlist_url, '_blank')}
+                                                >
+                                                    View
+                                                </Button>
+                                                <Dialog open={activePlaylist?.id === item.id} onOpenChange={(open) => {
+                                                    if (open) openSubmitDialog(item);
+                                                    else closeDialog();
+                                                }}>
+                                                    <DialogTrigger asChild>
+                                                        <Button size="sm" className="ml-auto" onClick={() => openSubmitDialog(item)}>Submit to playlist</Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Submit to {item.playlist_name}</DialogTitle>
+                                                            <DialogDescription>Provide your track ID and a short message to submit your track for review.</DialogDescription>
+                                                        </DialogHeader>
 
-                                        <div className="mt-4 flex gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => window.open(item.playlist_url, '_blank')}
-                                            >
-                                                View
-                                            </Button>
-                                            <Dialog open={activePlaylist?.id === item.id} onOpenChange={(open) => {
-                                                if (open) openSubmitDialog(item);
-                                                else closeDialog();
-                                            }}>
-                                                <DialogTrigger asChild>
-                                                    <Button size="sm" className="ml-auto" onClick={() => openSubmitDialog(item)}>Submit to playlist</Button>
-                                                </DialogTrigger>
-                                                <DialogContent>
-                                                    <DialogHeader>
-                                                        <DialogTitle>Submit to {item.playlist_name}</DialogTitle>
-                                                        <DialogDescription>Provide your track ID and a short message to submit your track for review.</DialogDescription>
-                                                    </DialogHeader>
+                                                        <Form {...form}>
+                                                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                                                <input type="hidden" {...form.register('playlistId')} />
 
-                                                    <Form {...form}>
-                                                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                                            <input type="hidden" {...form.register('playlistId')} />
+                                                                <FormField
+                                                                    control={form.control}
+                                                                    name="trackId"
+                                                                    render={({ field }) => (
+                                                                        <FormItem>
+                                                                            <FormLabel>Track ID</FormLabel>
+                                                                            <FormControl>
+                                                                                <Input placeholder="https://open.spotify.com/track/..." {...field} />
+                                                                            </FormControl>
+                                                                            <FormMessage />
+                                                                        </FormItem>
+                                                                    )}
+                                                                />
 
-                                                            <FormField
-                                                                control={form.control}
-                                                                name="trackId"
-                                                                render={({ field }) => (
-                                                                    <FormItem>
-                                                                        <FormLabel>Track ID</FormLabel>
-                                                                        <FormControl>
-                                                                            <Input placeholder="https://open.spotify.com/track/..." {...field} />
-                                                                        </FormControl>
-                                                                        <FormMessage />
-                                                                    </FormItem>
-                                                                )}
-                                                            />
+                                                                <FormField
+                                                                    control={form.control}
+                                                                    name="message"
+                                                                    render={({ field }) => (
+                                                                        <FormItem>
+                                                                            <FormLabel>Message</FormLabel>
+                                                                            <FormControl>
+                                                                                <Textarea placeholder="Short message for the curator" {...field} />
+                                                                            </FormControl>
+                                                                            <FormMessage />
+                                                                        </FormItem>
+                                                                    )}
+                                                                />
 
-                                                            <FormField
-                                                                control={form.control}
-                                                                name="message"
-                                                                render={({ field }) => (
-                                                                    <FormItem>
-                                                                        <FormLabel>Message</FormLabel>
-                                                                        <FormControl>
-                                                                            <Textarea placeholder="Short message for the curator" {...field} />
-                                                                        </FormControl>
-                                                                        <FormMessage />
-                                                                    </FormItem>
-                                                                )}
-                                                            />
-
-                                                            <DialogFooter>
-                                                                <DialogClose asChild>
-                                                                    <Button variant="outline">Cancel</Button>
-                                                                </DialogClose>
-                                                                <Button type="submit">Send Submission</Button>
-                                                            </DialogFooter>
-                                                        </form>
-                                                    </Form>
-                                                </DialogContent>
-                                            </Dialog>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                                                                <DialogFooter>
+                                                                    <DialogClose asChild>
+                                                                        <Button variant="outline">Cancel</Button>
+                                                                    </DialogClose>
+                                                                    <Button type="submit">Send Submission</Button>
+                                                                </DialogFooter>
+                                                            </form>
+                                                        </Form>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                         </div>
                     </>
                 )}
@@ -523,17 +526,8 @@ const SubmissionPage = () => {
                             {userSubmissions.map((s: any) => (
                                 <Card key={s.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                                     <div className="relative h-40 bg-gray-100 w-full flex items-center justify-center overflow-hidden">
-                                        {s.track_id ? (
-                                            <iframe
-                                                data-testid="track-embed-iframe"
-                                                className="w-full h-full rounded-lg"
-                                                src={`https://open.spotify.com/embed/track/${s.track_id}?utm_source=generator`}
-                                                width="100%"
-                                                height="100%"
-                                                allowFullScreen
-                                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                                                loading="lazy"
-                                            />
+                                        {s.track_image_url ? (
+                                            <LazyImage src={s.track_image_url} alt={s.playlist?.playlist_name ?? 'Track image'} className="w-full h-full object-cover" />
                                         ) : s.playlist?.image_url ? (
                                             <LazyImage src={s.playlist.image_url} alt={s.playlist.playlist_name} className="w-full h-full object-cover" />
                                         ) : (
@@ -542,7 +536,7 @@ const SubmissionPage = () => {
 
                                         {/* status icon overlay */}
                                         {s.reviewed && (
-                                            <div className="absolute top-2 right-2">
+                                            <div className="absolute top-2 right-2 z-10">
                                                 {s.accepted ? (
                                                     <CheckCircle className="text-green-600 bg-white rounded-full p-0.5" size={30} />
                                                 ) : (

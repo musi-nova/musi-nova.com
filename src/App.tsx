@@ -30,6 +30,7 @@ import SmartUrl from "./pages/SmartUrl";
 import Terms from "./pages/Terms";
 import Feedback from "./pages/Feedback";
 import Submission from "./pages/Submission";
+import PaymentCreditsPage from "./pages/PaymentCredits";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +109,7 @@ const App = () => (
                 // </AuthGuard>
               }
             />
+            <Route path="/payment-credits" element={<PaymentCreditsPage />} />
             <Route
               path="/payment-success"
               element={
