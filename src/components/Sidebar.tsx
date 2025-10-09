@@ -252,7 +252,7 @@ const Sidebar = () => {
 
   // For desktop, we'll use the regular sidebar
   return (
-    <div className="w-64 bg-musinova-green/90 text-white min-h-full flex flex-col">
+    <div className="w-64 bg-musinova-green/90 text-white flex flex-col h-screen">
       <SidebarContent />
     </div>
   );

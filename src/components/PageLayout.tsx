@@ -39,11 +39,18 @@ const PageLayout: React.FC<PageLayoutProps> = ({
       {/* Only show Navbar if not on dashboard and sidebar is not being shown */}
       {!isDashboard && !showSidebar && <Navbar />}
 
-      <div className="flex flex-grow">
+      <div className="flex flex-grow min-h-0">
         {/* Only show sidebar when needed and not expanded on mobile by default */}
-        {showSidebar && <Sidebar />}
+        {showSidebar && (
+          // Make the sidebar static/sticky and full-height while allowing the main area to scroll
+          <div className="flex-none">
+            <div className="sticky top-0 h-screen">
+              <Sidebar />
+            </div>
+          </div>
+        )}
 
-        <main className={`flex-grow ${className}`}>
+        <main className={`flex-grow overflow-auto ${className}`}>
           <div className={`mx-auto ${isMobile ? 'px-2 pt-16' : 'px-4'}`}>
             {tabs && <TabsNav tabs={tabs} className={`${isMobile ? 'mt-2' : 'mt-6'}`} />}
             {children}
