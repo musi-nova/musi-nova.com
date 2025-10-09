@@ -51,12 +51,18 @@ const Hero = () => {
           </h1>
           <p className="text-lg md:text-xl text-musinova-darkgray mb-10 max-w-2xl mx-auto">
             Attract more listeners for your music by creating and promoting your
-            own Spotify playlist with us!
+            own Spotify playlists with us, or if you prefer, simply submit your
+            tracks to our curated playlists!
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/campaigns/new" className="mx-auto">
-              <Button className="bg-musinova-green text-white hover:bg-opacity-90 font-bold text-xl py-6 px-8 rounded-lg transition-all flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-center items-center">
+            <Link to="/campaigns/new" className="w-full sm:w-auto">
+              <Button className="bg-musinova-green text-white hover:bg-opacity-90 font-bold text-xl py-6 px-8 rounded-lg sm:rounded-l-lg sm:rounded-r-none transition-all flex items-center justify-center w-full sm:w-auto">
                 Launch Campaign
+              </Button>
+            </Link>
+            <Link to="/campaigns/new" className="w-full sm:w-auto">
+              <Button className="bg-musinova-brown text-white hover:bg-musinova-brown/90 font-bold text-xl py-6 px-8 rounded-lg sm:rounded-r-lg sm:rounded-l-none transition-all flex items-center justify-center w-full sm:w-auto">
+                Submit Your Music
               </Button>
             </Link>
           </div>

@@ -104,16 +104,16 @@ const Sidebar = () => {
       path: '/campaigns/new', 
       icon: <FileText size={20} /> 
     },
+    {
+      label: 'Submissions',
+      path: '/submissions',
+      icon: <FileText size={20} />
+    },
     { 
       label: 'Smart URL', 
       path: '/dashboard/smart-url', 
       icon: <Link2 size={20} /> 
     },
-    // {
-    //   label: 'Submissions',
-    //   path: '/submissions',
-    //   icon: <FileText size={20} />
-    // },
     { 
       label: 'Playlist Checker', 
       path: '/playlist-checker', 
@@ -131,14 +131,14 @@ const Sidebar = () => {
     },
   ];
 
-  // Conditionally add the Admin menu item
-  if (teamId === '3d19423e-d150-4819-9a63-20714899f425') {
-    menuItems.push({
-      label: 'Submissions',
-      path: '/submissions',
-      icon: <FileText size={20} />, // Replace with a more appropriate icon if needed
-    });
-  }
+  // // Conditionally add the Admin menu item
+  // if (teamId === '3d19423e-d150-4819-9a63-20714899f425') {
+  //   menuItems.push({
+  //     label: 'Submissions',
+  //     path: '/submissions',
+  //     icon: <FileText size={20} />, // Replace with a more appropriate icon if needed
+  //   });
+  // }
 
   // Conditionally add the Admin menu item
   // if (teamId === '3d19423e-d150-4819-9a63-20714899f425') {

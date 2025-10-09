@@ -56,6 +56,15 @@ const Navbar: React.FC = () => {
           <div className="absolute top-14 left-0 w-full bg-white shadow-md z-40">
             <div className="flex flex-col space-y-2 p-4">
               <Link
+                to="/submit-to-playlists"
+                className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
+                  isActive('/submit-to-playlists') ? 'font-bold text-musinova-green' : ''
+                }`}
+                onClick={toggleMenu}
+              >
+                Playlist Submission
+              </Link>
+              <Link
                 to="/playlist-checker"
                 className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
                   isActive('/playlist-checker') ? 'font-bold text-musinova-green' : ''
@@ -148,6 +157,14 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
+            <Link
+              to="/submit-to-playlists"
+              className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
+                isActive('/submit-to-playlists') ? 'font-bold text-musinova-green' : ''
+              } text-sm`}
+            >
+              Playlist Submission
+            </Link>
             <Link
               to="/playlist-checker"
               className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${

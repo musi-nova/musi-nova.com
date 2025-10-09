@@ -22,7 +22,7 @@ const PaymentCreditsPage: React.FC = () => {
     };
   };
 
-  const handleBack = () => navigate('/dashboard');
+  const handleBack = () => navigate('/submissions');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
