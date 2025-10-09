@@ -31,6 +31,7 @@ import Terms from "./pages/Terms";
 import Feedback from "./pages/Feedback";
 import Submission from "./pages/Submission";
 import PaymentCreditsPage from "./pages/PaymentCredits";
+import SubmissionPromo from "./pages/SubmissionPromo";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +111,7 @@ const App = () => (
               }
             />
             <Route path="/payment-credits" element={<PaymentCreditsPage />} />
+            <Route path="/submit-to-playlists" element={<SubmissionPromo />} />
             <Route
               path="/payment-success"
               element={
