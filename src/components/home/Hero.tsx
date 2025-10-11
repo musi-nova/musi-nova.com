@@ -60,7 +60,7 @@ const Hero = () => {
                 Launch Campaign
               </Button>
             </Link>
-            <Link to="/campaigns/new" className="w-full sm:w-auto">
+            <Link to="/submit-to-playlists" className="w-full sm:w-auto">
               <Button className="bg-musinova-brown text-white hover:bg-musinova-brown/90 font-bold text-xl py-6 px-8 rounded-lg sm:rounded-r-lg sm:rounded-l-none transition-all flex items-center justify-center w-full sm:w-auto">
                 Submit Your Music
               </Button>
