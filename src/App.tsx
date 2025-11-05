@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import SmartUrlDashboard from "./pages/dashboard/SmartUrlDashboard";
 import Help from "./pages/Help";
 import Index from "./pages/Index";
+import LearnMore from "./pages/LearnMore";
 import NewCampaign from "./pages/NewCampaign";
 import NotFound from "./pages/NotFound";
 import Payment from "./pages/Payment";
@@ -51,6 +52,7 @@ const App = () => (
 
             {/* Public informational page */}
             <Route path="/smart-url" element={<SmartUrl />} />
+            <Route path="/learn-more" element={<LearnMore />} />
             {/* <Route path="/blog" element={<Blog />} /> */}
             <Route path="/help" element={<Help />} />
             <Route path="/playlist-checker" element={<PlaylistChecker />} />
@@ -89,17 +91,17 @@ const App = () => (
             <Route
               path="/submissions"
               element={
-                <AuthGuard>
+                // <AuthGuard>
                   <Submission />
-                </AuthGuard>
+                // </AuthGuard>
               }
             />
             <Route
               path="/campaigns/new"
               element={
-                <AuthGuard>
+                // <AuthGuard>
                   <NewCampaign />
-                </AuthGuard>
+                // </AuthGuard>
               }
             />
             <Route

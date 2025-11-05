@@ -78,18 +78,18 @@ const NewCampaign = () => {
   };
 
 
-  useEffect(() => {
-    // Check if the user is authenticated
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      // Redirect to the /register page if no access token is found
-      navigate('/login');
-    } else if (!isAuthenticated) {
-      setShowAuthStep(true);
-    } else {
-      setShowAuthStep(false);
-    }
-  }, [isAuthenticated, navigate]);
+  // useEffect(() => {
+  //   // Check if the user is authenticated
+  //   const accessToken = localStorage.getItem('access_token');
+  //   if (!accessToken) {
+  //     // Redirect to the /register page if no access token is found
+  //     navigate('/login');
+  //   } else if (!isAuthenticated) {
+  //     setShowAuthStep(true);
+  //   } else {
+  //     setShowAuthStep(false);
+  //   }
+  // }, [isAuthenticated, navigate]);
 
   const extractPlaylistId = (url: string): string | null => {
     try {

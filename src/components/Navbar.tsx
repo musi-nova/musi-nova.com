@@ -157,7 +157,7 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Link
+            {/* <Link
               to="/submit-to-playlists"
               className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
                 isActive('/submit-to-playlists') ? 'font-bold text-musinova-green' : ''
@@ -180,8 +180,8 @@ const Navbar: React.FC = () => {
               } text-sm`}
             >
               Smart URL
-            </Link>
-            <Link
+            </Link> */}
+            {/* <Link
               to="/pricing"
               className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
                 isActive('/pricing') ? 'font-bold text-musinova-green' : ''
@@ -196,7 +196,7 @@ const Navbar: React.FC = () => {
               } text-sm`}
             >
               Help
-            </Link>
+            </Link> */}
           </div>
 
           <div className="flex items-center space-x-2">
@@ -214,7 +214,7 @@ const Navbar: React.FC = () => {
                   <Button
                     className="btn-primary hidden md:block text-sm py-1.5 px-4"
                   >
-                    Try Now
+                    Sign Up
                   </Button>
                 </Link>
               </>

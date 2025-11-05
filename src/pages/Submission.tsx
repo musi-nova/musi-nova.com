@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import './DashboardTopupBtn.css';
 import PageLayout from '@/components/PageLayout';
@@ -88,6 +89,7 @@ type Submission = {
 };
 
 const SubmissionPage = () => {
+    const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const [items, setItems] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
@@ -262,10 +264,15 @@ const SubmissionPage = () => {
             });
 
             if (res.status === 401) {
-                // mirror apiFetch behaviour: clear auth and redirect
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('musinova_user');
-                window.location.href = '/login';
+                if (isAuthenticated) {
+                    window.location.href = '/login';
+                } else {
+                    // Store attempted submission in localStorage and redirect to PaymentCredits
+                    localStorage.setItem('pending_submission', JSON.stringify(body));
+                    window.location.href = '/payment-credits';
+                }
                 return;
             }
 
@@ -308,7 +315,7 @@ const SubmissionPage = () => {
     };
 
     return (
-        <PageLayout showSidebar={true}>
+        <PageLayout showSidebar={isAuthenticated}>
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
@@ -328,7 +335,9 @@ const SubmissionPage = () => {
                             <span>Buy Credits</span>
                         </Button>
                         <Button size="sm" variant={viewMode === 'playlists' ? undefined : 'outline'} onClick={() => setViewMode('playlists')}>Playlists</Button>
-                        <Button size="sm" variant={viewMode === 'submissions' ? undefined : 'outline'} onClick={() => setViewMode('submissions')}>Your Submissions</Button>
+                        {isAuthenticated && (
+                            <Button size="sm" variant={viewMode === 'submissions' ? undefined : 'outline'} onClick={() => setViewMode('submissions')}>Your Submissions</Button>
+                        )}
                     </div>
                 </div>
 
@@ -383,8 +392,8 @@ const SubmissionPage = () => {
 
                 {viewMode === 'playlists' && loading && <div className="text-center py-12">Loading...</div>}
                 {viewMode === 'playlists' && error && <div className="text-center py-6 text-destructive">{error}</div>}
-                {viewMode === 'submissions' && subsLoading && <div className="text-center py-12">Loading your submissions...</div>}
-                {viewMode === 'submissions' && subsError && <div className="text-center py-6 text-destructive">{subsError}</div>}
+                {viewMode === 'submissions' && isAuthenticated && subsLoading && <div className="text-center py-12">Loading your submissions...</div>}
+                {viewMode === 'submissions' && isAuthenticated && subsError && <div className="text-center py-6 text-destructive">{subsError}</div>}
 
                 {viewMode === 'playlists' && (
                     <>
@@ -516,7 +525,7 @@ const SubmissionPage = () => {
                     </>
                 )}
 
-                {viewMode === 'submissions' && (
+                {viewMode === 'submissions' && isAuthenticated && (
                     <>
                         {!subsLoading && !subsError && userSubmissions.length === 0 && (
                             <div className="text-center py-12">You have no submissions yet.</div>
