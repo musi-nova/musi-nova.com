@@ -32,6 +32,7 @@ import Feedback from "./pages/Feedback";
 import Submission from "./pages/Submission";
 import PaymentCreditsPage from "./pages/PaymentCredits";
 import SubmissionPromo from "./pages/SubmissionPromo";
+import CampaignFlyer from "./pages/CampaignFlyer";
 
 const queryClient = new QueryClient();
 
@@ -43,13 +44,14 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public informational pages */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgotten-password" element={<ForgottenPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/campaign-flyer" element={<CampaignFlyer />} />
 
-            {/* Public informational page */}
             <Route path="/smart-url" element={<SmartUrl />} />
             {/* <Route path="/blog" element={<Blog />} /> */}
             <Route path="/help" element={<Help />} />

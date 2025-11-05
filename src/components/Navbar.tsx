@@ -157,46 +157,46 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Link
+            {/* <Link
               to="/submit-to-playlists"
               className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
                 isActive('/submit-to-playlists') ? 'font-bold text-musinova-green' : ''
               } text-sm`}
             >
               Playlist Submission
-            </Link>
-            <Link
+            </Link> */}
+            {/* <Link
               to="/playlist-checker"
               className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
                 isActive('/playlist-checker') ? 'font-bold text-musinova-green' : ''
               } text-sm`}
             >
               Playlist Checker
-            </Link>
-            <Link
+            </Link> */}
+            {/* <Link
               to="/smart-url"
               className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
                 isActive('/smart-url') ? 'font-bold text-musinova-green' : ''
               } text-sm`}
             >
               Smart URL
-            </Link>
-            <Link
+            </Link> */}
+            {/* <Link
               to="/pricing"
               className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
                 isActive('/pricing') ? 'font-bold text-musinova-green' : ''
               } text-sm`}
             >
               Pricing
-            </Link>
-            <Link
+            </Link> */}
+            {/* <Link
               to="/help"
               className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
                 isActive('/help') ? 'font-bold text-musinova-green' : ''
               } text-sm`}
             >
               Help
-            </Link>
+            </Link> */}
           </div>
 
           <div className="flex items-center space-x-2">
