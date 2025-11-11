@@ -6,6 +6,7 @@ import CallToAction from '@/components/home/CallToAction';
 import Hero from '@/components/home/Hero';
 import HowItWorks from '@/components/home/HowItWorks';
 import PainPoints from '@/components/home/PainPoints';
+import Testimonials from '@/components/home/Testimonials';
 import Navbar from '@/components/Navbar';
 
 const Index = () => {
@@ -21,7 +22,7 @@ const Index = () => {
 
         {/* <GenreStats /> */}
         <AdExamples />
-        {/* <Testimonials /> */}
+        <Testimonials />
         {/* <Pricing /> */}
         <CallToAction />
       </main>
