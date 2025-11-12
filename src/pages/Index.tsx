@@ -17,12 +17,12 @@ const Index = () => {
       <main className="flex-grow">
         <Hero />
         <PainPoints />
+        <Testimonials />
         <Benefits />
         <HowItWorks />
 
         {/* <GenreStats /> */}
         <AdExamples />
-        <Testimonials />
         {/* <Pricing /> */}
         <CallToAction />
       </main>
