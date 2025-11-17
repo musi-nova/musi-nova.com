@@ -139,6 +139,7 @@ const App = () => (
             />
 
             <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+            <Route path="/unsubscribe/:lead_id" element={<AuthGuard><Unsubscribe /></AuthGuard>} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
