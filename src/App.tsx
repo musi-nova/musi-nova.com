@@ -33,6 +33,8 @@ import Submission from "./pages/Submission";
 import PaymentCreditsPage from "./pages/PaymentCredits";
 import SubmissionPromo from "./pages/SubmissionPromo";
 import CampaignFlyer from "./pages/CampaignFlyer";
+import Unsubscribe from "./pages/Unsubscribe";
+
 
 const queryClient = new QueryClient();
 
@@ -62,6 +64,7 @@ const App = () => (
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/unsubscribe/:lead_id" element={<Unsubscribe />} />
 
             {/* Protected routes */}
             <Route
