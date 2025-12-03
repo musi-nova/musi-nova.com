@@ -6,11 +6,29 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '@/lib/api';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 const PaymentCreditsPage: React.FC = () => {
   const [creditsAmount, setCreditsAmount] = useState<number>(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Show any pending toast persisted across redirects
+  React.useEffect(() => {
+    try {
+      const pending = localStorage.getItem('pending_toast');
+      if (pending) {
+        const payload = JSON.parse(pending);
+        toast({ title: payload.title, description: payload.description, variant: payload.variant });
+        localStorage.removeItem('pending_toast');
+      }
+    } catch (err) {
+      console.error('Failed to read pending toast', err);
+    }
+  }, []);
 
   const calculateBreakdown = (amount: number) => {
     const musiNovaFee = amount <= 100 ? parseFloat((amount * 0.45).toFixed(2)) : parseFloat((amount * 0.35).toFixed(2));
@@ -22,12 +40,18 @@ const PaymentCreditsPage: React.FC = () => {
     };
   };
 
-  const handleBack = () => navigate('/submissions');
+  const handleBack = () => navigate('/dashboard');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Block guest users from purchasing credits until they update their email/username
+      if (user && /guest/i.test(user.user_name)) {
+        toast({ title: 'Complete your account', description: 'Please update your email and username before purchasing credits. We use these to keep track of your account and ensure a smooth experience.', variant: 'destructive' });
+        navigate('/settings');
+        return;
+      }
       const payload = {
         paymentType: 'credits',
         creditsAmount,
@@ -69,7 +93,7 @@ const PaymentCreditsPage: React.FC = () => {
 
                 <Slider
                   defaultValue={[creditsAmount]}
-                  max={100}
+                  max={1000}
                   min={5}
                   step={1}
                   onValueChange={(values) => setCreditsAmount(values[0])}
@@ -78,7 +102,7 @@ const PaymentCreditsPage: React.FC = () => {
 
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>5 credits</span>
-                  <span>100 credits</span>
+                  <span>1000 credits</span>
                 </div>
               </div>
             </div>

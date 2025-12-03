@@ -1,77 +1,82 @@
+
+
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import CurvedArrow from "@/components/ui/curved-arrow";
+import { Link, useNavigate } from "react-router-dom";
+import { Check, Rocket, TrendingUp, Award } from "lucide-react";
+import { apiFetch } from "@/lib/api";
+import React from "react";
 
-const pricingOptions = [
-	{
-		type: "Subscription",
-		subtitle: "For ongoing campaigns",
-		price: "$100+",
-		priceSuffix: "/month",
-		highlight: true,
-		icon: (
-			<span className="flex items-center justify-center w-12 h-12 rounded-full bg-musinova-green/90 mb-4">
-				<svg
-					width="28"
-					height="28"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						fill="#fff"
-						d="M12 17.75a.75.75 0 0 1-.53-.22l-6.5-6.5a.75.75 0 1 1 1.06-1.06l5.97 5.97 5.97-5.97a.75.75 0 1 1 1.06 1.06l-6.5 6.5a.75.75 0 0 1-.53.22Z"
-					/>
-				</svg>
-			</span>
-		),
-		features: [
-			"Set your monthly budget",
-			"Continuous campaign promotion",
-			"Cancel anytime",
-			"Lower fees for higher budgets",
-			"Priority support",
-		],
-		fee: "45% fee up to $100/mo, 35% fee above $100/mo",
-		adSpend: "55% ad spend up to $100/mo, 65% ad spend above $100/mo",
-		cta: "Start Subscription",
-		to: "/register",
-	},
-	{
-		type: "One-Time Payment",
-		subtitle: "For short-term boosts",
-		price: "$100+",
-		priceSuffix: "/campaign",
-		icon: (
-			<span className="flex items-center justify-center w-12 h-12 rounded-full bg-musinova-yellow/90 mb-4">
-				<svg
-					width="28"
-					height="28"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						fill="#fff"
-						d="M12 2a1 1 0 0 1 1 1v1.07A7.002 7.002 0 0 1 19.93 11H21a1 1 0 1 1 0 2h-1.07A7.002 7.002 0 0 1 13 19.93V21a1 1 0 1 1-2 0v-1.07A7.002 7.002 0 0 1 4.07 13H3a1 1 0 1 1 0-2h1.07A7.002 7.002 0 0 1 11 4.07V3a1 1 0 0 1 1-1Zm0 3a5 5 0 1 0 0 10A5 5 0 0 0 12 5Z"
-					/>
-				</svg>
-			</span>
-		),
-		features: [
-			"Set your one-time budget",
-			"Choose campaign duration",
-			"No commitment",
-			"Great for testing or short-term boosts",
-			"Same transparent fees",
-		],
-		fee: "45% fee up to $100, 35% fee above $100",
-		adSpend: "55% ad spend up to $100, 65% ad spend above $100",
-		cta: "Try One-Time",
-		to: "/register",
-	},
-];
 
 const Pricing = () => {
+	const navigate = useNavigate();
+
+	// Use the same breakdown calculation as Payment
+	const calculateBreakdown = (amount: number) => {
+		const musiNovaFee = amount <= 100 ? (amount * 0.45).toFixed(2) : (amount * 0.35).toFixed(2);
+		const adSpend = amount <= 100 ? (amount * 0.55).toFixed(2) : (amount * 0.65).toFixed(2);
+		return {
+			musiNovaFee: parseFloat(musiNovaFee),
+			adSpend: parseFloat(adSpend),
+			totalCharge: amount,
+		};
+	};
+
+	// Handles guest campaign payment logic
+		const handlePlanClick = async (e: React.MouseEvent, planAmount: number) => {
+			e.preventDefault();
+			// Determine if this is a guest user by checking musinova_user.user_name
+			const storedUser = localStorage.getItem('musinova_user');
+			let isGuest = false;
+			if (storedUser) {
+				try {
+					const userObj = JSON.parse(storedUser);
+					const userName = (userObj?.user_name || '').toString().toLowerCase();
+					isGuest = userName.includes('guest');
+				} catch (err) {
+					isGuest = false;
+				}
+			}
+
+			if (!isGuest) {
+				navigate('/campaign/new');
+				return;
+			}
+
+			try {
+				// If a pendingCampaign still exists, include it; otherwise send null and the server
+				// should associate the campaign with the guest user that was created earlier.
+				const pending = localStorage.getItem('pendingCampaign');
+				const campaignData = pending ? JSON.parse(pending) : null;
+				const amount = planAmount;
+				const breakdown = calculateBreakdown(amount);
+				const paymentDetails = {
+					paymentType: "one-time",
+					oneTimeAmount: amount,
+					oneTimeDuration: 30,  // Default to 30 days for all plans
+					selectedCampaign: campaignData,
+					breakdown,
+				};
+				const response = await apiFetch("stripe/create-checkout-session", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(paymentDetails),
+				});
+				if (!response.ok) {
+					throw new Error("Failed to create checkout session");
+				}
+				const { url } = await response.json();
+				localStorage.removeItem('pendingCampaign');
+				window.location.href = url; // Redirect to Stripe checkout
+			} catch (error) {
+				alert('There was an error creating your campaign. Please try again.');
+				localStorage.removeItem('pendingCampaign');
+				navigate('/campaign/new');
+			}
+		};
+
 	return (
 		<div
 			className="min-h-screen flex flex-col"
@@ -82,7 +87,7 @@ const Pricing = () => {
 		>
 			<Navbar />
 			<main className="flex-grow flex flex-col justify-center items-center py-12">
-				<div className="w-full max-w-5xl px-4">
+				<div className="w-full max-w-7xl px-4">
 					<h1
 						className="text-5xl font-extrabold text-center text-musinova-green mb-2"
 						style={{
@@ -98,264 +103,96 @@ const Pricing = () => {
 						</span>{" "}
 						Choose the option that fits your campaign best.
 					</p>
-					<div className="grid gap-10 md:grid-cols-2">
-						{/* Subscription Card */}
-						<div className="relative bg-white border border-gray-200 rounded-3xl shadow-2xl p-10 flex flex-col items-center hover:scale-[1.03] hover:shadow-3xl transition-transform duration-200">
-							<span className="absolute -top-5 left-1/2 -translate-x-1/2 bg-musinova-green text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg uppercase tracking-wider">
-								Most Popular
-							</span>
+					<div className="grid gap-10 md:grid-cols-3">
+						{/* Launch Pad Plan - Light Grey */}
+						<div className="relative bg-gray-100 border border-gray-300 rounded-3xl shadow-2xl p-10 flex flex-col items-center hover:scale-[1.03] hover:shadow-3xl transition-transform duration-200">
 							<div className="flex flex-col items-center w-full">
-								<h2 className="text-2xl font-extrabold mb-1 text-musinova-darkgray tracking-tight">
-									Subscription
-								</h2>
-								<div className="text-musinova-darkgray text-base mb-2 font-medium">
-									For ongoing campaigns
-								</div>
-								<ul className="mb-8 text-musinova-darkgray text-base list-none text-left w-full space-y-2">
-									<li className="flex items-center gap-2 relative">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										<span>
-											Set your monthly budget{" "}
-											<span className="font-semibold">
-												(minimum $50)
-											</span>
-										</span>
-									</li>
-									<li className="flex items-center gap-4 mt-1" style={{ marginLeft: '24px', position: 'relative' }}>
-										<span className="flex-shrink-0" style={{ position: 'absolute', left: '0px', top: '-4px' }}>
-											<CurvedArrow width={38} height={24} fill="#000" stroke="#222" strokeWidth={2} />
-										</span>
-										<span className="text-sm font-bold text-black ml-10" style={{ position: 'relative', top: '1px' }}>Higher budget = more streams.</span>
-									</li>
-									<li className="flex items-center gap-2">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										Continuous campaign promotion
-									</li>
-									<li className="flex items-center gap-2">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										Cancel anytime
-									</li>
-									<li className="flex items-center gap-2">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										Lower fees for higher budgets
-									</li>
-									<li className="flex items-center gap-2">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										Priority support
-									</li>
+								<span className="flex items-center justify-center w-14 h-14 rounded-full bg-gray-300 mb-4">
+									<Rocket size={32} stroke="#5EA47C" />
+								</span>
+								<h2 className="text-2xl font-extrabold mb-1 text-gray-700 tracking-tight">LAUNCH PAD</h2>
+								<div className="text-gray-700 text-2xl font-bold mb-2">$197 USD</div>
+								<ul className="mb-6 text-musinova-darkgray text-base text-left w-full max-w-sm md:max-w-md mx-auto space-y-4">
+									<li className="flex items-start gap-3"><Check size={28} className="text-musinova-green pt-1 flex-shrink-0" />Introducing your sound and building a foundational fanbase</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-musinova-green pt-1 flex-shrink-0" />Launch your music onto a dedicated playlist</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-musinova-green pt-1 flex-shrink-0" />Start building your core audience</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-musinova-green pt-1 flex-shrink-0" />Your first fans are waiting</li>
 								</ul>
-								<Link to="/register" className="w-full mt-auto">
-									<Button className="w-full font-bold text-lg py-3 rounded-xl bg-musinova-green text-white hover:bg-musinova-green/90 transition-all shadow">
-										Start Subscription
-									</Button>
-								</Link>
+								<Button className="w-full font-bold text-lg py-3 rounded-xl bg-gray-300 text-gray-800 hover:bg-gray-400 transition-all shadow" onClick={(e) => handlePlanClick(e, 197)}>START SMALL</Button>
 							</div>
 						</div>
-						{/* One-Time Payment Card */}
-						<div className="relative bg-white border border-gray-200 rounded-3xl shadow-2xl p-10 flex flex-col items-center hover:scale-[1.03] hover:shadow-3xl transition-transform duration-200">
+						{/* Momentum Plan - Musinova Green */}
+						<div className="relative bg-musinova-green border border-musinova-green rounded-3xl shadow-2xl p-10 flex flex-col items-center hover:scale-[1.03] hover:shadow-3xl transition-transform duration-200">
+							<span className="absolute -top-5 left-1/2 -translate-x-1/2 bg-musinova-green text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg uppercase tracking-wider">Most Popular</span>
 							<div className="flex flex-col items-center w-full">
-								<h2 className="text-2xl font-extrabold mb-1 text-musinova-darkgray tracking-tight">
-									One-Time Payment
-								</h2>
-								<div className="text-musinova-darkgray text-base mb-2 font-medium">
-									For short-term boosts
-								</div>
-								<ul className="mb-8 text-musinova-darkgray text-base list-none text-left w-full space-y-2">
-									<li className="flex items-center gap-2 relative">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										<span>
-											Set your monthly budget{" "}
-											<span className="font-semibold">
-												(minimum $50)
-											</span>
-										</span>
-									</li>
-									<li className="flex items-center gap-4 mt-1" style={{ marginLeft: '24px', position: 'relative' }}>
-										<span className="flex-shrink-0" style={{ position: 'absolute', left: '0px', top: '-4px' }}>
-											<CurvedArrow width={38} height={24} fill="#000" stroke="#222" strokeWidth={2} />
-										</span>
-										<span className="text-sm font-bold text-black ml-10" style={{ position: 'relative', top: '1px' }}>Higher budget = more streams.</span>
-									</li>
-									<li className="flex items-center gap-2">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										Continuous campaign promotion
-									</li>
-									<li className="flex items-center gap-2">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										Cancel anytime
-									</li>
-									<li className="flex items-center gap-2">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										Lower fees for higher budgets
-									</li>
-									<li className="flex items-center gap-2">
-										<svg
-											className="text-musinova-green flex-shrink-0"
-											width="20"
-											height="20"
-											fill="none"
-											viewBox="0 0 20 20"
-										>
-											<path
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M5 10.5l3.5 3.5 6-7"
-											/>
-										</svg>
-										Priority support
-									</li>
+								<span className="flex items-center justify-center w-14 h-14 rounded-full bg-white mb-4">
+									<TrendingUp size={32} stroke="#5EA47C" />
+								</span>
+								<h2 className="text-2xl font-extrabold mb-1 text-white tracking-tight">MOMENTUM</h2>
+								<div className="text-white text-2xl font-bold mb-2">$397 USD</div>
+								<ul className="mb-6 text-white text-base text-left w-full max-w-sm md:max-w-md mx-auto space-y-4">
+									<li className="flex items-start gap-3"><Check size={28} className="text-white pt-1 flex-shrink-0" />Artists seeing traction and ready to accelerate their growth</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-white pt-1 flex-shrink-0" />Fuel a growing, loyal listener base</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-white pt-1 flex-shrink-0" />Transform casual plays into dedicated following</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-white pt-1 flex-shrink-0" />Scale buzz effectively</li>
 								</ul>
-								<Link to="/register" className="w-full mt-auto">
-									<Button className="w-full font-bold text-lg py-3 rounded-xl border border-musinova-green text-musinova-green bg-white hover:bg-musinova-green hover:text-white transition-all shadow">
-										Try One-Time
+								<Button className="w-full font-bold text-lg py-3 rounded-xl bg-white text-musinova-green hover:bg-musinova-cream transition-all shadow border border-musinova-green" onClick={(e) => handlePlanClick(e, 397)}>LEVEL UP</Button>
+							</div>
+						</div>
+						{/* Breakthrough Plan - Musinova Brown */}
+						<div className="relative bg-musinova-brown border border-musinova-brown rounded-3xl shadow-2xl p-10 flex flex-col items-center hover:scale-[1.03] hover:shadow-3xl transition-transform duration-200">
+							<div className="flex flex-col items-center w-full">
+								<span className="flex items-center justify-center w-14 h-14 rounded-full bg-white mb-4">
+									<Award size={32} stroke="#8B5A2B" />
+								</span>
+								<h2 className="text-2xl font-extrabold mb-1 text-white tracking-tight">BREAKTHROUGH</h2>
+								<div className="text-white text-2xl font-bold mb-2">$797 USD</div>
+								<ul className="mb-6 text-white text-base text-left w-full max-w-sm md:max-w-md mx-auto space-y-4">
+									<li className="flex items-start gap-3"><Check size={28} className="text-musinova-gold pt-1 flex-shrink-0" />Maximizing reach and achieving a career-changing level of exposure</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-musinova-gold pt-1 flex-shrink-0" />Command attention in the crowded market</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-musinova-gold pt-1 flex-shrink-0" />Intensive campaign for undeniable visibility</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-musinova-gold pt-1 flex-shrink-0" />Dramatically spike your algorithmic reach</li>
+									<li className="flex items-start gap-3"><Check size={28} className="text-musinova-gold pt-1 flex-shrink-0" />Make you impossible to ignore</li>
+								</ul>
+								<Button className="w-full font-bold text-lg py-3 rounded-xl bg-white text-musinova-brown hover:bg-musinova-cream transition-all shadow border border-musinova-brown" onClick={(e) => handlePlanClick(e, 797)}>GO GLOBAL</Button>
+							</div>
+						</div>
+					</div>
+					{/* Contact card for custom requests */}
+					<div className="mt-8 flex justify-center">
+						<div className="bg-white border border-gray-200 rounded-xl shadow-md px-6 py-4 w-full text-center">
+							<p className="text-sm text-musinova-darkgray mb-2 font-semibold">Are you a small or independent label?</p>
+							<p className="text-sm text-musinova-darkgray mb-4">We offer custom solutions for label rosters, multiple artists, and unique campaign needs. Let’s help your artists break through with a tailored approach.</p>
+							<div className="flex flex-col sm:flex-row sm:justify-center gap-3 items-center">
+								<Link to="/help" className="inline-block">
+									<Button className="bg-musinova-cream text-musinova-brown px-4 py-2 rounded-md text-sm font-semibold hover:bg-musinova-cream/80 transition-colors">
+										Contact Us
 									</Button>
 								</Link>
+								<a
+									href="https://calendly.com/contact-musi-nova/30min"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-block bg-musinova-green text-white px-4 py-2 rounded-md text-sm font-semibold"
+								>
+									Book a label consult
+								</a>
 							</div>
 						</div>
 					</div>
 					<div className="text-center text-xs text-gray-700 mt-10">
-						All pricing is in USD. 45% of the total budget is used for operating
-						costs and fees, while 55% goes directly to ad spend.
+						All packages include a dedicated genre-specific playlist with your music at the top, blended with similar popular artists.
 					</div>
 				</div>
 			</main>
 			<footer className="bg-white py-6">
 				<div className="text-center text-musinova-darkgray text-base">
 					<p className="mb-2">
-						<span className="font-semibold">Cancel anytime.</span> All payments
-						are securely processed via{" "}
+						All payments are securely processed via{' '}
 						<span className="font-semibold text-musinova-green">Stripe</span>.
 					</p>
 					<p className="text-xs text-gray-500">
-						Questions?{" "}
+						Questions?{' '}
 						<a
 							href="/help"
 							className="underline hover:text-musinova-green"

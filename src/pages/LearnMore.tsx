@@ -4,6 +4,7 @@ import Benefits from '@/components/home/Benefits';
 import CallToAction from '@/components/home/CallToAction';
 import HowItWorks from '@/components/home/HowItWorks';
 import PainPoints from '@/components/home/PainPoints';
+import Testimonials from '@/components/home/Testimonials';
 import Navbar from '@/components/Navbar';
 
 const LearnMore = () => {
@@ -13,13 +14,10 @@ const LearnMore = () => {
 
       <main className="flex-grow">
         <PainPoints />
+        <Testimonials />
         <Benefits />
         <HowItWorks />
-
-        {/* <GenreStats /> */}
         <AdExamples />
-        {/* <Testimonials /> */}
-        {/* <Pricing /> */}
         <CallToAction />
       </main>
 

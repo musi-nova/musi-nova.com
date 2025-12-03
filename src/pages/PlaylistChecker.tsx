@@ -232,7 +232,7 @@ const PlaylistChecker = () => {
                 )}
               </div>
               
-              {checkResult.passed && (
+              {/* {checkResult.passed && (
                 <div className="mt-8 p-4 bg-musinova-cream rounded-lg">
                   <h3 className="font-semibold mb-2 flex items-center">
                     <Music size={18} className="mr-2" />
@@ -257,7 +257,7 @@ const PlaylistChecker = () => {
                     </li>
                   </ul>
                 </div>
-              )}
+              )} */}
             </CardContent>
           </Card>
         )}

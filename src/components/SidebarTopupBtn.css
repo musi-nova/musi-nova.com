@@ -1,4 +1,4 @@
-/* Custom animation for the sidebar Top Up / Subscribe button */
+/* Custom animation for the sidebar Top Up button */
 .sidebar-topup-btn {
   transition: transform 0.15s cubic-bezier(0.4,0,0.2,1), background 0.2s, color 0.2s;
 }

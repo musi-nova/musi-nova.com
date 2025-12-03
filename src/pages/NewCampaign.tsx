@@ -69,27 +69,13 @@ const NewCampaign = () => {
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, login } = useAuth();
 
   const toggleMood = (mood: string) => {
     setSelectedMoods((prev) =>
       prev.includes(mood) ? prev.filter((m) => m !== mood) : [...prev, mood]
     );
   };
-
-
-  // useEffect(() => {
-  //   // Check if the user is authenticated
-  //   const accessToken = localStorage.getItem('access_token');
-  //   if (!accessToken) {
-  //     // Redirect to the /register page if no access token is found
-  //     navigate('/login');
-  //   } else if (!isAuthenticated) {
-  //     setShowAuthStep(true);
-  //   } else {
-  //     setShowAuthStep(false);
-  //   }
-  // }, [isAuthenticated, navigate]);
 
   const extractPlaylistId = (url: string): string | null => {
     try {
@@ -187,32 +173,34 @@ const NewCampaign = () => {
     }
 
     if (currentStep === (showAuthStep ? 4 : 3)) {
-      // Validate Artist
-      const artistId = extractArtistId(artistUrl);
-      if (!artistId) {
-        toast({
-          title: "Error",
-          description: "Invalid artist URL. Please provide a valid Spotify artist link.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      try {
-        const response = await apiFetch(`spotify/artists/${artistId}`);
-        if (!response.ok) {
-          throw new Error(`Failed to validate artist: ${response.statusText}`);
+      // Validate Artist only if an artist URL was provided (artist is optional)
+      if (artistUrl) {
+        const artistId = extractArtistId(artistUrl);
+        if (!artistId) {
+          toast({
+            title: "Error",
+            description: "Invalid artist URL. Please provide a valid Spotify artist link.",
+            variant: "destructive",
+          });
+          return;
         }
-        const data = await response.json();
-        console.log("Artist validation successful:", data);
-      } catch (error) {
-        console.error("Error validating artist:", error);
-        toast({
-          title: "Error",
-          description: "There was an issue validating your artist. Please try again.",
-          variant: "destructive",
-        });
-        return;
+
+        try {
+          const response = await apiFetch(`spotify/artists/${artistId}`);
+          if (!response.ok) {
+            throw new Error(`Failed to validate artist: ${response.statusText}`);
+          }
+          const data = await response.json();
+          console.log("Artist validation successful:", data);
+        } catch (error) {
+          console.error("Error validating artist:", error);
+          toast({
+            title: "Error",
+            description: "There was an issue validating your artist. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
       }
     }
 
@@ -229,19 +217,96 @@ const NewCampaign = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const campaignData = {
+    const campaignData: any = {
       campaignName,
       playlistId: extractPlaylistId(playlistUrl),
-      artistId: extractArtistId(artistUrl),
+      // artistId is optional — only include if an artist URL was provided
       trackId: extractTrackId(trackUrl),
       genre: selectedGenre,
       moods: selectedMoods,
       createdAt: new Date().toISOString(),
+      userId: user?.id || null,
+      teamId: user?.team_id || null,
     };
-    console.log('Campaign Data:', campaignData);
 
+    if (artistUrl) {
+      const artistId = extractArtistId(artistUrl);
+      campaignData.artistId = artistId;
+    }
+
+    if (!isAuthenticated) {
+      // Guest: create a generic user, login, save token, create campaign, then redirect to /pricing
+      try {
+        // create generic user
+        const userName = `guest_${Date.now()}`;
+        const genericUser = {
+          name: userName,
+          email: `${userName}@musi-nova.com`,
+          password: 'string',
+          created_at: new Date().toISOString(),
+          super_user: false,
+          plan_1_user: true,
+          plan_2_user: false,
+          plan_3_user: false,
+        };
+
+        const createUserRes = await apiFetch('user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(genericUser),
+        });
+
+        if (!createUserRes.ok) {
+          throw new Error(`Failed to create guest user: ${createUserRes.statusText}`);
+        }
+
+        // Login the newly created user using the login helper (this saves token/user in localStorage)
+        await login(genericUser.email, genericUser.password);
+
+        // we now need to assign the userId and teamId to campaignData
+        // based on what is returned from login
+        campaignData.userId = user?.id || null;
+        campaignData.teamId = user?.team_id || null;
+
+        console.log('Posting Campaign Data:', campaignData);
+
+        const createCampaignRes = await apiFetch('user/campaign/new', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(campaignData),
+        });
+
+        if (!createCampaignRes.ok) {
+          throw new Error(`Failed to create campaign for guest: ${createCampaignRes.statusText}`);
+        }
+
+        // save the newly created campaign result in local storage for retrieval after payment
+        const campaignResult = await createCampaignRes.json();
+
+        localStorage.setItem('pendingCampaign', JSON.stringify(campaignResult));
+
+        toast({
+          title: 'Almost there!',
+          description: 'Please complete your payment to finish creating your campaign.',
+        });
+
+        navigate('/dashboard');
+      } catch (error) {
+        console.error('Guest submission error:', error);
+        toast({
+          title: 'Error',
+          description: 'There was an issue creating your campaign. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+
+      return;
+    }
+
+    // Authenticated: Post to API and redirect to dashboard
     try {
-      // Post the campaign data to the API
       const response = await apiFetch('user/campaign/new', {
         method: 'POST',
         headers: {
@@ -263,9 +328,8 @@ const NewCampaign = () => {
 
       console.log('Campaign created successfully:', responseData);
 
-      // Move to the next step
-      setCurrentStep(currentStep + 1);
-      window.scrollTo(0, 0);
+      // Redirect to dashboard
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error creating campaign:', error);
       toast({
@@ -607,7 +671,7 @@ const NewCampaign = () => {
                   <div className="space-y-4 mb-8">
                     <div>
                       <label htmlFor="artistUrl" className="block text-sm font-medium mb-2">
-                        Paste your Spotify artist link <span className="text-red-500">*</span>
+                        Paste your Spotify artist link (Optional for better targeting)
                       </label>
                       <Input
                         id="artistUrl"
@@ -617,9 +681,7 @@ const NewCampaign = () => {
                         onChange={(e) => setArtistUrl(e.target.value)}
                         className="w-full"
                       />
-                      {!artistUrl && (
-                        <p className="text-sm text-red-500 mt-1">Artist URL is required.</p>
-                      )}
+                      {/* Artist URL is optional; no error shown when empty */}
                     </div>
                   </div>
                   <div className="flex justify-between">
@@ -629,7 +691,6 @@ const NewCampaign = () => {
                     <Button
                       className="btn-primary"
                       onClick={handleNext}
-                      disabled={!artistUrl} // Disable button if artist URL is missing
                     >
                       Continue <ArrowRight size={16} className="ml-2" />
                     </Button>
@@ -808,7 +869,7 @@ const NewCampaign = () => {
                       <li className="flex gap-2">
                         <span className="font-medium">3.</span>
                         <span><Link to="/payment" className="text-musinova-green hover:underline">
-                          Top up/ subscribe
+                          Top up
                          </Link> to get started with our advertising service.</span>
                       </li>
                     </ol>

@@ -9,24 +9,21 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "@/lib/api"; // Replace with your actual API fetch utility
 
 type Job = {
-  id: string;
   playlist_id: string;
   playlist_name: string;
   campaign_name: string;
   campaign_id?: string;
   artist_id?: string;
+  displayName?: string;
+  id: string; // generated as playlist_id + '-' + campaign_id
 };
 
 const PaymentPage = () => {
-  const [paymentType, setPaymentType] = useState<"subscription" | "one-time">(
-    "subscription"
-  );
-  const [subscriptionAmount, setSubscriptionAmount] = useState(100);
   const [oneTimeAmount, setOneTimeAmount] = useState(100);
   const [oneTimeDuration, setOneTimeDuration] = useState(14);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [selectedCampaign, setSelectedCampaign] = useState<Job | null>(null); // Store the full Job object
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const navigate = useNavigate();
 
   // Fetch jobs
@@ -51,26 +48,17 @@ const PaymentPage = () => {
             data.map((job) => [`${job.playlist_id}-${job.campaign_id}`, job])
           ).values()
         ).map((job) => {
-          jobCounters[job.playlist_id] =
-            (jobCounters[job.playlist_id] || 0) + 1;
-
-          const campaignSuffix =
-            jobCounters[job.playlist_id] > 1
-              ? ` (Campaign ${jobCounters[job.playlist_id]})`
-              : "";
-
+          jobCounters[job.playlist_id] = (jobCounters[job.playlist_id] || 0) + 1;
+          const campaignSuffix = jobCounters[job.playlist_id] > 1 ? ` (Campaign ${jobCounters[job.playlist_id]})` : "";
           return {
-            id: `${job.campaign_name}-${job.campaign_id}`,
-            name: `${job.campaign_name}${campaignSuffix}`,
-            campaign_id: job.campaign_id,
-            playlist_id: job.playlist_id,
-            artist_id: job.artist_id,
+            ...job,
+            id: `${job.playlist_id}-${job.campaign_id}`,
+            displayName: `${job.campaign_name}${campaignSuffix}`,
           };
         });
-
         setJobs([...uniqueJobs]);
         if (uniqueJobs.length > 0) {
-          setSelectedCampaign(uniqueJobs[0]); // Set the first job as the default selected campaign
+          setSelectedCampaignId(uniqueJobs[0].id);
         }
       } catch (error) {
         console.error("Error fetching jobs:", error);
@@ -81,10 +69,8 @@ const PaymentPage = () => {
   }, []);
 
   const calculateBreakdown = (amount: number) => {
-    const musiNovaFee =
-      amount <= 100 ? (amount * 0.45).toFixed(2) : (amount * 0.35).toFixed(2);
-    const adSpend =
-      amount <= 100 ? (amount * 0.55).toFixed(2) : (amount * 0.65).toFixed(2);
+    const musiNovaFee = amount <= 100 ? (amount * 0.45).toFixed(2) : (amount * 0.35).toFixed(2);
+    const adSpend = amount <= 100 ? (amount * 0.55).toFixed(2) : (amount * 0.65).toFixed(2);
     return {
       musiNovaFee: parseFloat(musiNovaFee),
       adSpend: parseFloat(adSpend),
@@ -94,49 +80,29 @@ const PaymentPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const selectedCampaign = jobs.find((job) => job.id === selectedCampaignId) || null;
+
     setIsSubmitting(true);
-  
-    let paymentDetails;
-  
-    if (paymentType === "subscription") {
-      const breakdown = calculateBreakdown(subscriptionAmount);
-      paymentDetails = {
-        paymentType,
-        subscriptionAmount,
-        selectedCampaign,
-        breakdown,
-      };
-    } else {
-      const breakdown = calculateBreakdown(oneTimeAmount);
-      paymentDetails = {
-        paymentType,
-        oneTimeAmount,
-        oneTimeDuration,
-        selectedCampaign,
-        breakdown,
-      };
-    }
-  
+    const breakdown = calculateBreakdown(oneTimeAmount);
+    const paymentDetails = {
+      paymentType: "one-time",
+      oneTimeAmount,
+      oneTimeDuration,
+      selectedCampaign,
+      breakdown,
+    };
     console.log("Form submitted with values:", paymentDetails);
-  
     try {
-      const endpoint =
-        paymentType === "subscription"
-          ? "stripe/create-checkout-session-subscription"
-          : "stripe/create-checkout-session";
-  
-      const response = await apiFetch(endpoint, {
+      const response = await apiFetch("stripe/create-checkout-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(paymentDetails),
       });
-  
       if (!response.ok) {
         throw new Error("Failed to create checkout session");
       }
-  
       const { url } = await response.json();
       window.location.href = url; // Redirect to Stripe checkout
     } catch (error) {
@@ -151,10 +117,10 @@ const PaymentPage = () => {
     navigate("/dashboard");
   };
 
-  const breakdown =
-    paymentType === "subscription"
-      ? calculateBreakdown(subscriptionAmount)
-      : calculateBreakdown(oneTimeAmount);
+  const breakdown = calculateBreakdown(oneTimeAmount);
+
+  // Get the selected campaign object for use in form and handleSubmit
+  const selectedCampaign = jobs.find((job) => job.id === selectedCampaignId) || null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -163,7 +129,7 @@ const PaymentPage = () => {
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="bg-white shadow-sm rounded-lg p-6">
             <h2 className="text-2xl font-bold text-center mb-6">
-              Choose Payment Option
+              Top Up Your Campaign
             </h2>
 
             {/* Campaign Selection */}
@@ -172,12 +138,8 @@ const PaymentPage = () => {
                 Select Campaign
               </label>
               <select
-                value={selectedCampaign?.id || ""}
-                onChange={(e) =>
-                  setSelectedCampaign(
-                    jobs.find((job) => job.id === e.target.value) || null
-                  )
-                }
+                value={selectedCampaignId}
+                onChange={(e) => setSelectedCampaignId(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg p-2"
               >
                 <option value="" disabled>
@@ -185,113 +147,61 @@ const PaymentPage = () => {
                 </option>
                 {jobs.map((job) => (
                   <option key={job.id} value={job.id}>
-                    {job.name}
+                    {job.displayName}
                   </option>
                 ))}
               </select>
             </div>
 
-            <Tabs
-              defaultValue="subscription"
-              onValueChange={(value) =>
-                setPaymentType(value as "subscription" | "one-time")
-              }
-            >
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="subscription">
-                  Monthly Subscription
-                </TabsTrigger>
-                <TabsTrigger value="one-time">One-Time Payment</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="subscription">
-                <div className="space-y-6 mb-8">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium">
-                        Monthly Budget
-                      </label>
-                      <span className="text-lg font-bold text-musinova-green">
-                        ${subscriptionAmount}
-                      </span>
-                    </div>
-
-                    <Slider
-                      defaultValue={[subscriptionAmount]}
-                      max={10000}
-                      min={25}
-                      step={5}
-                      onValueChange={(values) =>
-                        setSubscriptionAmount(values[0])
-                      }
-                      className="my-4"
-                    />
-
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>$25</span>
-                      <span>$10,000</span>
-                    </div>
-                  </div>
+            {/* One-Time Payment Only */}
+            <div className="space-y-6 mb-8">
+              {/* amount of money */}
+              <div>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium">
+                    Campaign Budget
+                  </label>
+                  <span className="text-lg font-bold text-musinova-green">
+                    ${oneTimeAmount}
+                  </span>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="one-time">
-                <div className="space-y-6 mb-8">
-                  {/* amount of money */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium">
-                        Campaign Budget
-                      </label>
-                      <span className="text-lg font-bold text-musinova-green">
-                        ${oneTimeAmount}
-                      </span>
-                    </div>
-
-                    <Slider
-                      defaultValue={[oneTimeAmount]}
-                      max={10000}
-                      min={25}
-                      step={5}
-                      onValueChange={(values) => setOneTimeAmount(values[0])}
-                      className="my-4"
-                    />
-
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>$25</span>
-                      <span>$10,000</span>
-                    </div>
-                  </div>
-                  {/* duration of campaign */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium">
-                        Campaign Duration (days)
-                      </label>
-                      <span className="text-lg font-bold text-musinova-green">
-                        {oneTimeDuration} days
-                      </span>
-                    </div>
-
-                    <Slider
-                      defaultValue={[oneTimeDuration]}
-                      max={30}
-                      min={1}
-                      step={1}
-                      onValueChange={(values) =>
-                        setOneTimeDuration(values[0])
-                      }
-                      className="my-4"
-                    />
-
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>1 day</span>
-                      <span>30 days</span>
-                    </div>
-                  </div>
+                <Slider
+                  defaultValue={[oneTimeAmount]}
+                  max={10000}
+                  min={25}
+                  step={5}
+                  onValueChange={(values) => setOneTimeAmount(values[0])}
+                  className="my-4"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>$25</span>
+                  <span>$10,000</span>
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+              {/* duration of campaign */}
+              <div>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium">
+                    Campaign Duration (days)
+                  </label>
+                  <span className="text-lg font-bold text-musinova-green">
+                    {oneTimeDuration} days
+                  </span>
+                </div>
+                <Slider
+                  defaultValue={[oneTimeDuration]}
+                  max={30}
+                  min={1}
+                  step={1}
+                  onValueChange={(values) => setOneTimeDuration(values[0])}
+                  className="my-4"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>1 day</span>
+                  <span>30 days</span>
+                </div>
+              </div>
+            </div>
 
             {/* Payment Breakdown */}
             <div className="bg-gray-100 p-4 rounded-lg mb-6">
@@ -319,7 +229,7 @@ const PaymentPage = () => {
                 <Button
                   type="submit"
                   className="btn-primary"
-                  disabled={isSubmitting || !selectedCampaign}
+                  disabled={isSubmitting || !selectedCampaignId}
                 >
                   {isSubmitting ? (
                     <>

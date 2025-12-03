@@ -105,20 +105,20 @@ const Sidebar = () => {
       icon: <FileText size={20} /> 
     },
     {
-      label: 'Submissions',
+      label: 'New Submission',
       path: '/submissions',
       icon: <FileText size={20} />
     },
-    { 
-      label: 'Smart URL', 
-      path: '/dashboard/smart-url', 
-      icon: <Link2 size={20} /> 
-    },
-    { 
-      label: 'Playlist Checker', 
-      path: '/playlist-checker', 
-      icon: <CheckCircle size={20} /> 
-    },
+    // { 
+    //   label: 'Smart URL', 
+    //   path: '/dashboard/smart-url', 
+    //   icon: <Link2 size={20} /> 
+    // },
+    // { 
+    //   label: 'Playlist Checker', 
+    //   path: '/playlist-checker', 
+    //   icon: <CheckCircle size={20} /> 
+    // },
     { 
       label: 'Support', 
       path: '/help', 
@@ -174,9 +174,9 @@ const Sidebar = () => {
           </Link>
         </div>
 
-        {/* Top Up / Subscribe button - prominent and above nav */}
+        {/* Top Up button - prominent and above nav */}
         <div className="mb-6 flex justify-center">
-          <Link to="/payment" onClick={() => isMobile && setIsOpen(false)} className="w-full">
+          <Link to="/payment-credits" onClick={() => isMobile && setIsOpen(false)} className="w-full">
             <Button
               className="w-full py-3 px-4 rounded-xl bg-musinova-brown text-white font-bold text-lg shadow-lg border-2 border-musinova-brown hover:bg-white hover:text-musinova-brown transition-all flex items-center gap-2 sidebar-topup-btn"
               style={{ boxShadow: '0 0 0 2px #8B5A2B, 0 2px 8px 0 rgba(0,0,0,0.08)' }}
@@ -184,7 +184,7 @@ const Sidebar = () => {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>Top Up / Subscribe</span>
+              <span>Top Up</span>
             </Button>
           </Link>
         </div>
