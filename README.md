@@ -25,3 +25,17 @@ The musi-nova.com frontend.
 - user selects songs
 - user submits playlist for review
 - admin creates campaign based on submitted playlist
+
+## Video compression
+We use [ffmpeg](https://ffmpeg.org/) to compress videos before uploading them to cloudinary.
+
+```
+ffmpeg -i ~/Downloads/Nick Testimonial #7.mp4 \
+-c:v libx264 \
+-crf 26 \
+-preset slow \
+-c:a aac \
+-b:a 128k \
+-movflags +faststart \
+jay_testimonial.mp4
+```

@@ -26,6 +26,7 @@ import PaymentCreditsPage from "@/pages/PaymentCredits";
 import AuthGuard from "@/components/AuthGuard";
 import TestimonialsPage from "./pages/TestimonialsPage";
 import CreditsBanner from '@/components/CreditsBanner';
+import Unsubscribe from "./pages/Unsubscribe";
 
 export default function AppRoutes() {
   return (
@@ -53,6 +54,7 @@ export default function AppRoutes() {
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-failed" element={<PaymentFailed />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
+        <Route path="/unsubscribe" element={<Unsubscribe />} />
 
         {/* Protected routes (require AuthGuard) */}
         <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
