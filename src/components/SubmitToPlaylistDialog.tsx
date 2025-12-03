@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -66,32 +65,9 @@ const SubmitToPlaylistDialog: React.FC<Props> = ({ playlist, open, onOpenChange,
       const body = { message: values.message, trackId: finalTrackId, playlistId: values.playlistId };
 
       if (!isAuthenticated) {
-        try {
-          const userName = `guest_${Date.now()}`;
-          const genericUser = {
-            name: userName,
-            email: `${userName}@musi-nova.com`,
-            password: 'string',
-            created_at: new Date().toISOString(),
-            super_user: false,
-            plan_1_user: true,
-            plan_2_user: false,
-            plan_3_user: false,
-          };
-
-          const createUserRes = await apiFetch('user', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(genericUser),
-          });
-
-          if (!createUserRes.ok) throw new Error('Failed to create guest user');
-
-          await login(genericUser.email, genericUser.password);
-        } catch (err) {
-          console.error('Failed to create/login guest user, falling back to save pending submission', err);
-          localStorage.setItem('pending_submission', JSON.stringify(body));
-          window.location.href = '/payment-credits';
-          return;
-        }
+        const { ensureGuestUser } = await import('@/lib/guestUser');
+        const res = await ensureGuestUser(login, 'pending_submission', body);
+        if (!res.success) return; // helper handles persistence/redirect
       }
 
       const baseUrl = import.meta.env.VITE_MN_API_BASE_URL;

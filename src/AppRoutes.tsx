@@ -11,7 +11,6 @@ import Index from "@/pages/Index";
 import LearnMore from "@/pages/LearnMore";
 import NewCampaign from "@/pages/NewCampaign";
 import NotFound from "@/pages/NotFound";
-import Payment from "@/pages/Payment";
 import PaymentFailed from "@/pages/PaymentFailed";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import PlaylistTips from "@/pages/playlist/PlaylistTips";
@@ -20,12 +19,10 @@ import Playlists from "@/pages/Playlists";
 import Pricing from "@/pages/Pricing";
 import Privacy from "@/pages/Privacy";
 import Settings from "@/pages/Settings";
-import SmartUrl from "@/pages/SmartUrl";
 import Terms from "@/pages/Terms";
 import Feedback from "@/pages/Feedback";
 import Submission from "@/pages/Submission";
 import PaymentCreditsPage from "@/pages/PaymentCredits";
-import SubmissionPromo from "@/pages/SubmissionPromo";
 import AuthGuard from "@/components/AuthGuard";
 import TestimonialsPage from "./pages/TestimonialsPage";
 import CreditsBanner from '@/components/CreditsBanner';
@@ -51,7 +48,6 @@ export default function AppRoutes() {
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/submissions" element={<Submission />} />
         <Route path="/campaigns/new" element={<NewCampaign />} />
-        <Route path="/payment" element={<Payment />} />
         <Route path="/payment-credits" element={<PaymentCreditsPage />} />
         {/* <Route path="/submit-to-playlists" element={<SubmissionPromo />} /> */}
         <Route path="/payment-success" element={<PaymentSuccess />} />

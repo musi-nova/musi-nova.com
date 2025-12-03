@@ -6,30 +6,14 @@ import PageLayout from '@/components/PageLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogTrigger,
-    DialogClose,
-} from '@/components/ui/dialog';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
-import { CheckCircle, XCircle } from 'lucide-react';
 import UserSubmissionsList from '@/components/UserSubmissionsList';
 import LazyImage from '@/components/LazyImage';
 import SubmitToPlaylistDialog from '@/components/SubmitToPlaylistDialog';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
-
-import { daysSince } from '@/lib/uiUtils';
 
 type Submission = {
     id: string;
@@ -118,20 +102,6 @@ const SubmissionPage = () => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const daysSince = (iso?: string | null) => {
-        if (!iso) return null;
-        try {
-            const then = new Date(iso);
-            const now = new Date();
-            const diff = Math.floor((now.getTime() - then.getTime()) / (1000 * 60 * 60 * 24));
-            if (diff <= 0) return 'Today';
-            if (diff === 1) return '1 day ago';
-            return `${diff} days ago`;
-        } catch (e) {
-            return null;
-        }
-    };
-
     const extractTrackId = (url: string): string | null => {
         try {
             // Match URLs like https://open.spotify.com/track/ID
@@ -213,40 +183,11 @@ const SubmissionPage = () => {
                 playlistId: values.playlistId,
             };
 
-            // If the user is not authenticated, create a guest user and login first (same pattern as NewCampaign)
+            // If the user is not authenticated, ensure a guest user exists and is logged in
             if (!isAuthenticated) {
-                try {
-                    const userName = `guest_${Date.now()}`;
-                    const genericUser = {
-                        name: userName,
-                        email: `${userName}@musi-nova.com`,
-                        password: 'string',
-                        created_at: new Date().toISOString(),
-                        super_user: false,
-                        plan_1_user: true,
-                        plan_2_user: false,
-                        plan_3_user: false,
-                    };
-
-                    const createUserRes = await apiFetch('user', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(genericUser),
-                    });
-
-                    if (!createUserRes.ok) {
-                        throw new Error(`Failed to create guest user: ${createUserRes.statusText}`);
-                    }
-
-                    // Login the newly created user using the login helper (this saves token/user in localStorage)
-                    await login(genericUser.email, genericUser.password);
-                } catch (err) {
-                    console.error('Failed to create/login guest user, falling back to save pending submission', err);
-                    // store the pending submission and redirect to payment credits so the user can continue after topping up / registering
-                    localStorage.setItem('pending_submission', JSON.stringify(body));
-                    window.location.href = '/payment-credits';
-                    return;
-                }
+                const { ensureGuestUser } = await import('@/lib/guestUser');
+                const res = await ensureGuestUser(login, 'pending_submission', body);
+                if (!res.success) return; // ensureGuestUser handles persisting and redirecting on failure
             }
 
             // Use a direct fetch so we can inspect 404 responses (insufficient credits)

@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import LazyImage from '@/components/LazyImage';
-import { daysSince } from '@/lib/uiUtils';
+import { daysSince, toShort } from '@/lib/uiUtils';
 import { CheckCircle, XCircle } from 'lucide-react';
 
 type Props = {
@@ -55,7 +55,7 @@ const UserSubmissionsList: React.FC<Props> = ({ submissions, loading, error }) =
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-semibold text-lg">Submission to {s.playlist?.playlist_name ?? s.playlist_id}</h3>
-                <div className="text-sm text-gray-600 mt-1">{(function toShort(msg: any, n = 100) { if (!msg && msg !== 0) return ''; const str = String(msg); return str.length > n ? str.slice(0, n).trimEnd() + '...' : str; })(s.message)}</div>
+                <div className="text-sm text-gray-600 mt-1">{toShort(s.message)}</div>
               </div>
               <div className="text-sm text-gray-600 flex items-center gap-2">
                 {s.reviewed ? (

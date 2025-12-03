@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback, memo } from "react";
+import React, { useRef, useEffect, useState, memo, useMemo } from "react";
 import { AdvancedVideo } from "@cloudinary/react";
 import { Cloudinary } from "@cloudinary/url-gen";
 import "@/styles/videojs-cover.css"; // keep existing styles if they apply to container
@@ -25,19 +25,21 @@ const FlowTabs = memo(function FlowTabs({ flow, setFlow }: { flow: FlowType; set
   );
 });
 
-const MediaCard = memo(function MediaCard({ videoRef, cldCampaignVid, cldSubmitVid, flow }: { videoRef: React.RefObject<HTMLVideoElement>; cldCampaignVid: any; cldSubmitVid: any; flow: FlowType }) {
+const MediaCard = memo(function MediaCard({ videoRef, activeCldVid }: { videoRef: React.RefObject<HTMLVideoElement>; activeCldVid: any | null }) {
   return (
     <div className="w-full max-w-2xl md:max-w-2xl mt-6 md:mt-0 bg-white p-4 rounded-xl shadow-lg border border-gray-200 h-full min-h-[280px]">
       <div className="relative w-full rounded-lg overflow-hidden h-full min-h-0">
         <div className={`absolute top-0 left-0 w-full h-full rounded-lg transition-opacity duration-300 ${'opacity-100 z-20'}`} style={{ background: '#000' }}>
-          <AdvancedVideo
-            cldVid={flow === 'campaign' ? cldCampaignVid : cldSubmitVid}
-            innerRef={videoRef}
-            className="w-full h-full object-cover"
-            controls
-            muted={false}
-            playsInline
-          />
+          {activeCldVid ? (
+            <AdvancedVideo
+              cldVid={activeCldVid}
+              innerRef={videoRef}
+              className="w-full h-full object-cover"
+              controls
+              muted={false}
+              playsInline
+            />
+          ) : null}
         </div>
       </div>
     </div>
@@ -117,6 +119,10 @@ const Hero: React.FC = () => {
   const campaignVideo = cld.video('Musinova_introduction_video_1_l2iubx');
   const submitVideo = cld.video('submit_feature_musinova_nkwklw');
 
+  const activeCldVid = useMemo(() => {
+    return flow === 'campaign' ? campaignVideo : submitVideo;
+  }, [flow, campaignVideo, submitVideo]);
+
   // Pause video when flow changes
   useEffect(() => {
     try {
@@ -145,7 +151,7 @@ const Hero: React.FC = () => {
             <LeftColumn flow={flow} />
 
             <div className="md:col-span-6 flex items-center justify-end md:justify-end min-h-0">
-              <MediaCard videoRef={videoRef} cldCampaignVid={campaignVideo} cldSubmitVid={submitVideo} flow={flow} />
+              <MediaCard videoRef={videoRef} activeCldVid={activeCldVid} />
             </div>
           </div>
           {/* Contact / Calendly card (95% width) */}

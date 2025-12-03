@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Calendar, CreditCard, AlertTriangle, Info } from "lucide-react";
+import { Info } from "lucide-react";
 
 type Variant = "default" | "secondary" | "destructive" | "outline";
 
@@ -53,11 +53,21 @@ export default function MobileBadge({
             <TooltipTrigger asChild>
               <button
                 type="button"
+                role="button"
+                tabIndex={0}
                 className={cn(
                   "inline-flex h-8 w-8 items-center justify-center rounded-md",
                   variantClasses[variant]
                 )}
                 aria-label={typeof label === "string" ? label : "More info"}
+                onKeyDown={(e) => {
+                  // Ensure Enter and Space activate the tooltip trigger
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    // Let Radix handle activation via keyboard; prevent default space scroll
+                    e.preventDefault();
+                    // programmatic focus/activation isn't required here because asChild passes events through
+                  }
+                }}
               >
                 {Icon}
               </button>

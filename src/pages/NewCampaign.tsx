@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Register from './auth/Register';
 
@@ -237,36 +237,17 @@ const NewCampaign = () => {
     if (!isAuthenticated) {
       // Guest: create a generic user, login, save token, create campaign, then redirect to /pricing
       try {
-        // create generic user
-        const userName = `guest_${Date.now()}`;
-        const genericUser = {
-          name: userName,
-          email: `${userName}@musi-nova.com`,
-          password: 'string',
-          created_at: new Date().toISOString(),
-          super_user: false,
-          plan_1_user: true,
-          plan_2_user: false,
-          plan_3_user: false,
-        };
-
-        const createUserRes = await apiFetch('user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(genericUser),
-        });
-
-        if (!createUserRes.ok) {
-          throw new Error(`Failed to create guest user: ${createUserRes.statusText}`);
+        const { ensureGuestUser } = await import('@/lib/guestUser');
+        const res = await ensureGuestUser(login, 'pendingCampaign', campaignData);
+        if (!res.success) {
+          // reason is only present on failure
+          const reason = (res as any).reason || new Error('Failed to ensure guest user');
+          throw reason;
         }
 
-        // Login the newly created user using the login helper (this saves token/user in localStorage)
-        await login(genericUser.email, genericUser.password);
-
-        // we now need to assign the userId and teamId to campaignData
-        // based on what is returned from login
-        campaignData.userId = user?.id || null;
-        campaignData.teamId = user?.team_id || null;
+        // update campaignData with any user/team ids set by login
+        campaignData.userId = res.user?.id || null;
+        campaignData.teamId = res.user?.team_id || null;
 
         console.log('Posting Campaign Data:', campaignData);
 

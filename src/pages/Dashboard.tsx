@@ -1,4 +1,3 @@
-import React from 'react';
 import PageLayout from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,27 +11,19 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from "@/lib/api";
 import { useEffect, useState } from "react";
 import UserSubmissionsList from '@/components/UserSubmissionsList';
-import { daysSince } from '@/lib/uiUtils';
-import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import MobileBadge from '@/components/ui/mobile-badge';
 import { Calendar, AlertTriangle } from 'lucide-react';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import GuestBanner from '@/components/GuestBanner';
 import {
   Area,
   AreaChart,
   CartesianGrid,
   Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -54,8 +45,6 @@ type Job = {
 };
 
 const cache: Record<string, any> = {}; // In-memory cache object
-
-// using shared LazyImage and daysSince utilities
 
 // Function to fetch data with caching
 const fetchWithCache = async (key: string, fetcher: () => Promise<any>) => {
@@ -155,7 +144,6 @@ const Dashboard = () => {
 
   // When opening the assign dialog, prefill with minimum 100
   const { user, isAuthenticated } = useAuth();
-  const { toast } = useToast();
 
   const openAssignDialog = async () => {
     // Fetch latest credits from API to ensure up-to-date value before opening slider

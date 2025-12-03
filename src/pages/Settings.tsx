@@ -24,23 +24,6 @@ const Settings = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Determine if current user is a guest
-  const isGuestUser = (() => {
-    try {
-      const name = (user?.user_name || '').toString().toLowerCase();
-      if (name && name.includes('guest')) return true;
-      const stored = localStorage.getItem('musinova_user');
-      if (stored) {
-        const obj = JSON.parse(stored);
-        const storedName = (obj?.user_name || '').toString().toLowerCase();
-        return storedName.includes('guest');
-      }
-      return false;
-    } catch (err) {
-      return false;
-    }
-  })();
-
   useEffect(() => {
     const fetchSettings = async () => {
       try {

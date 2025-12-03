@@ -16,6 +16,18 @@ const PaymentCreditsPage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Redirect guest users to settings on page load
+  React.useEffect(() => {
+    try {
+      if (user && /guest/i.test(user.user_name)) {
+        toast({ title: 'Complete your account', description: 'Please update your email and username before purchasing credits.', variant: 'destructive' });
+        navigate('/settings');
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, [user, navigate, toast]);
+
   // Show any pending toast persisted across redirects
   React.useEffect(() => {
     try {

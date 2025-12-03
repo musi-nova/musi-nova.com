@@ -11,3 +11,9 @@ export const daysSince = (iso?: string | null) => {
     return null;
   }
 };
+
+export const toShort = (msg: unknown, n = 100) => {
+  if (msg === undefined || msg === null) return '';
+  const str = String(msg);
+  return str.length > n ? str.slice(0, n).trimEnd() + '...' : str;
+};
