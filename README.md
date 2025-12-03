@@ -10,6 +10,22 @@ The musi-nova.com frontend.
 - `firebase login` to log in to Firebase
 - `firebase deploy` to deploy the project to Firebase Hosting
 
+## Notes
+### General
+- new payment page for credits (song submissions) - slider
+
+### Song submission (to playlist) flow
+- hero -> view all playlists -> payment -> success -> submit songs
+- user pays for submission to our playlist
+- user selects songs for playlists (submits)
+- admin reviews submitted songs, approves/rejects songs for playlists
+
+### Ad campaign running
+- hero -> payment -> success -> create campaign
+- user selects songs
+- user submits playlist for review
+- admin creates campaign based on submitted playlist
+
 ## Video compression
 We use [ffmpeg](https://ffmpeg.org/) to compress videos before uploading them to cloudinary.
 

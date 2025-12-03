@@ -34,7 +34,7 @@ const Navbar: React.FC = () => {
       <nav className="bg-gray-50 top-0 z-50">
         <div className="flex justify-between items-center h-14 px-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center">
             <img
               src="/logo.png"
               alt="MusiNova Logo"
@@ -55,42 +55,6 @@ const Navbar: React.FC = () => {
         {isMenuOpen && (
           <div className="absolute top-14 left-0 w-full bg-white shadow-md z-40">
             <div className="flex flex-col space-y-2 p-4">
-              <Link
-                to="/submit-to-playlists"
-                className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
-                  isActive('/submit-to-playlists') ? 'font-bold text-musinova-green' : ''
-                }`}
-                onClick={toggleMenu}
-              >
-                Playlist Submission
-              </Link>
-              <Link
-                to="/playlist-checker"
-                className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
-                  isActive('/playlist-checker') ? 'font-bold text-musinova-green' : ''
-                }`}
-                onClick={toggleMenu}
-              >
-                Playlist Checker
-              </Link>
-              <Link
-                to="/smart-url"
-                className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
-                  isActive('/smart-url') ? 'font-bold text-musinova-green' : ''
-                }`}
-                onClick={toggleMenu}
-              >
-                Smart URL
-              </Link>
-              <Link
-                to="/help"
-                className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
-                  isActive('/help') ? 'font-bold text-musinova-green' : ''
-                }`}
-                onClick={toggleMenu}
-              >
-                Help
-              </Link>
               {isAuthenticated ? (
                 <>
                   <Link
@@ -147,56 +111,13 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2">
               <img
                 src="/logo.png"
                 alt="MusiNova Logo"
                 className="h-10 w-auto"
               />
             </Link>
-          </div>
-
-          <div className="hidden md:flex items-center space-x-4">
-            {/* <Link
-              to="/submit-to-playlists"
-              className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
-                isActive('/submit-to-playlists') ? 'font-bold text-musinova-green' : ''
-              } text-sm`}
-            >
-              Playlist Submission
-            </Link> */}
-            {/* <Link
-              to="/playlist-checker"
-              className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
-                isActive('/playlist-checker') ? 'font-bold text-musinova-green' : ''
-              } text-sm`}
-            >
-              Playlist Checker
-            </Link> */}
-            {/* <Link
-              to="/smart-url"
-              className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
-                isActive('/smart-url') ? 'font-bold text-musinova-green' : ''
-              } text-sm`}
-            >
-              Smart URL
-            </Link> */}
-            {/* <Link
-              to="/pricing"
-              className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
-                isActive('/pricing') ? 'font-bold text-musinova-green' : ''
-              } text-sm`}
-            >
-              Pricing
-            </Link> */}
-            {/* <Link
-              to="/help"
-              className={`text-musinova-darkgray hover:text-musinova-green px-3 py-2 rounded-md transition-all duration-300 ${
-                isActive('/help') ? 'font-bold text-musinova-green' : ''
-              } text-sm`}
-            >
-              Help
-            </Link> */}
           </div>
 
           <div className="flex items-center space-x-2">
@@ -214,7 +135,7 @@ const Navbar: React.FC = () => {
                   <Button
                     className="btn-primary hidden md:block text-sm py-1.5 px-4"
                   >
-                    Try Now
+                    Sign Up
                   </Button>
                 </Link>
               </>

@@ -1,77 +1,19 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import './DashboardTopupBtn.css';
 import PageLayout from '@/components/PageLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogTrigger,
-    DialogClose,
-} from '@/components/ui/dialog';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
-import { CheckCircle, XCircle } from 'lucide-react';
+import UserSubmissionsList from '@/components/UserSubmissionsList';
+import LazyImage from '@/components/LazyImage';
+import SubmitToPlaylistDialog from '@/components/SubmitToPlaylistDialog';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
-
-// Lightweight lazy-loading image component using IntersectionObserver
-const LazyImage: React.FC<{
-    src: string;
-    alt?: string;
-    className?: string;
-    style?: React.CSSProperties;
-}> = ({ src, alt = '', className = '', style }) => {
-    const ref = React.useRef<HTMLDivElement | null>(null);
-    const [visible, setVisible] = React.useState(false);
-    const [loadedSrc, setLoadedSrc] = React.useState<string | null>(null);
-
-    React.useEffect(() => {
-        const node = ref.current;
-        if (!node) return;
-
-        if ('IntersectionObserver' in window) {
-            const io = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setVisible(true);
-                        io.disconnect();
-                    }
-                });
-            });
-            io.observe(node);
-            return () => io.disconnect();
-        }
-
-        // Fallback: load immediately
-        setVisible(true);
-    }, []);
-
-    React.useEffect(() => {
-        if (visible) setLoadedSrc(src);
-    }, [visible, src]);
-
-    return (
-        <div ref={ref} className={className} style={style}>
-            {loadedSrc ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={loadedSrc} alt={alt} className={className} style={style} />
-            ) : (
-                <div className={`w-full h-full bg-gray-100 flex items-center justify-center ${className}`}></div>
-            )}
-        </div>
-    );
-};
 
 type Submission = {
     id: string;
@@ -88,6 +30,7 @@ type Submission = {
 };
 
 const SubmissionPage = () => {
+    const { isAuthenticated, login } = useAuth();
     const navigate = useNavigate();
     const [items, setItems] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
@@ -139,7 +82,13 @@ const SubmissionPage = () => {
 
     const schema = z.object({
         message: z.string().min(1, 'Message is required'),
-        trackId: z.string().min(1, 'Track ID is required'),
+        trackId: z.string().min(1, 'Track ID is required').refine((val) => {
+            if (!val) return false;
+            const raw = val.trim();
+            const looksLikeId = /^[a-zA-Z0-9]+$/.test(raw);
+            const containsTrack = /track/i.test(raw);
+            return containsTrack || looksLikeId;
+        }, { message: 'Please provide a valid Spotify track URL (must include "track") or a valid track ID.' }),
         playlistId: z.string().min(1),
     });
 
@@ -152,20 +101,6 @@ const SubmissionPage = () => {
         },
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const daysSince = (iso?: string | null) => {
-        if (!iso) return null;
-        try {
-            const then = new Date(iso);
-            const now = new Date();
-            const diff = Math.floor((now.getTime() - then.getTime()) / (1000 * 60 * 60 * 24));
-            if (diff <= 0) return 'Today';
-            if (diff === 1) return '1 day ago';
-            return `${diff} days ago`;
-        } catch (e) {
-            return null;
-        }
-    };
 
     const extractTrackId = (url: string): string | null => {
         try {
@@ -248,10 +183,17 @@ const SubmissionPage = () => {
                 playlistId: values.playlistId,
             };
 
+            // If the user is not authenticated, ensure a guest user exists and is logged in
+            if (!isAuthenticated) {
+                const { ensureGuestUser } = await import('@/lib/guestUser');
+                const res = await ensureGuestUser(login, 'pending_submission', body);
+                if (!res.success) return; // ensureGuestUser handles persisting and redirecting on failure
+            }
+
             // Use a direct fetch so we can inspect 404 responses (insufficient credits)
             const baseUrl = import.meta.env.VITE_MN_API_BASE_URL;
             const url = `${baseUrl}submission`;
-            const accessToken = localStorage.getItem('access_token');
+            let accessToken = localStorage.getItem('access_token');
             const headers: Record<string, string> = { 'Content-Type': 'application/json' };
             if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
 
@@ -262,10 +204,16 @@ const SubmissionPage = () => {
             });
 
             if (res.status === 401) {
-                // mirror apiFetch behaviour: clear auth and redirect
+                // clear local tokens and either redirect to login or save pending submission
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('musinova_user');
-                window.location.href = '/login';
+                if (isAuthenticated) {
+                    window.location.href = '/login';
+                } else {
+                    // Store attempted submission in localStorage and redirect to PaymentCredits
+                    localStorage.setItem('pending_submission', JSON.stringify(body));
+                    window.location.href = '/payment-credits';
+                }
                 return;
             }
 
@@ -289,6 +237,8 @@ const SubmissionPage = () => {
                 // Backend uses 404 to indicate no/insufficient credits
                 const bodyMsg = await parseErrorBody(res);
                 toast({ title: 'Not enough credits', description: bodyMsg || 'You do not have enough credits to submit. Please top up.', variant: 'destructive' });
+                // Persist pending submission so user can complete after topping up
+                localStorage.setItem('pending_submission', JSON.stringify(body));
                 return;
             }
 
@@ -299,6 +249,8 @@ const SubmissionPage = () => {
 
             toast({ title: 'Submission sent', description: 'Your track has been submitted to the playlist.' });
             closeDialog();
+            // New users receive 2 credits on signup; send them to the dashboard
+            navigate('/dashboard');
         } catch (err: any) {
             console.error(err);
             toast({ title: 'Error', description: err.message || 'Could not submit track', variant: 'destructive' });
@@ -308,7 +260,7 @@ const SubmissionPage = () => {
     };
 
     return (
-        <PageLayout showSidebar={true}>
+        <PageLayout showSidebar={isAuthenticated}>
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
@@ -317,7 +269,7 @@ const SubmissionPage = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                        <Button
+                        {/* <Button
                             className="text-sm md:text-base bg-musinova-brown text-white font-bold px-6 py-3 rounded-xl shadow-lg border-2 border-musinova-brown hover:bg-white hover:text-musinova-brown transition-all flex items-center gap-2 dashboard-topup-btn"
                             style={{ boxShadow: '0 0 0 2px #8B5A2B, 0 2px 8px 0 rgba(0,0,0,0.08)' }}
                             onClick={() => (window.location.href = "/payment-credits")}
@@ -326,9 +278,13 @@ const SubmissionPage = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span>Buy Credits</span>
-                        </Button>
-                        <Button size="sm" variant={viewMode === 'playlists' ? undefined : 'outline'} onClick={() => setViewMode('playlists')}>Playlists</Button>
-                        <Button size="sm" variant={viewMode === 'submissions' ? undefined : 'outline'} onClick={() => setViewMode('submissions')}>Your Submissions</Button>
+                        </Button> */}
+                        {isAuthenticated ? (
+                            <>
+                                <Button size="sm" variant={viewMode === 'playlists' ? undefined : 'outline'} onClick={() => setViewMode('playlists')}>Playlists</Button>
+                                <Button size="sm" variant={viewMode === 'submissions' ? undefined : 'outline'} onClick={() => setViewMode('submissions')}>Your Submissions</Button>
+                            </>
+                        ) : null}
                     </div>
                 </div>
 
@@ -383,8 +339,7 @@ const SubmissionPage = () => {
 
                 {viewMode === 'playlists' && loading && <div className="text-center py-12">Loading...</div>}
                 {viewMode === 'playlists' && error && <div className="text-center py-6 text-destructive">{error}</div>}
-                {viewMode === 'submissions' && subsLoading && <div className="text-center py-12">Loading your submissions...</div>}
-                {viewMode === 'submissions' && subsError && <div className="text-center py-6 text-destructive">{subsError}</div>}
+                {/* {viewMode === 'submissions' && isAuthenticated && subsError && <div className="text-center py-6 text-destructive">{subsError}</div>} */}
 
                 {viewMode === 'playlists' && (
                     <>
@@ -453,61 +408,15 @@ const SubmissionPage = () => {
                                                 >
                                                     View
                                                 </Button>
-                                                <Dialog open={activePlaylist?.id === item.id} onOpenChange={(open) => {
-                                                    if (open) openSubmitDialog(item);
-                                                    else closeDialog();
-                                                }}>
-                                                    <DialogTrigger asChild>
-                                                        <Button size="sm" className="ml-auto" onClick={() => openSubmitDialog(item)}>Submit to playlist</Button>
-                                                    </DialogTrigger>
-                                                    <DialogContent>
-                                                        <DialogHeader>
-                                                            <DialogTitle>Submit to {item.playlist_name}</DialogTitle>
-                                                            <DialogDescription>Provide your track ID and a short message to submit your track for review.</DialogDescription>
-                                                        </DialogHeader>
-
-                                                        <Form {...form}>
-                                                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                                                <input type="hidden" {...form.register('playlistId')} />
-
-                                                                <FormField
-                                                                    control={form.control}
-                                                                    name="trackId"
-                                                                    render={({ field }) => (
-                                                                        <FormItem>
-                                                                            <FormLabel>Track ID</FormLabel>
-                                                                            <FormControl>
-                                                                                <Input placeholder="https://open.spotify.com/track/..." {...field} />
-                                                                            </FormControl>
-                                                                            <FormMessage />
-                                                                        </FormItem>
-                                                                    )}
-                                                                />
-
-                                                                <FormField
-                                                                    control={form.control}
-                                                                    name="message"
-                                                                    render={({ field }) => (
-                                                                        <FormItem>
-                                                                            <FormLabel>Message</FormLabel>
-                                                                            <FormControl>
-                                                                                <Textarea placeholder="Short message for the curator" {...field} />
-                                                                            </FormControl>
-                                                                            <FormMessage />
-                                                                        </FormItem>
-                                                                    )}
-                                                                />
-
-                                                                <DialogFooter>
-                                                                    <DialogClose asChild>
-                                                                        <Button variant="outline">Cancel</Button>
-                                                                    </DialogClose>
-                                                                    <Button type="submit">Send Submission</Button>
-                                                                </DialogFooter>
-                                                            </form>
-                                                        </Form>
-                                                    </DialogContent>
-                                                </Dialog>
+                                                <SubmitToPlaylistDialog
+                                                    playlist={item}
+                                                    open={activePlaylist?.id === item.id}
+                                                    onOpenChange={(open) => {
+                                                        if (open) openSubmitDialog(item);
+                                                        else closeDialog();
+                                                    }}
+                                                    trigger={<Button size="sm" className="ml-auto" onClick={() => openSubmitDialog(item)}>Submit to playlist</Button>}
+                                                />
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -516,68 +425,8 @@ const SubmissionPage = () => {
                     </>
                 )}
 
-                {viewMode === 'submissions' && (
-                    <>
-                        {!subsLoading && !subsError && userSubmissions.length === 0 && (
-                            <div className="text-center py-12">You have no submissions yet.</div>
-                        )}
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {userSubmissions.map((s: any) => (
-                                <Card key={s.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                                    <div className="relative h-40 bg-gray-100 w-full flex items-center justify-center overflow-hidden">
-                                        {s.track_image_url ? (
-                                            <LazyImage src={s.track_image_url} alt={s.playlist?.playlist_name ?? 'Track image'} className="w-full h-full object-cover" />
-                                        ) : s.playlist?.image_url ? (
-                                            <LazyImage src={s.playlist.image_url} alt={s.playlist.playlist_name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="text-gray-400">No image or track</div>
-                                        )}
-
-                                        {/* status icon overlay */}
-                                        {s.reviewed && (
-                                            <div className="absolute top-2 right-2 z-10">
-                                                {s.accepted ? (
-                                                    <CheckCircle className="text-green-600 bg-white rounded-full p-0.5" size={30} />
-                                                ) : (
-                                                    <XCircle className="text-red-600 bg-white rounded-full p-0.5" size={30} />
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <CardContent className="pt-4">
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <h3 className="font-semibold text-lg">Submission to {s.playlist?.playlist_name ?? s.playlist_id}</h3>
-                                                <div className="text-sm text-gray-600 mt-1">{s.message}</div>
-                                            </div>
-                                            <div className="text-sm text-gray-600 flex items-center gap-2">
-                                                {s.reviewed ? (
-                                                    <span className="text-sm text-gray-700">{daysSince(s.reviewed_at ?? s.playlist?.reviewed_at) ?? 'Reviewed'}</span>
-                                                ) : (
-                                                    <span className="inline-block text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">Pending</span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {s.review_remarks && (
-                                            <div className="mt-3">
-                                                <div className={`p-3 rounded text-sm ${s.accepted === true ? 'bg-green-50 border border-green-200 text-green-800' : s.accepted === false ? 'bg-red-50 border border-red-200 text-red-800' : 'bg-yellow-50 border border-yellow-200 text-yellow-800'}`}>
-                                                    <strong className="block font-medium">Review notes</strong>
-                                                    <div className="mt-1">{s.review_remarks}</div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="mt-4 flex gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => window.open(s.playlist?.playlist_url ?? s.playlist_url, '_blank')}>View Playlist</Button>
-                                            <Button variant="ghost" size="sm" onClick={() => window.open(`https://open.spotify.com/track/${s.track_id}`, '_blank')}>View Track</Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </>
+                {viewMode === 'submissions' && isAuthenticated && (
+                    <UserSubmissionsList submissions={userSubmissions} loading={subsLoading} error={subsError} />
                 )}
             </div>
         </PageLayout>

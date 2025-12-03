@@ -218,7 +218,7 @@ const Admin = () => {
             <CardContent>
               <div className="mb-4">
                 <label htmlFor="job-select" className="font-medium text-sm md:text-base">
-                  Select Job:
+                  Select Campaign:
                 </label>
                 <Select value={selectedJob} onValueChange={setSelectedJob}>
                   <SelectTrigger className="w-full md:w-80 text-sm">

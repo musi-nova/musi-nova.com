@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { AdvancedVideo } from '@cloudinary/react';
 import { Cloudinary } from '@cloudinary/url-gen';
 

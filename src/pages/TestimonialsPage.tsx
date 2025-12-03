@@ -1,20 +1,19 @@
-
 import Footer from '@/components/Footer';
-import Hero from '@/components/home/Hero';
+import Testimonials from '@/components/home/Testimonials';
 import Navbar from '@/components/Navbar';
 
-const Index = () => {
+const TestimonialsPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* <Navbar /> */}
+      <Navbar />
 
       <main className="flex-grow">
-        <Hero />
+        <Testimonials />
       </main>
 
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 };
 
-export default Index;
+export default TestimonialsPage;
