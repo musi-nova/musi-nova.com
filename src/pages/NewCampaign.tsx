@@ -54,6 +54,8 @@ const moods = [
 const NewCampaign = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [hasPlaylist, setHasPlaylist] = useState<string | null>(null);
+  const [createPlaylistForUser, setCreatePlaylistForUser] = useState(false);
+  const [generatedPlaylistId, setGeneratedPlaylistId] = useState<string | null>(null);
   const [hasArtist, setHasArtist] = useState<string | null>(null);
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [artistUrl, setArtistUrl] = useState('');
@@ -208,6 +210,74 @@ const NewCampaign = () => {
     window.scrollTo(0, 0);
   };
 
+  const createPlaylistForUserAndContinue = async () => {
+    // Create a playlist via our backend and advance to next step using returned playlist_id
+    setIsSubmitting(true);
+    try {
+      // Require artist and track for this flow
+      if (!artistUrl || !trackUrl) {
+        toast({ title: 'Missing information', description: 'Please provide both artist and track URLs so we can create a playlist for you.', variant: 'destructive' });
+        return;
+      }
+
+      const artistId = extractArtistId(artistUrl);
+      const trackId = extractTrackId(trackUrl);
+
+      if (!artistId || !trackId) {
+        toast({ title: 'Invalid URLs', description: 'Please provide valid Spotify artist and track links.', variant: 'destructive' });
+        return;
+      }
+
+      // If user is not authenticated, ensure a guest user exists and is logged in
+      if (!isAuthenticated) {
+        try {
+          const { ensureGuestUser } = await import('@/lib/guestUser');
+          const res = await ensureGuestUser(login);
+          if (!res.success) {
+            toast({ title: 'Error', description: 'Failed to create a guest account. Please try again.', variant: 'destructive' });
+            return;
+          }
+        } catch (err) {
+          console.error('Failed to ensure guest before creating playlist', err);
+          toast({ title: 'Error', description: 'Failed to create a guest account. Please try again.', variant: 'destructive' });
+          return;
+        }
+      }
+      const body: any = { name: 'MusiNova Playlist', description: 'temp description', public: true };
+      body.artistId = artistId;
+      body.trackId = trackId;
+      const resp = await apiFetch('spotify/musinova/playlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!resp.ok) {
+        throw new Error(`Failed to create playlist: ${resp.statusText}`);
+      }
+
+      const data = await resp.json();
+      const playlistId = data.playlist_id || data.id || null;
+      if (!playlistId) {
+        throw new Error('API did not return a playlist_id');
+      }
+
+      setGeneratedPlaylistId(playlistId);
+      // prefill playlistUrl so later steps show the value
+      setPlaylistUrl(`https://open.spotify.com/playlist/${playlistId}`);
+      setHasPlaylist('yes');
+      setCreatePlaylistForUser(false);
+      // advance to next step
+      setCurrentStep((s) => s + 1);
+      window.scrollTo(0, 0);
+    } catch (err) {
+      console.error('Error creating playlist for user:', err);
+      toast({ title: 'Error', description: 'Failed to create playlist. Please try again.', variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleBack = () => {
     setCurrentStep(currentStep - 1);
     window.scrollTo(0, 0);
@@ -219,7 +289,7 @@ const NewCampaign = () => {
 
     const campaignData: any = {
       campaignName,
-      playlistId: extractPlaylistId(playlistUrl),
+      playlistId: generatedPlaylistId || extractPlaylistId(playlistUrl),
       // artistId is optional — only include if an artist URL was provided
       trackId: extractTrackId(trackUrl),
       genre: selectedGenre,
@@ -462,6 +532,17 @@ const NewCampaign = () => {
                     </Button>
 
                     <Button
+                      variant={hasPlaylist === 'create' ? 'default' : 'outline'}
+                      className={`w-full justify-start p-4 h-auto text-left ${hasPlaylist === 'create' ? 'bg-musinova-green hover:bg-musinova-green/90' : ''}`}
+                      onClick={() => setHasPlaylist('create')}
+                    >
+                      <div>
+                        <div className="font-medium">No</div>
+                        <div className="text-sm opacity-90">Make my playlist for me</div>
+                      </div>
+                    </Button>
+                    
+                    <Button
                       variant={hasPlaylist === 'no' ? 'default' : 'outline'}
                       className={`w-full justify-start p-4 h-auto text-left ${hasPlaylist === 'no' ? 'bg-musinova-green hover:bg-musinova-green/90' : ''}`}
                       onClick={() => setHasPlaylist('no')}
@@ -612,6 +693,31 @@ const NewCampaign = () => {
                         <p className="mt-2">
                           Need more help? <Link to="/help" className="text-musinova-green hover:underline">Send us a message.</Link>
                         </p>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {hasPlaylist === 'create' && (
+                    <div className="mb-8">
+                      <h3 className="font-medium mb-4">Let us create a playlist for you</h3>
+                      <p className="text-sm text-gray-600 mb-4">Provide an artist url and a track url (required) and we'll create a playlist and use it for your campaign.</p>
+
+                      <div className="mb-3">
+                        <label htmlFor="createArtistUrl" className="block text-sm font-medium mb-1">Artist URL <span className="text-red-500">*</span></label>
+                        <Input id="createArtistUrl" placeholder="https://open.spotify.com/artist/..." value={artistUrl} onChange={(e) => setArtistUrl(e.target.value)} />
+                      </div>
+
+                      <div className="mb-3">
+                        <label htmlFor="createTrackUrl" className="block text-sm font-medium mb-1">Track URL <span className="text-red-500">*</span></label>
+                        <Input id="createTrackUrl" placeholder="https://open.spotify.com/track/..." value={trackUrl} onChange={(e) => setTrackUrl(e.target.value)} />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setHasPlaylist(null)}>Cancel</Button>
+                        <Button className="btn-primary" onClick={createPlaylistForUserAndContinue} disabled={isSubmitting || !artistUrl || !trackUrl}>
+                          {isSubmitting ? 'Creating...' : 'Create playlist for me'}
+                        </Button>
                       </div>
                     </div>
                   )}
