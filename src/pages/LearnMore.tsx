@@ -13,10 +13,10 @@ const LearnMore = () => {
       <Navbar />
 
       <main className="flex-grow">
-        <PainPoints />
-        <Testimonials />
-        <Benefits />
         <HowItWorks />
+        <Testimonials />
+        <PainPoints />
+        <Benefits />
         <AdExamples />
         <CallToAction />
       </main>

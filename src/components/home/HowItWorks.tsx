@@ -11,9 +11,9 @@ const HowItWorks = () => {
             <div className="w-16 h-16 bg-musinova-green rounded-full flex items-center justify-center text-white mb-4 mx-auto">
               <CheckCircle size={28} />
             </div>
-            <h3 className="text-xl font-bold text-center mb-3 text-musinova-darkgray">1. Check Your Playlist</h3>
+            <h3 className="text-xl font-bold text-center mb-3 text-musinova-darkgray">1. Choose Your Playlist</h3>
             <p className="text-gray-600 text-center">
-              Our playlist checker ensures your playlist is optimized for promotion, with the right mix of songs and structure.
+              Select your playlist or let us create one for you to start promoting your music.
             </p>
           </div>
           
