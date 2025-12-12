@@ -16,6 +16,12 @@ const videos = [
     desc: 'Label Testimonial from Jay',
     url: 'https://starburstrecords.com',
   },
+  {
+    publicId: 'harry_bertora_testimonial_jwh3ha',
+    name: 'Harry Bertora',
+    desc: 'Artist Testimonial from Harry Bertora',
+    url: 'https://open.spotify.com/artist/0V13wPjbDVmeAOrHYo8zlw',
+  }
 ];
 
 const Testimonials = () => {
@@ -28,7 +34,7 @@ const Testimonials = () => {
         <p className="text-center text-musinova-darkgray mb-12 max-w-2xl mx-auto">
           Don't just take our word for it. Hear directly from artists and labels who have used Musi-Nova to grow their audience.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {videos.map((video, idx) => (
             <div key={video.publicId} className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center">
               <div className="relative w-full max-w-[350px] mx-auto rounded-lg overflow-hidden mb-4" style={{ aspectRatio: '9/16' }}>
