@@ -30,7 +30,7 @@ type Submission = {
 };
 
 const SubmissionPage = () => {
-    const { isAuthenticated, login } = useAuth();
+    const { isAuthenticated, login, register } = useAuth();
     const navigate = useNavigate();
     const [items, setItems] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
@@ -186,7 +186,7 @@ const SubmissionPage = () => {
             // If the user is not authenticated, ensure a guest user exists and is logged in
             if (!isAuthenticated) {
                 const { ensureGuestUser } = await import('@/lib/guestUser');
-                const res = await ensureGuestUser(login, 'pending_submission', body);
+                const res = await ensureGuestUser(login, register, 'pending_submission', body);
                 if (!res.success) return; // ensureGuestUser handles persisting and redirecting on failure
             }
 
@@ -292,15 +292,15 @@ const SubmissionPage = () => {
                 {viewMode === 'playlists' && (
                     <div className="mb-4 flex justify-center">
                         <div className="w-full max-w-6xl bg-white p-4 rounded-md shadow-sm">
-                            <div className="flex flex-wrap items-center gap-3">
-                                <input className="flex-1 min-w-[160px] border p-2 rounded" placeholder="Search by name" value={filterName} onChange={(e) => setFilterName(e.target.value)} />
+                            <div className="flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-3">
+                                <input className="w-full md:flex-1 min-w-[160px] border p-2 rounded" placeholder="Search by name" value={filterName} onChange={(e) => setFilterName(e.target.value)} />
 
-                                <div className="relative">
+                                <div className="relative w-full md:w-auto">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <button className="text-left border p-2 rounded">{filterGenres.length > 0 ? filterGenres.join(', ') : 'Filter genres'}</button>
+                                            <button className="w-full text-left border p-2 rounded truncate">{filterGenres.length > 0 ? filterGenres.join(', ') : 'Filter genres'}</button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
+                                        <DropdownMenuContent className="w-[200px]">
                                             <DropdownMenuLabel>Genres</DropdownMenuLabel>
                                             {uniqueGenres.map((g) => (
                                                 <DropdownMenuCheckboxItem key={g} checked={filterGenres.includes(g)} onCheckedChange={(v) => toggleGenre(g, !!v)}>{g}</DropdownMenuCheckboxItem>
@@ -309,12 +309,12 @@ const SubmissionPage = () => {
                                     </DropdownMenu>
                                 </div>
 
-                                <div className="relative">
+                                <div className="relative w-full md:w-auto">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <button className="text-left border p-2 rounded">{filterMoods.length > 0 ? filterMoods.join(', ') : 'Filter moods'}</button>
+                                            <button className="w-full text-left border p-2 rounded truncate">{filterMoods.length > 0 ? filterMoods.join(', ') : 'Filter moods'}</button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
+                                        <DropdownMenuContent className="w-[200px]">
                                             <DropdownMenuLabel>Moods</DropdownMenuLabel>
                                             {uniqueMoods.map((m) => (
                                                 <DropdownMenuCheckboxItem key={m} checked={filterMoods.includes(m)} onCheckedChange={(v) => toggleMood(m, !!v)}>{m}</DropdownMenuCheckboxItem>
@@ -323,15 +323,15 @@ const SubmissionPage = () => {
                                     </DropdownMenu>
                                 </div>
 
-                                <select className="border p-2 rounded" value={filterInstrumental === null ? 'any' : filterInstrumental ? 'yes' : 'no'} onChange={(e) => setFilterInstrumental(e.target.value === 'any' ? null : e.target.value === 'yes')}>
+                                <select className="w-full md:w-auto border p-2 rounded" value={filterInstrumental === null ? 'any' : filterInstrumental ? 'yes' : 'no'} onChange={(e) => setFilterInstrumental(e.target.value === 'any' ? null : e.target.value === 'yes')}>
                                     <option value="any">Any instrumentality</option>
                                     <option value="yes">Instrumental only</option>
                                     <option value="no">Contains vocals only</option>
                                 </select>
 
-                                <input type="number" className="border p-2 rounded w-32" placeholder="Max credits" value={filterMaxCredits ?? ''} onChange={(e) => setFilterMaxCredits(e.target.value ? Number(e.target.value) : null)} />
+                                <input type="number" className="w-full md:w-32 border p-2 rounded" placeholder="Max credits" value={filterMaxCredits ?? ''} onChange={(e) => setFilterMaxCredits(e.target.value ? Number(e.target.value) : null)} />
 
-                                <button className="ml-auto text-sm text-musinova-navy" onClick={() => { setFilterName(''); setFilterGenres([]); setFilterMoods([]); setFilterInstrumental(null); setFilterMaxCredits(null); }}>Clear</button>
+                                <button className="w-full md:w-auto md:ml-auto text-sm text-musinova-navy py-2" onClick={() => { setFilterName(''); setFilterGenres([]); setFilterMoods([]); setFilterInstrumental(null); setFilterMaxCredits(null); }}>Clear</button>
                             </div>
                         </div>
                     </div>

@@ -17,7 +17,8 @@ import UserSubmissionsList from '@/components/UserSubmissionsList';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import MobileBadge from '@/components/ui/mobile-badge';
-import { Calendar, AlertTriangle } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Calendar, AlertTriangle, Info } from 'lucide-react';
 import GuestBanner from '@/components/GuestBanner';
 import {
   Area,
@@ -443,7 +444,7 @@ const Dashboard = () => {
 
         {/* Job selector (only for campaign view) */}
         {viewMode === 'campaign' && (
-          <div className="flex flex-wrap items-center gap-2 md:gap-4">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-4">
             <Select value={selectedJob} onValueChange={setSelectedJob}>
               <SelectTrigger className="w-full md:w-80 text-sm">
                 <SelectValue placeholder="Select job" />
@@ -458,7 +459,7 @@ const Dashboard = () => {
             </Select>
 
             <Button
-              className="text-sm md:text-base"
+              className="text-sm md:text-base w-full md:w-auto"
               onClick={() => {
                 const selected = jobs.find((job) => job.id === selectedJob);
                 if (selected?.playlist_id) {
@@ -489,206 +490,291 @@ const Dashboard = () => {
       {/* Render Campaign Summary */}
       {viewMode === 'campaign' && campaignSummary && (
         <div className="mb-4">
-          <Card className="bg-white p-4 rounded shadow-md py-8 relative">
-            {/* Top-right badge: show 'Not currently running' when end_date is null, otherwise show formatted end date */}
-            <div className="absolute top-3 right-3 flex items-center gap-2">
-              {/* End date badge or not running (mobile icon + tooltip, desktop label) */}
-              {(() => {
-                const end = campaignSummary?.end_date ? new Date(campaignSummary.end_date) : null;
-                const now = new Date();
-                if (!end) {
-                  return (
+          <Card className="bg-white rounded-xl shadow-sm border-gray-100 overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-gray-50 bg-gray-50/30">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100">
+                    <Calendar className="h-5 w-5 text-musinova-green" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-semibold text-gray-900">Campaign Status</h2>
+                    <p className="text-xs text-gray-500">Real-time tracking & management</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* End date badge or not running */}
+                  {(() => {
+                    const end = campaignSummary?.end_date ? new Date(campaignSummary.end_date) : null;
+                    const now = new Date();
+                    if (!end) {
+                      return (
+                        <MobileBadge
+                          icon={<AlertTriangle size={14} />}
+                          label={"Not running"}
+                          explanation={"This campaign is not currently running."}
+                          variant="destructive"
+                        />
+                      );
+                    }
+
+                    if (end.getTime() < now.getTime()) {
+                      return (
+                        <MobileBadge
+                          icon={<AlertTriangle size={14} />}
+                          label={`Ended ${formatEndDate(end.toISOString())}`}
+                          explanation={`Ended ${formatEndDate(end.toISOString())}`}
+                          variant="destructive"
+                        />
+                      );
+                    }
+
+                    return (
+                      <MobileBadge
+                        icon={<Calendar size={14} />}
+                        label={`Ends ${formatEndDate(end.toISOString())}`}
+                        explanation={`Ends ${formatEndDate(end.toISOString())}`}
+                        variant="outline"
+                      />
+                    );
+                  })()}
+
+                  {/* Credit badge when zero */}
+                  {campaignSummary?.credit_amount === 0 && (
                     <MobileBadge
-                      icon={<AlertTriangle size={16} />}
-                      label={"Not currently running"}
-                      explanation={"This campaign is not currently running."}
+                      icon={<AlertTriangle size={14} />}
+                      label={"No credits"}
+                      explanation={"There are no credits on this campaign. Tap 'Assign' to add credits."}
                       variant="destructive"
                     />
-                  );
-                }
+                  )}
 
-                // If end date is in the past, show a destructive 'Ended' badge
-                if (end.getTime() < now.getTime()) {
-                  return (
-                    <MobileBadge
-                      icon={<AlertTriangle size={16} />}
-                      label={`Ended ${formatEndDate(end.toISOString())}`}
-                      explanation={`Ended ${formatEndDate(end.toISOString())}`}
-                      variant="destructive"
-                    />
-                  );
-                }
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="h-8 text-xs font-medium bg-musinova-brown text-white hover:bg-musinova-green/20 border-none" 
+                    onClick={openAssignDialog} 
+                    disabled={creditsLoading}
+                  >
+                    Assign Credits
+                  </Button>
 
-                return (
-                  <MobileBadge
-                    icon={<Calendar size={16} />}
-                    label={`Ends ${formatEndDate(end.toISOString())}`}
-                    explanation={`Ends ${formatEndDate(end.toISOString())}`}
-                    variant="outline"
-                  />
-                );
-              })()}
+                  <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Assign credits to campaign</DialogTitle>
+                        <DialogDescription>
+                          Enter the number of credits to assign to this campaign.
+                        </DialogDescription>
+                      </DialogHeader>
 
-              {/* Credit badge when zero */}
-              {campaignSummary?.credit_amount === 0 && (
-                <MobileBadge
-                  icon={<AlertTriangle size={16} />}
-                  label={"No credits"}
-                  explanation={"There are no credits on this campaign. Tap 'Assign credits' to add credits."}
-                  variant="destructive"
-                />
-              )}
-
-              {/* Assign credits button (opens a dialog) */}
-              <div>
-                <Button size="sm" variant="secondary" className="h-8 inline-flex items-center" onClick={openAssignDialog} disabled={creditsLoading}>Assign credits</Button>
-                <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Assign credits to campaign</DialogTitle>
-                      <DialogDescription>
-                        Enter the number of credits to assign to this campaign.
-                      </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-4 py-2">
-                      {/* Slider: min 100, max = user's current credits */}
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-4">
-                          <div className="w-40 text-sm">{Number(assignAmount)} credits</div>
-                          <div className="flex-1">
-                            <Slider
-                              min={100}
-                              max={Number(currentCredits ?? (Number((user as any)?.credits ?? (user as any)?.credit_amount ?? 1000)))}
-                              step={1}
-                              value={[Number(assignAmount) || 100]}
-                              onValueChange={(values) => setAssignAmount(values[0])}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Min/Max labels under the slider */}
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>100 credits</span>
-                          <span>{Number(currentCredits ?? (Number((user as any)?.credits ?? (user as any)?.credit_amount ?? 1000)))} credits</span>
-                        </div>
-                        {/* Duration slider */}
-                        <div className="pt-4 border-t border-gray-100">
-                          <div className="flex items-center gap-4">
-                            <div className="w-40 text-sm">{assignDurationDays} days</div>
+                      <div className="space-y-6 py-4">
+                        {/* Slider: min 100, max = user's current credits */}
+                        <div className="flex flex-col gap-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                            <div className="w-full sm:w-40 text-sm font-medium">{Number(assignAmount)} credits</div>
                             <div className="flex-1">
                               <Slider
-                                min={14}
-                                max={90}
+                                min={100}
+                                max={Number(currentCredits ?? (Number((user as any)?.credits ?? (user as any)?.credit_amount ?? 1000)))}
                                 step={1}
-                                value={[assignDurationDays]}
-                                onValueChange={(values) => setAssignDurationDays(values[0])}
+                                value={[Number(assignAmount) || 100]}
+                                onValueChange={(values) => setAssignAmount(values[0])}
                               />
                             </div>
                           </div>
 
-                          <div className="flex justify-between text-xs text-gray-500 mt-2">
-                            <span>14 days</span>
-                            <span>90 days</span>
+                          {/* Min/Max labels under the slider */}
+                          <div className="flex justify-between text-[10px] sm:text-xs text-gray-500">
+                            <span>100 credits</span>
+                            <span>{Number(currentCredits ?? (Number((user as any)?.credits ?? (user as any)?.credit_amount ?? 1000)))} credits</span>
                           </div>
+                        </div>
 
-                          <div className="text-xs text-gray-600 mt-2">
-                            {assignDurationDays > 0 && (
-                              <span>Ends {formatEndDate(new Date(Date.now() + assignDurationDays * 24 * 60 * 60 * 1000).toISOString())}</span>
-                            )}
+                        {/* Duration slider */}
+                        <div className="pt-6 border-t border-gray-100">
+                          <div className="flex flex-col gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                              <div className="w-full sm:w-40 text-sm font-medium">{assignDurationDays} days</div>
+                              <div className="flex-1">
+                                <Slider
+                                  min={14}
+                                  max={90}
+                                  step={1}
+                                  value={[assignDurationDays]}
+                                  onValueChange={(values) => setAssignDurationDays(values[0])}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between text-[10px] sm:text-xs text-gray-500">
+                              <span>14 days</span>
+                              <span>90 days</span>
+                            </div>
+
+                            <div className="text-xs text-gray-600 mt-1 bg-blue-50 p-2 rounded border border-blue-100">
+                              {assignDurationDays > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  Ends {formatEndDate(new Date(Date.now() + assignDurationDays * 24 * 60 * 60 * 1000).toISOString())}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <DialogFooter>
-                      <Button disabled={assignLoading || creditsLoading || Number(assignAmount) < 100} onClick={handleAssignCredits}>{assignLoading ? 'Assigning...' : 'Assign'}</Button>
-                      <DialogClose asChild>
-                        <Button variant="ghost">Cancel</Button>
-                      </DialogClose>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                      <DialogFooter>
+                        <Button disabled={assignLoading || creditsLoading || Number(assignAmount) < 100} onClick={handleAssignCredits}>{assignLoading ? 'Assigning...' : 'Assign'}</Button>
+                        <DialogClose asChild>
+                          <Button variant="ghost">Cancel</Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </div>
-            <CardContent>
-              <Tabs defaultValue="summary" className="w-full">
-                <TabsList className="mb-4 pt-6 md:pt-0">
-                  <TabsTrigger value="summary" className="data-[state=active]:bg-musinova-green data-[state=active]:text-white">Summary</TabsTrigger>
-                  <TabsTrigger value="performance" className="data-[state=active]:bg-musinova-green data-[state=active]:text-white">Performance</TabsTrigger>
-                </TabsList>
 
-                <TabsContent value="summary">
-                  <div className="flex items-center gap-4 mb-4">
+            <CardContent className="p-0">
+              {/* Mobile Alerts Section - More obvious reasons for issues */}
+              <div className="md:hidden px-4 pt-4 space-y-2">
+                {(() => {
+                  const end = campaignSummary?.end_date ? new Date(campaignSummary.end_date) : null;
+                  const now = new Date();
+                  const alerts = [];
+
+                  if (!end) {
+                    alerts.push({
+                      title: "Campaign Not Running",
+                      description: "This campaign is not currently running. Assign credits to start.",
+                      variant: "destructive" as const
+                    });
+                  } else if (end.getTime() < now.getTime()) {
+                    alerts.push({
+                      title: "Campaign Ended",
+                      description: `This campaign ended on ${formatEndDate(end.toISOString())}.`,
+                      variant: "destructive" as const
+                    });
+                  }
+
+                  if (campaignSummary?.credit_amount === 0) {
+                    alerts.push({
+                      title: "No Credits Remaining",
+                      description: "Your campaign has run out of credits and is paused.",
+                      variant: "destructive" as const
+                    });
+                  }
+
+                  return alerts.map((alert, i) => (
+                    <Alert key={i} variant={alert.variant} className="py-2 px-3 border-destructive/20 bg-destructive/5">
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
+                      <AlertTitle className="text-xs font-bold text-destructive">{alert.title}</AlertTitle>
+                      <AlertDescription className="text-[11px] text-destructive/90">
+                        {alert.description}
+                      </AlertDescription>
+                    </Alert>
+                  ));
+                })()}
+              </div>
+
+              <Tabs defaultValue="summary" className="w-full">
+                <div className="px-4 md:px-6 pt-4">
+                  <TabsList className="grid w-full grid-cols-2 bg-gray-100/50 p-1 rounded-lg">
+                    <TabsTrigger 
+                      value="summary" 
+                      className="rounded-md py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-musinova-green data-[state=active]:shadow-sm"
+                    >
+                      Summary
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="performance" 
+                      className="rounded-md py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-musinova-green data-[state=active]:shadow-sm"
+                    >
+                      Performance
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="summary" className="p-4 md:p-6 mt-0">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
                     <img
                       src={campaignSummary.playlist_image_url}
                       alt={campaignSummary.playlist_name}
-                      className="w-20 h-20 rounded-md object-cover"
+                      className="w-20 h-20 rounded-xl object-cover shadow-md border-2 border-white"
                     />
-                    <div>
-                      <h3 className="text-xl font-bold">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-900">
                         {campaignSummary.playlist_name}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                         {campaignSummary.playlist_description}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        <strong>Owner:</strong> {campaignSummary.playlist_owner}
-                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Owner:</span>
+                        <span className="text-xs font-semibold text-musinova-green bg-musinova-green/5 px-2 py-0.5 rounded">
+                          {campaignSummary.playlist_owner}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-600">Total Spend</h4>
-                      <p className="text-lg font-bold text-gray-800">
-                        {campaignSummary.spend || 0} / 
-                        <span className="ml-2 text-sm font-medium text-gray-600">
-                          {((campaignSummary.credit_budget ?? campaignSummary.credit_amount ?? 0)).toLocaleString()} credits
-                        </span>
-                      </p>
+                  {/* ...existing code... */}
+                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spend</h4>
+                      <div className="mt-1">
+                        <p className="text-lg font-bold text-musinova-darkgray">
+                          {campaignSummary.spend || 0}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          of {((campaignSummary.credit_budget ?? campaignSummary.credit_amount ?? 0)).toLocaleString()} credits
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-600">
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Total Followers
                       </h4>
-                      <p className="text-lg font-bold text-gray-800">
-                        {campaignSummary.playlist_followers_total}
+                      <p className="text-lg font-bold text-musinova-darkgray mt-1">
+                        {campaignSummary.playlist_followers_total?.toLocaleString()}
                       </p>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-600">
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Total Tracks
                       </h4>
-                      <p className="text-lg font-bold text-gray-800">
+                      <p className="text-lg font-bold text-musinova-darkgray mt-1">
                         {campaignSummary.playlist_tracks_total}
                       </p>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-600">Genre</h4>
-                      <p className="text-lg font-bold text-gray-800">
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Genre</h4>
+                      <p className="text-lg font-bold text-musinova-darkgray mt-1">
                         {campaignSummary.campaign_genre || "N/A"}
                       </p>
                     </div>
-                    <div className="col-span-2">
-                      <h4 className="text-sm font-medium text-gray-600">Moods</h4>
-                      <p className="text-lg font-bold text-gray-800">
+                    <div className="col-span-1 xs:col-span-2 sm:col-span-2 md:col-span-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Moods</h4>
+                      <p className="text-base font-semibold text-musinova-darkgray mt-1">
                         {campaignSummary.campaign_moods?.join(", ") || "N/A"}
                       </p>
                     </div>
                   </div>
                 </TabsContent>
 
-                <TabsContent value="performance">
-                  <ResponsiveContainer width="100%" height={400}>
-                    <AreaChart
-                      data={timeSeriesData}
-                      margin={{
-                        top: 10,
-                        right: isMobile ? 10 : 20,
-                        left: isMobile ? 0 : 10,
-                        bottom: isMobile ? 40 : 20,
-                      }}
-                    >
+                <TabsContent value="performance" className="p-4 md:p-6 mt-0">
+                  <div className="h-[300px] sm:h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={timeSeriesData}
+                        margin={{
+                          top: 10,
+                          right: isMobile ? 5 : 20,
+                          left: isMobile ? -20 : 10,
+                          bottom: isMobile ? 20 : 20,
+                        }}
+                      >
                       <defs>
                         <linearGradient
                           id="colorFollowers"
@@ -725,31 +811,32 @@ const Dashboard = () => {
                       />
                       <YAxis
                         yAxisId="left"
-                        width={isMobile ? 40 : 60}
-                        tick={{ fontSize: isMobile ? 10 : 12 }}
-                        label={{
+                        width={isMobile ? 30 : 60}
+                        tick={{ fontSize: isMobile ? 9 : 12 }}
+                        label={!isMobile ? {
                           value: "Followers",
                           angle: -90,
                           position: "insideLeft",
-                        }}
+                        } : undefined}
                       />
                       <YAxis
                         yAxisId="right"
                         orientation="right"
-                        width={isMobile ? 40 : 60}
-                        tick={{ fontSize: isMobile ? 10 : 12 }}
-                        label={{
+                        width={isMobile ? 30 : 60}
+                        tick={{ fontSize: isMobile ? 9 : 12 }}
+                        label={!isMobile ? {
                           value: "Spend ($)",
                           angle: -90,
                           position: "insideRight",
-                        }}
+                        } : undefined}
                       />
-                      <CartesianGrid strokeDasharray="3 3" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <Tooltip />
-                      <Legend />
+                      <Legend wrapperStyle={isMobile ? { fontSize: '10px', paddingTop: '10px' } : undefined} />
                       <Area
                         type="monotone"
                         dataKey="followers_total"
+                        name="Followers"
                         stroke="#5EA47C"
                         strokeWidth={2}
                         fillOpacity={1}
@@ -759,6 +846,7 @@ const Dashboard = () => {
                       <Area
                         type="monotone"
                         dataKey="spend"
+                        name="Spend ($)"
                         stroke="#8B5A2B"
                         strokeWidth={2}
                         fillOpacity={1}
@@ -767,6 +855,7 @@ const Dashboard = () => {
                       />
                     </AreaChart>
                   </ResponsiveContainer>
+                  </div>
                 </TabsContent>
               </Tabs>
             </CardContent>

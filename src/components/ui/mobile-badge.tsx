@@ -45,7 +45,7 @@ export default function MobileBadge({
         </div>
       ) : null}
 
-      {/* Mobile: show icon-only with clickable tooltip/explanation */}
+      {/* Mobile: show icon with label for destructive/important variants, else just icon */}
       <div className="md:hidden">
         <TooltipProvider delayDuration={0}>
           <Tooltip>
@@ -56,8 +56,9 @@ export default function MobileBadge({
                 role="button"
                 tabIndex={0}
                 className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-md",
-                  variantClasses[variant]
+                  "inline-flex h-8 items-center justify-center rounded-md px-2 gap-1.5",
+                  variantClasses[variant],
+                  variant !== "destructive" && "w-8 px-0"
                 )}
                 aria-label={typeof label === "string" ? label : "More info"}
                 onKeyDown={(e) => {
@@ -70,10 +71,14 @@ export default function MobileBadge({
                 }}
               >
                 {Icon}
+                {variant === "destructive" && label && (
+                  <span className="text-[10px] font-bold uppercase whitespace-nowrap">{label}</span>
+                )}
               </button>
             </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-sm">{explanation}</div>
+            <TooltipContent side="bottom" align="end" className="max-w-[200px]">
+              <div className="text-xs font-medium mb-1">{label}</div>
+              <div className="text-[11px] leading-relaxed opacity-90">{explanation}</div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

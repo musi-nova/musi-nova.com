@@ -43,12 +43,15 @@ const PageLayout: React.FC<PageLayoutProps> = ({
         {/* Only show sidebar when needed and not expanded on mobile by default */}
         {showSidebar && (
           // Make the sidebar static/sticky and full-height while allowing the main area to scroll
-          <div className="flex-none">
+          <div className="hidden md:block flex-none">
             <div className="sticky top-0 h-screen">
               <Sidebar />
             </div>
           </div>
         )}
+
+        {/* On mobile, Sidebar component handles its own trigger and sheet */}
+        {showSidebar && isMobile && <Sidebar />}
 
         <main className={`flex-grow overflow-auto ${className}`}>
           <div className={`mx-auto ${isMobile ? 'px-2 pt-16' : 'px-4'}`}>

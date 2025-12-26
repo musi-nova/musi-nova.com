@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import PageLayout from '@/components/PageLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import emailjs from '@emailjs/browser';
+import { useAuth } from '@/hooks/use-auth';
 
 // Define the form schema
 const formSchema = z.object({
@@ -28,15 +29,23 @@ const formSchema = z.object({
 });
 
 const Help = () => {
+  const { user, isAuthenticated } = useAuth();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
+      name: user?.user_name || "",
+      email: user?.email || "",
       subject: "",
       message: "",
     },
   });
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      form.setValue('name', user.user_name || "");
+      form.setValue('email', user.email || "");
+    }
+  }, [isAuthenticated, user, form]);
 
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -104,7 +113,12 @@ const Help = () => {
                         <FormItem>
                           <FormLabel className="text-musinova-darkgray font-medium">Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="Your email" {...field} className="border-musinova-green/30 focus:border-musinova-green" />
+                            <Input 
+                              placeholder="Your email" 
+                              {...field} 
+                              className={`border-musinova-green/30 focus:border-musinova-green ${isAuthenticated ? "bg-gray-100 cursor-not-allowed" : ""}`} 
+                              readOnly={isAuthenticated}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

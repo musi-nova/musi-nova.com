@@ -23,59 +23,60 @@ const Pricing = () => {
 	};
 
 	// Handles guest campaign payment logic
-		const handlePlanClick = async (e: React.MouseEvent, planAmount: number) => {
-			e.preventDefault();
-			// Determine if this is a guest user by checking musinova_user.user_name
-			const storedUser = localStorage.getItem('musinova_user');
-			let isGuest = false;
-			if (storedUser) {
-				try {
-					const userObj = JSON.parse(storedUser);
-					const userName = (userObj?.user_name || '').toString().toLowerCase();
-					isGuest = userName.includes('guest');
-				} catch (err) {
-					isGuest = false;
-				}
-			}
-
-			if (!isGuest) {
-				navigate('/campaign/new');
-				return;
-			}
-
+	const handlePlanClick = async (e: React.MouseEvent, planAmount: number) => {
+		e.preventDefault();
+		// Determine if this is a guest user by checking musinova_user.user_name
+		const storedUser = localStorage.getItem('musinova_user');
+		let isGuest = false;
+		if (storedUser) {
 			try {
-				// If a pendingCampaign still exists, include it; otherwise send null and the server
-				// should associate the campaign with the guest user that was created earlier.
-				const pending = localStorage.getItem('pendingCampaign');
-				const campaignData = pending ? JSON.parse(pending) : null;
-				const amount = planAmount;
-				const breakdown = calculateBreakdown(amount);
-				const paymentDetails = {
-					paymentType: "one-time",
-					oneTimeAmount: amount,
-					oneTimeDuration: 30,  // Default to 30 days for all plans
-					selectedCampaign: campaignData,
-					breakdown,
-				};
-				const response = await apiFetch("stripe/create-checkout-session", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(paymentDetails),
-				});
-				if (!response.ok) {
-					throw new Error("Failed to create checkout session");
-				}
-				const { url } = await response.json();
-				localStorage.removeItem('pendingCampaign');
-				window.location.href = url; // Redirect to Stripe checkout
-			} catch (error) {
-				alert('There was an error creating your campaign. Please try again.');
-				localStorage.removeItem('pendingCampaign');
-				navigate('/campaign/new');
+				const userObj = JSON.parse(storedUser);
+				const userName = (userObj?.user_name || '').toString().toLowerCase();
+				isGuest = userName.includes('guest');
+			} catch (err) {
+				isGuest = false;
 			}
-		};
+		}
+
+		if (!isGuest) {
+			// Non-guest users should go to the new create campaign flow and pass the chosen plan amount
+			navigate('/campaign/new', { state: { planAmount } });
+			return;
+		}
+
+		try {
+			// If a pendingCampaign still exists, include it; otherwise send null and the server
+			// should associate the campaign with the guest user that was created earlier.
+			const pending = localStorage.getItem('pendingCampaign');
+			const campaignData = pending ? JSON.parse(pending) : null;
+			const amount = planAmount;
+			const breakdown = calculateBreakdown(amount);
+			const paymentDetails = {
+				paymentType: "one-time",
+				oneTimeAmount: amount,
+				oneTimeDuration: 30,  // Default to 30 days for all plans
+				selectedCampaign: campaignData,
+				breakdown,
+			};
+			const response = await apiFetch("stripe/create-checkout-session", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(paymentDetails),
+			});
+			if (!response.ok) {
+				throw new Error("Failed to create checkout session");
+			}
+			const { url } = await response.json();
+			localStorage.removeItem('pendingCampaign');
+			window.location.href = url; // Redirect to Stripe checkout
+		} catch (error) {
+			alert('There was an error creating your campaign. Please try again.');
+			localStorage.removeItem('pendingCampaign');
+			navigate('/campaign/new');
+		}
+	};
 
 	return (
 		<div
@@ -86,10 +87,10 @@ const Pricing = () => {
 			}}
 		>
 			<Navbar />
-			<main className="flex-grow flex flex-col justify-center items-center py-12">
+			<main className="flex-grow flex flex-col justify-center items-center py-8 md:py-12">
 				<div className="w-full max-w-7xl px-4">
 					<h1
-						className="text-5xl font-extrabold text-center text-musinova-green mb-2"
+						className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center text-musinova-green mb-2"
 						style={{
 							textShadow: "0 2px 8px #c7e5c6",
 						}}

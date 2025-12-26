@@ -27,8 +27,8 @@ const FlowTabs = memo(function FlowTabs({ flow, setFlow }: { flow: FlowType; set
 
 const MediaCard = memo(function MediaCard({ videoRef, activeCldVid }: { videoRef: React.RefObject<HTMLVideoElement>; activeCldVid: any | null }) {
   return (
-    <div className="w-full max-w-2xl md:max-w-2xl mt-6 md:mt-0 bg-white p-4 rounded-xl shadow-lg border border-gray-200 h-full min-h-[280px]">
-      <div className="relative w-full rounded-lg overflow-hidden h-full min-h-0">
+    <div className="w-full max-w-2xl md:max-w-2xl mt-6 md:mt-0 bg-white p-2 md:p-4 rounded-xl shadow-lg border border-gray-200 h-full min-h-[200px] md:min-h-[280px]">
+      <div className="relative w-full rounded-lg overflow-hidden h-full min-h-0 aspect-video md:aspect-auto">
         <div className={`absolute top-0 left-0 w-full h-full rounded-lg transition-opacity duration-300 ${'opacity-100 z-20'}`} style={{ background: '#000' }}>
           {activeCldVid ? (
             <AdvancedVideo
@@ -54,17 +54,17 @@ const LeftColumn = memo(function LeftColumn({ flow }: { flow: FlowType }) {
           <CardContent className="p-6 h-full flex flex-col justify-center">
             {flow === 'submit' ? (
               <>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-musinova-darkgray mb-6">Do you want to submit to our playlists?</h1>
-                <p className="text-lg md:text-xl text-musinova-darkgray mb-4 max-w-xl">Browse our catalogue of active playlists and pitch your track directly.</p>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-musinova-darkgray mb-6">Do you want to submit to our playlists?</h1>
+                <p className="text-base md:text-xl text-musinova-darkgray mb-4 max-w-xl">Browse our catalogue of active playlists and pitch your track directly.</p>
 
-                <ul className="list-disc pl-6 text-musinova-darkgray space-y-2 mb-4 max-w-xl">
+                <ul className="list-disc pl-6 text-musinova-darkgray space-y-2 mb-4 max-w-xl text-sm md:text-base">
                   <li>Great addition to your personal playlist. Boost your fan-finding machine even more.</li>
                   <li>Real bot-free playlists.</li>
                   <li>Low cost option, however your personal playlist will give the best results.</li>
                 </ul>
                 <div className="flex flex-wrap gap-4 sm:gap-6 items-start">
                   <Link to="/submissions" className="w-full sm:w-auto">
-                    <Button className={`font-bold text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-green text-white`}>
+                    <Button className={`font-bold text-base md:text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-green text-white`}>
                       Submit Your Music
                     </Button>
                   </Link>
@@ -72,11 +72,11 @@ const LeftColumn = memo(function LeftColumn({ flow }: { flow: FlowType }) {
               </>
             ) : (
               <>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-musinova-darkgray mb-6">Do you want your own playlists?</h1>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-musinova-darkgray mb-6">Do you want your own playlists?</h1>
 
-                <p className="text-lg md:text-xl text-musinova-darkgray mb-4 max-w-xl">Get your personal playlist, advertised by the team that has spent over <span className="font-semibold"> $250,000 </span> in high converting playlist campaigns.</p>
+                <p className="text-base md:text-xl text-musinova-darkgray mb-4 max-w-xl">Get your personal playlist, advertised by the team that has spent over <span className="font-semibold"> $250,000 </span> in high converting playlist campaigns.</p>
 
-                <ul className="list-disc pl-6 text-musinova-darkgray space-y-2 mb-4 max-w-xl">
+                <ul className="list-disc pl-6 text-musinova-darkgray space-y-2 mb-4 max-w-xl text-sm md:text-base">
                   <li>Your playlist, your music <span className="font-semibold">always</span> at the top.</li>
                   <li>Playlist tailored to your genre.</li>
                   <li><span className="font-semibold">High conversions</span>, find your fans immediately &amp; boost the algorithm.</li>
@@ -84,18 +84,18 @@ const LeftColumn = memo(function LeftColumn({ flow }: { flow: FlowType }) {
                 </ul>
 
                 <div className="flex flex-wrap gap-4 sm:gap-6 items-start">
-                  <Link to="/campaigns/new" className="w-full sm:w-auto">
-                    <Button className={`font-bold text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-green text-white`}>
+                  <Link to="/pricing" className="w-full sm:w-auto">
+                    <Button className={`font-bold text-base md:text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-green text-white`}>
                       Launch Campaign
                     </Button>
                   </Link>
                   <Link to="/testimonials" className="w-full sm:w-auto">
-                    <Button className={`font-bold text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-brown text-white`}>
+                    <Button className={`font-bold text-base md:text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-brown text-white`}>
                       Testimonials
                     </Button>
                   </Link>
                   <Link to="/learn-more" className="w-full sm:w-auto">
-                    <Button className={`font-bold text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-brown text-white`}>
+                    <Button className={`font-bold text-base md:text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-brown text-white`}>
                       Learn More
                     </Button>
                   </Link>
@@ -136,7 +136,7 @@ const Hero: React.FC = () => {
   }, [flow]);
 
   return (
-    <section className="bg-gradient-to-br from-musinova-lightyellow to-musinova-lightgreen md:h-screen h-auto flex items-stretch">
+    <section className="bg-gradient-to-br from-musinova-lightyellow to-musinova-lightgreen md:min-h-screen h-auto flex items-stretch py-8 md:py-0">
       <style>{`
         /* Hide default Video.js play button */
         .vjs-default-skin .vjs-big-play-button {

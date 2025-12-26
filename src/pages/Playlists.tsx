@@ -60,7 +60,7 @@ const Playlists = () => {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-musinova-navy mb-2">
-            {user?.name}'s Playlists
+            {user?.user_name}'s Playlists
           </h1>
           <p className="text-sm md:text-base text-gray-600">
             Manage and monitor all your playlists

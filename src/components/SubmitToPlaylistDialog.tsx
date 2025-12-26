@@ -31,7 +31,7 @@ type Props = {
 };
 
 const SubmitToPlaylistDialog: React.FC<Props> = ({ playlist, open, onOpenChange, trigger }) => {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, register } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -66,7 +66,7 @@ const SubmitToPlaylistDialog: React.FC<Props> = ({ playlist, open, onOpenChange,
 
       if (!isAuthenticated) {
         const { ensureGuestUser } = await import('@/lib/guestUser');
-        const res = await ensureGuestUser(login, 'pending_submission', body);
+        const res = await ensureGuestUser(login, register, 'pending_submission', body);
         if (!res.success) return; // helper handles persistence/redirect
       }
 

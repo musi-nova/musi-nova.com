@@ -157,7 +157,7 @@ const Settings = () => {
 
       {settingsData && (
         <Tabs defaultValue="account">
-          <TabsList>
+          <TabsList className="w-full justify-start overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide">
             <TabsTrigger value="account">Account</TabsTrigger>
             {/* <TabsTrigger value="payments">Payments</TabsTrigger> */}
             <TabsTrigger value="team_members">Team Members</TabsTrigger>
@@ -166,10 +166,10 @@ const Settings = () => {
           <TabsContent value="account">
             <Card>
               <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <CardTitle>Account Information</CardTitle>
                       <div>
-                        <Button size="sm" onClick={async () => {
+                        <Button size="sm" className="w-full sm:w-auto" onClick={async () => {
                           try {
                             const res = await apiFetch('stripe/customer-portal');
                             if (!res.ok) throw new Error('Failed to open customer portal');

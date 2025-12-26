@@ -31,7 +31,7 @@ const Navbar: React.FC = () => {
 
   if (isMobile) {
     return (
-      <nav className="bg-gray-50 top-0 z-50">
+      <nav className="bg-gray-50 sticky top-0 z-50 shadow-sm">
         <div className="flex justify-between items-center h-14 px-4">
           {/* Logo */}
           <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center">
@@ -148,7 +148,7 @@ const Navbar: React.FC = () => {
                       className="flex items-center gap-2 text-sm"
                     >
                       <UserCircle size={20} />
-                      <span>{user?.name}</span>
+                      <span>{user?.user_name}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">

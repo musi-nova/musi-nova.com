@@ -5,11 +5,10 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const url = `${baseUrl}${endpoint}`;
 
   const accessToken = localStorage.getItem('access_token'); // Retrieve the token from localStorage (or another storage mechanism)
-  if (accessToken) {
-    options.headers = {
-      ...options.headers,
-      Authorization: `Bearer ${accessToken}`,
-    };
+  const headers = { ...options.headers } as Record<string, string>;
+
+  if (accessToken && !headers.Authorization) {
+    headers.Authorization = `Bearer ${accessToken}`;
   }
 
   const defaultHeaders = {
@@ -20,7 +19,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     ...options,
     headers: {
       ...defaultHeaders,
-      ...options.headers,
+      ...headers,
     },
   };
 

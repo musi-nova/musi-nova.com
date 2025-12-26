@@ -35,12 +35,12 @@ const TabsNav: React.FC<TabsNavProps> = ({
   return (
     <div className={`mb-6 ${className}`}>
       <Tabs defaultValue={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="w-full justify-start bg-musinova-cream/30 p-1 rounded-lg">
+        <TabsList className="w-full justify-start bg-musinova-cream/30 p-1 rounded-lg overflow-x-auto flex-nowrap scrollbar-hide">
           {tabs.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-musinova-green data-[state=active]:shadow-sm rounded-md"
+              className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-musinova-green data-[state=active]:shadow-sm rounded-md whitespace-nowrap"
             >
               {tab.label}
             </TabsTrigger>

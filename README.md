@@ -39,3 +39,19 @@ ffmpeg -i ~/Downloads/Nick Testimonial #7.mp4 \
 -movflags +faststart \
 jay_testimonial.mp4
 ```
+
+### New Payment flow
+- hero -> pricing -> track selection + email -> payment -> success -> dashboard
+
+track selection copy:
+```
+Please list all your songs that you want in the playlist.
+
+List them from most to least important
+
+(All your songs are important to us of course, but the higher they are ranked the more streams they will get)
+
+We will blend your songs in with popular music within your genre, so people will love the playlist, and your music will be discovered as a result.
+```
+
+Add call schedule as hover component on every page

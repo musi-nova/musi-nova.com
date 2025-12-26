@@ -71,7 +71,11 @@ const NewCampaign = () => {
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isAuthenticated, user, login } = useAuth();
+  const { isAuthenticated, user, login, register } = useAuth();
+
+  React.useEffect(() => {
+    setShowAuthStep(!isAuthenticated);
+  }, [isAuthenticated]);
 
   const toggleMood = (mood: string) => {
     setSelectedMoods((prev) =>
@@ -232,7 +236,7 @@ const NewCampaign = () => {
       if (!isAuthenticated) {
         try {
           const { ensureGuestUser } = await import('@/lib/guestUser');
-          const res = await ensureGuestUser(login);
+          const res = await ensureGuestUser(login, register);
           if (!res.success) {
             toast({ title: 'Error', description: 'Failed to create a guest account. Please try again.', variant: 'destructive' });
             return;
@@ -308,7 +312,7 @@ const NewCampaign = () => {
       // Guest: create a generic user, login, save token, create campaign, then redirect to /pricing
       try {
         const { ensureGuestUser } = await import('@/lib/guestUser');
-        const res = await ensureGuestUser(login, 'pendingCampaign', campaignData);
+        const res = await ensureGuestUser(login, register, 'pendingCampaign', campaignData);
         if (!res.success) {
           // reason is only present on failure
           const reason = (res as any).reason || new Error('Failed to ensure guest user');

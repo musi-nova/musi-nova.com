@@ -177,7 +177,7 @@ const GenreStats = () => {
                         margin={{ 
                           top: 10, 
                           right: isMobile ? 10 : 20, 
-                          left: isMobile ? 0 : 10, 
+                          left: isMobile ? -20 : 10, 
                           bottom: isMobile ? 40 : 20 
                         }}
                       >
@@ -193,20 +193,21 @@ const GenreStats = () => {
                         </defs>
                         <XAxis 
                           dataKey="month" 
-                          tick={{ fontSize: isMobile ? 10 : 12 }}
+                          tick={{ fontSize: isMobile ? 9 : 12 }}
                           angle={isMobile ? -45 : 0}
                           textAnchor={isMobile ? "end" : "middle"}
                           height={isMobile ? 60 : 30}
                         />
                         <YAxis 
-                          width={isMobile ? 40 : 60} 
-                          tick={{ fontSize: isMobile ? 10 : 12 }}
+                          width={isMobile ? 30 : 60} 
+                          tick={{ fontSize: isMobile ? 9 : 12 }}
                         />
-                        <CartesianGrid strokeDasharray="3 3" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Area 
                           type="monotone" 
                           dataKey="followers" 
+                          name="Followers"
                           stroke="#5EA47C" 
                           strokeWidth={2}
                           fillOpacity={1} 
@@ -215,6 +216,7 @@ const GenreStats = () => {
                         <Area 
                           type="monotone" 
                           dataKey="spent" 
+                          name="Spent ($)"
                           stroke="#8B5A2B" 
                           strokeWidth={2}
                           fillOpacity={1} 

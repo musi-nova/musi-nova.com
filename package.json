@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "deploy:beta:channel": "npm run build && firebase hosting:channel:deploy beta --expires 30d",
+    "deploy:beta:local": "npm run build && firebase hosting:channel:deploy beta"
   },
   "dependencies": {
     "@cloudinary/react": "^1.14.3",
@@ -50,6 +52,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.5.2",
+    "firebase": "^12.7.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",

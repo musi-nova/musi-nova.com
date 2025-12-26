@@ -125,7 +125,7 @@ const Admin = () => {
       </div>
 
       <Tabs defaultValue="payments">
-        <TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide">
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="charts">Charts</TabsTrigger>
         </TabsList>
@@ -138,70 +138,72 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               {payments.length > 0 ? (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="border-b py-2">Campaign Name</th>
-                      <th className="border-b py-2">Payment Type</th>
-                      <th className="border-b py-2">Breakdown Ad Spend</th>
-                      <th className='border-b py-2'>Campaign Spend (til now)</th>
-                      <th className="border-b py-2">Campaign Start Date</th>
-                      <th className="border-b py-2">Ad duration (days)</th>
-                      <th className="border-b py-2">Paid</th>
-                      <th className="border-b py-2">Created At</th>
-                      <th className="border-b py-2">Smart URL</th>
-                      <th className="border-b py-2">Stripe Payment Link</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map((payment) => (
-                      <tr key={payment.id}>
-                        <td className="border-b py-2">{payment.campaign_name}</td>
-                        <td className="border-b py-2">{payment.payment_type}</td>
-                        <td className="border-b py-2">${payment.breakdown_ad_spend}</td>
-                        <td className="border-b py-2">${payment.campaign_spend ? payment.campaign_spend : 'N/A'}</td>
-                        <td className="border-b py-2">{payment.campaign_start_date}</td>
-                        <td className="border-b py-2">{payment.one_time_duration}</td>
-                        <td
-                          className={`border-b py-2 ${!payment.paid ? 'bg-red-100 text-red-600 font-bold' : ''}`}
-                        >
-                          {payment.paid ? 'Yes' : 'No'}
-                        </td>
-                        <td className="border-b py-2">{new Date(payment.created_at).toLocaleDateString()}</td>
-                        <td className="border-b py-2">
-                          {payment.playlist_id ? (
-                            <Button
-                              className="text-sm md:text-base"
-                              onClick={() => {
-                                const smartUrl = `${baseUrl}spotify/playlist/${payment.playlist_id}/smart-url`;
-                                window.open(smartUrl, '_blank'); // Open the Smart URL in a new tab
-                              }}
-                            >
-                              Get Smart-URL
-                            </Button>
-                          ) : (
-                            'N/A'
-                          )}
-                        </td>
-                        <td className="border-b py-2">
-                          {payment.stripe_payment_id ? (
-                            <Button
-                              className="text-sm md:text-base"
-                              onClick={() => {
-                                const stripeUrl = `https://dashboard.stripe.com/payments/${payment.stripe_payment_id}`;
-                                window.open(stripeUrl, '_blank'); // Open the Stripe payment link in a new tab
-                              }}
-                            >
-                              Get Stripe Payment Link
-                            </Button>
-                          ) : (
-                            'N/A'
-                          )}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr>
+                        <th className="border-b py-2">Campaign Name</th>
+                        <th className="border-b py-2">Payment Type</th>
+                        <th className="border-b py-2">Breakdown Ad Spend</th>
+                        <th className='border-b py-2'>Campaign Spend (til now)</th>
+                        <th className="border-b py-2">Campaign Start Date</th>
+                        <th className="border-b py-2">Ad duration (days)</th>
+                        <th className="border-b py-2">Paid</th>
+                        <th className="border-b py-2">Created At</th>
+                        <th className="border-b py-2">Smart URL</th>
+                        <th className="border-b py-2">Stripe Payment Link</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {payments.map((payment) => (
+                        <tr key={payment.id}>
+                          <td className="border-b py-2">{payment.campaign_name}</td>
+                          <td className="border-b py-2">{payment.payment_type}</td>
+                          <td className="border-b py-2">${payment.breakdown_ad_spend}</td>
+                          <td className="border-b py-2">${payment.campaign_spend ? payment.campaign_spend : 'N/A'}</td>
+                          <td className="border-b py-2">{payment.campaign_start_date}</td>
+                          <td className="border-b py-2">{payment.one_time_duration}</td>
+                          <td
+                            className={`border-b py-2 ${!payment.paid ? 'bg-red-100 text-red-600 font-bold' : ''}`}
+                          >
+                            {payment.paid ? 'Yes' : 'No'}
+                          </td>
+                          <td className="border-b py-2">{new Date(payment.created_at).toLocaleDateString()}</td>
+                          <td className="border-b py-2">
+                            {payment.playlist_id ? (
+                              <Button
+                                className="text-sm md:text-base"
+                                onClick={() => {
+                                  const smartUrl = `${baseUrl}spotify/playlist/${payment.playlist_id}/smart-url`;
+                                  window.open(smartUrl, '_blank'); // Open the Smart URL in a new tab
+                                }}
+                              >
+                                Get Smart-URL
+                              </Button>
+                            ) : (
+                              'N/A'
+                            )}
+                          </td>
+                          <td className="border-b py-2">
+                            {payment.stripe_payment_id ? (
+                              <Button
+                                className="text-sm md:text-base"
+                                onClick={() => {
+                                  const stripeUrl = `https://dashboard.stripe.com/payments/${payment.stripe_payment_id}`;
+                                  window.open(stripeUrl, '_blank'); // Open the Stripe payment link in a new tab
+                                }}
+                              >
+                                Get Stripe Payment Link
+                              </Button>
+                            ) : (
+                              'N/A'
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <p>No payments found/ Loading...</p>
               )}
@@ -235,42 +237,58 @@ const Admin = () => {
               </div>
 
               {timeSeriesData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
-                  <AreaChart
-                    data={timeSeriesData}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id="colorFollowers" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="created_at" />
-                    <YAxis />
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <Tooltip />
-                    <Legend />
-                    <Area
-                      type="monotone"
-                      dataKey="followers_total"
-                      stroke="#8884d8"
-                      fillOpacity={1}
-                      fill="url(#colorFollowers)"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="spend"
-                      stroke="#82ca9d"
-                      fillOpacity={1}
-                      fill="url(#colorSpend)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <div className="h-[300px] sm:h-[400px] w-full mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={timeSeriesData}
+                      margin={{
+                        top: 10,
+                        right: 10,
+                        left: -20,
+                        bottom: 20,
+                      }}
+                    >
+                      <defs>
+                        <linearGradient id="colorFollowers" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis
+                        dataKey="created_at"
+                        tick={{ fontSize: 10 }}
+                        tickFormatter={(tick) => new Date(tick).toLocaleDateString()}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis tick={{ fontSize: 10 }} width={40} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <Tooltip />
+                      <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                      <Area
+                        type="monotone"
+                        dataKey="followers_total"
+                        name="Followers"
+                        stroke="#8884d8"
+                        fillOpacity={1}
+                        fill="url(#colorFollowers)"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="spend"
+                        name="Spend ($)"
+                        stroke="#82ca9d"
+                        fillOpacity={1}
+                        fill="url(#colorSpend)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               ) : (
                 <p>No data available for the selected job.</p>
               )}
