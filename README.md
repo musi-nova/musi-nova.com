@@ -9,6 +9,7 @@ The musi-nova.com frontend.
 - `npm install -g firebase-tools` to install Firebase CLI globally (if not already installed)
 - `firebase login` to log in to Firebase
 - `firebase deploy` to deploy the project to Firebase Hosting
+- `firebase hosting:channel:deploy beta --expires 7d` to deploy to a temporary preview channel
 
 ## Notes
 ### General
