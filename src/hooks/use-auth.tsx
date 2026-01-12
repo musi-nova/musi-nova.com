@@ -1,9 +1,10 @@
 
-import { apiFetch } from '@/lib/api';
+import { apiFetch, checkEmail, CheckEmailResult } from '@/lib/api';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
+  signInAnonymously,
   updateProfile,
   signOut, 
   onAuthStateChanged, 
@@ -18,7 +19,7 @@ import { auth } from '@/lib/firebase';
 
 interface User {
   id: string;
-  user_name: string;
+  name: string;
   team_id: string;
   team_name?: string;
   email: string;
@@ -35,6 +36,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
+  loginAnonymously: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithMicrosoft: () => Promise<void>;
   logout: () => void;
@@ -42,6 +44,7 @@ interface AuthContextType {
   updateUserStatus: (updates: Partial<User>) => void;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (token: string, password: string) => Promise<void>;
+  checkEmailExists: (email: string) => Promise<CheckEmailResult>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -68,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await response.json();
       const userData: User = {
         id: data.user.id,
-        user_name: data.user.name,
+        name: data.user.name,
         team_id: data.user.team_id,
         team_name: data.user.team_name,
         email: data.user.email,
@@ -131,6 +134,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const loginAnonymously = async () => {
+    try {
+      const userCredential = await signInAnonymously(auth);
+      console.log('Anonymous user:', userCredential.user);
+      await syncWithBackend(userCredential.user);
+    } catch (error) {
+      console.error('Anonymous login error:', error);
+      throw error;
+    }
+  };
+
   const loginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -189,6 +203,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+
+  async function checkEmailExists(email: string): Promise<CheckEmailResult> {
+    try {
+      const res: CheckEmailResult = await checkEmail(email);
+      return res;
+    } catch (err) {
+      console.error('checkEmailExists error:', err);
+      // If the backend fails for some reason, default to not found.
+      return { exists: false };
+    }
+  }
+
   if (loading) {
     return null; // Or a loading spinner
   }
@@ -198,13 +224,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user, 
       login, 
       register,
+      loginAnonymously,
       loginWithGoogle, 
       loginWithMicrosoft,
       logout, 
       isAuthenticated, 
       updateUserStatus, 
       requestPasswordReset, 
-      resetPassword 
+      resetPassword,
+      checkEmailExists
     }}>
       {children}
     </AuthContext.Provider>

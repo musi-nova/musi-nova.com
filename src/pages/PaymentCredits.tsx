@@ -19,7 +19,7 @@ const PaymentCreditsPage: React.FC = () => {
   // Redirect guest users to settings on page load
   React.useEffect(() => {
     try {
-      if (user && /guest/i.test(user.user_name)) {
+      if (user && /guest/i.test(user.name)) {
         toast({ title: 'Complete your account', description: 'Please update your email and username before purchasing credits.', variant: 'destructive' });
         navigate('/settings');
       }
@@ -59,7 +59,7 @@ const PaymentCreditsPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       // Block guest users from purchasing credits until they update their email/username
-      if (user && /guest/i.test(user.user_name)) {
+      if (user && /guest/i.test(user.name)) {
         toast({ title: 'Complete your account', description: 'Please update your email and username before purchasing credits. We use these to keep track of your account and ensure a smooth experience.', variant: 'destructive' });
         navigate('/settings');
         return;

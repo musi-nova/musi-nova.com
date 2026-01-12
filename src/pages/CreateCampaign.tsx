@@ -20,10 +20,41 @@ const CreateCampaign: React.FC = () => {
     const [planAmount] = useState<number>(planAmountFromState || 197);
 
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPasswordField, setShowPasswordField] = useState(false);
+    const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+    const [emailProviders, setEmailProviders] = useState<string[] | null>(null);
     const [tracks, setTracks] = useState<string[]>(defaultTracks);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
-    const { isAuthenticated, user, login, register } = useAuth();
+    const { isAuthenticated, user, login, loginAnonymously, loginWithGoogle, loginWithMicrosoft, checkEmailExists } = useAuth();
+
+    // Auto-check email existence
+    React.useEffect(() => {
+        if (isAuthenticated || !validateEmail(email)) {
+            setShowPasswordField(false);
+            setIsCheckingEmail(false);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsCheckingEmail(true);
+            try {
+                const res = await checkEmailExists(email);
+                if (res.exists) {
+                    setShowPasswordField(true);
+                    setEmailProviders(res.providers || []);
+                } else {
+                    setShowPasswordField(false);
+                    setEmailProviders(null);
+                }
+            } finally {
+                setIsCheckingEmail(false);
+            }
+        }, 800);
+
+        return () => clearTimeout(timer);
+    }, [email, isAuthenticated, checkEmailExists]);
 
     React.useEffect(() => {
         if (isAuthenticated && user?.email) {
@@ -69,74 +100,78 @@ const CreateCampaign: React.FC = () => {
 
         setIsSubmitting(true);
         try {
-            // Ensure guest user exists if not authenticated. Try to create a user with the provided email.
+            // Ensure guest user exists if not authenticated.
             if (!isAuthenticated) {
-                const guestPassword = (import.meta as any).env?.VITE_MN_GUEST_DEFAULT_PASSWORD || 'changeme1234';
-                const userName = (email && email.split('@')[0]) || `guest_${Date.now()}`;
-                const genericUser = {
-                    name: userName,
-                    email,
-                    password: guestPassword,
-                    created_at: new Date().toISOString(),
-                    super_user: false,
-                    plan_1_user: true,
-                    plan_2_user: false,
-                    plan_3_user: false,
-                };
-
-                try {
-                    await apiFetch('user', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(genericUser),
-                    });
-
-                    // login the newly created guest using provided email + guest password
+                // If we are already showing the password field, try to login
+                if (showPasswordField) {
                     try {
-                        await login(email, guestPassword);
-                    } catch (err) {
-                        console.warn('Created guest user but failed to login automatically', err);
-                    }
-                } catch (err: any) {
-                    if (err.message.includes('400')) {
+                        await login(email, password);
+                    } catch (err: any) {
                         toast({
-                            title: 'Account already exists',
-                            description: (
-                                <span>
-                                    An account with this email already exists. Please{' '}
-                                    <Link to="/login" className="underline font-bold">
-                                        log in
-                                    </Link>{' '}
-                                    to continue.
-                                </span>
-                            ),
+                            title: 'Login failed',
+                            description: 'Please check your password and try again.',
                             variant: 'destructive',
                         });
                         setIsSubmitting(false);
                         return;
                     }
+                } else {
+                    // Final check if email exists (in case they clicked submit before debounce finished)
+                    const res = await checkEmailExists(email);
+                    if (res.exists) {
+                        setShowPasswordField(true);
+                        setEmailProviders(res.providers || []);
+                        // If provider suggests social login only, show a helpful toast
+                        toast({
+                            title: 'Account already exists',
+                            description: 'Please sign in using the method associated with this account (password or social login).',
+                        });
+                        setIsSubmitting(false);
+                        return;
+                    }
 
-                    // creation failed for other reasons: try to login with guest password as a fallback
+                    // If email doesn't exist, proceed with anonymous login
                     try {
-                        await login(email, guestPassword);
-                    } catch (loginErr) {
-                        // final fallback: use ensureGuestUser which will persist pending data and redirect
-                        console.warn('Failed to create/login with provided email, falling back to generic guest', loginErr);
-                        try {
-                            const pending = { email, tracks: sanitizedTracks, planAmount, createdAt: new Date().toISOString() };
-                            const { ensureGuestUser } = await import('@/lib/guestUser');
-                            const res = await ensureGuestUser(login, register, 'pendingCampaign', pending);
-                            if (!res.success) {
+                        const pending = { email, tracks: sanitizedTracks, planAmount, createdAt: new Date().toISOString() };
+                        const { ensureGuestUser } = await import('@/lib/guestUser');
+                        const res = await ensureGuestUser(loginAnonymously, email, 'pendingCampaign', pending);
+                        if (!res.success) {
+                            // If the backend signaled account already exists, show a helpful message
+                            const reason = (res as any).reason || null;
+                            if (reason && typeof reason === 'string' && reason.toLowerCase().includes('account exists')) {
+                                toast({
+                                    title: 'Account already exists',
+                                    description: (
+                                        <span>
+                                            An account with this email already exists. Please <Link to="/login" className="underline font-bold">log in</Link> to continue.
+                                        </span>
+                                    ) as any,
+                                    variant: 'destructive',
+                                });
+                            } else {
                                 toast({ title: 'Error', description: 'Failed to create a guest account. Please try again.', variant: 'destructive' });
-                                return;
                             }
-                            // ensureGuestUser will redirect — stop further processing
-                            return;
-                        } catch (e) {
-                            console.error('Fallback ensureGuestUser failed', e);
-                            toast({ title: 'Error', description: 'Failed to create a guest account. Please try again.', variant: 'destructive' });
+                            setIsSubmitting(false);
                             return;
                         }
+                    } catch (e: any) {
+                        console.error('ensureGuestUser failed', e);
+                        const msg = e?.message || String(e);
+                        if (msg.toLowerCase().includes('account exists')) {
+                            toast({
+                                title: 'Account already exists',
+                                description: (
+                                    <span>
+                                        An account with this email already exists. Please <Link to="/login" className="underline font-bold">log in</Link> to continue.
+                                    </span>
+                                ) as any,
+                                variant: 'destructive',
+                            });
+                        } else {
+                            toast({ title: 'Error', description: 'Failed to create a guest account. Please try again.', variant: 'destructive' });
+                        }
+                        setIsSubmitting(false);
+                        return;
                     }
                 }
             }
@@ -171,6 +206,7 @@ const CreateCampaign: React.FC = () => {
                 campaignName,
                 playlistId,
                 tracks: sanitizedTracks,
+                email, // Include the email collected in the form
                 createdAt: new Date().toISOString(),
                 userId: user?.id || null,
                 teamId: user?.team_id || null,
@@ -209,29 +245,37 @@ const CreateCampaign: React.FC = () => {
                 return { musiNovaFee, adSpend, totalCharge: amount };
             })();
 
-            // Build credits-style payload expected by stripe/create-checkout-session/credits
+            // Build direct payment payload
             const payload = {
-                paymentType: 'credits',
-                creditsAmount: planAmount,
+                paymentType: 'one-time',
+                oneTimeAmount: planAmount,
+                oneTimeDuration: 30,
                 selectedCampaign,
                 breakdown,
             };
 
-            // Use the credits flow page: persist the prepared campaign and route user to /payment-credits
+            // Persist the prepared campaign and redirect to Stripe
             try {
                 localStorage.setItem('pendingCampaign', JSON.stringify({ ...campaignResult }));
-                // Directly create checkout session for credits and redirect
-                const creditsResp = await apiFetch('stripe/create-checkout-session/credits', {
+                // Directly create credits checkout session and redirect
+                const creditsPayload = {
+                    paymentType: 'credits',
+                    creditsAmount: planAmount,
+                    campaignId: campaignId,
+                    campaignName: campaignName,
+                };
+
+                const response = await apiFetch('stripe/create-checkout-session/credits', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify(creditsPayload),
                 });
 
-                if (!creditsResp.ok) throw new Error('Failed to create credits checkout session');
-                const { url } = await creditsResp.json();
+                if (!response.ok) throw new Error('Failed to create checkout session');
+                const { url } = await response.json();
                 window.location.href = url;
             } catch (err) {
-                console.error('Failed to create credits checkout session', err);
+                console.error('Failed to create checkout session', err);
                 toast({ title: 'Error', description: 'Failed to start payment. Please try again.', variant: 'destructive' });
                 navigate('/pricing');
             }
@@ -260,7 +304,7 @@ const CreateCampaign: React.FC = () => {
                         <div className="bg-gray-50 p-4 rounded-md mb-4 text-sm text-gray-700">
                             <p>Please list all your songs that you want in the playlist.</p>
                             <p className="mt-2 font-medium">List them from most to least important</p>
-                            <p className="mt-2 text-sm">(All your songs are important to us of course, but the higher they are ranked the more streams they will get)</p>
+                            <p className="mt-2 text-sm">All your songs are important to us of course, but the higher they are ranked the more streams they will get</p>
                             <p className="mt-2">We will blend your songs in with popular music within your genre, so people will love the playlist, and your music will be discovered as a result.</p>
                         </div>
 
@@ -285,17 +329,134 @@ const CreateCampaign: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-2">Email <span className="text-red-500">*</span></label>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-sm font-medium">Email <span className="text-red-500">*</span></label>
+                                    {isCheckingEmail && (
+                                        <span className="text-xs text-gray-400 animate-pulse">Checking account...</span>
+                                    )}
+                                </div>
                                 <Input 
                                     type="email" 
                                     value={email} 
-                                    onChange={(e) => setEmail(e.target.value)} 
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (showPasswordField) setShowPasswordField(false);
+                                    }} 
                                     placeholder="you@example.com" 
                                     readOnly={isAuthenticated}
                                     className={isAuthenticated ? "bg-gray-100 cursor-not-allowed" : ""}
                                 />
                                 <p className="text-xs text-gray-500 mt-2">We use your email to keep you up to date on how your campaign is going and to send important notifications about the campaign.</p>
                             </div>
+
+                            {showPasswordField && (
+                                <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-4 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                                    {/* Show password field if the provider list includes password or if providers are unknown */}
+                                    {(emailProviders === null || emailProviders.includes('password')) && (
+                                    <>
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-sm font-medium">Password <span className="text-red-500">*</span></label>
+                                            <Link to="/forgotten-password" title="Forgot password?" className="text-xs text-musinova-blue hover:underline">
+                                                Forgot password?
+                                            </Link>
+                                        </div>
+                                        <Input 
+                                            type="password" 
+                                            value={password} 
+                                            onChange={(e) => setPassword(e.target.value)} 
+                                            placeholder="••••••••" 
+                                            autoFocus
+                                        />
+                                        <p className="text-xs text-musinova-blue">
+                                            Welcome back! Please enter your password to continue with your existing account.
+                                        </p>
+                                    </>
+                                    )}
+
+                                    {/* If providers include social methods, show those buttons */}
+                                    {emailProviders && (emailProviders.includes('google.com') || emailProviders.includes('microsoft.com')) && (
+                                    <>
+                                        <div className="relative py-2">
+                                            <div className="absolute inset-0 flex items-center">
+                                                <span className="w-full border-t border-gray-200"></span>
+                                            </div>
+                                            <div className="relative flex justify-center text-xs uppercase">
+                                                <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {emailProviders.includes('google.com') && (
+                                            <Button 
+                                                type="button" 
+                                                variant="outline" 
+                                                onClick={async () => {
+                                                    try {
+                                                        await loginWithGoogle();
+                                                    } catch (err) {
+                                                        console.error(err);
+                                                    }
+                                                }}
+                                                className="w-full"
+                                            >
+                                                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+                                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                                                </svg>
+                                                Google
+                                            </Button>
+                                            )}
+
+                                            {emailProviders.includes('microsoft.com') && (
+                                            <Button 
+                                                type="button" 
+                                                variant="outline" 
+                                                onClick={async () => {
+                                                    try {
+                                                        await loginWithMicrosoft();
+                                                    } catch (err) {
+                                                        console.error(err);
+                                                    }
+                                                }}
+                                                className="w-full"
+                                            >
+                                                <svg className="mr-2 h-4 w-4" viewBox="0 0 23 23">
+                                                    <path fill="#f3f3f3" d="M0 0h23v23H0z" />
+                                                    <path fill="#f35325" d="M1 1h10v10H1z" />
+                                                    <path fill="#81bc06" d="M12 1h10v10H12z" />
+                                                    <path fill="#05a6f0" d="M1 12h10v10H1z" />
+                                                    <path fill="#ffba08" d="M12 12h10v10H12z" />
+                                                </svg>
+                                                Microsoft
+                                            </Button>
+                                            )}
+                                        </div>
+                                    </>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-2">
+                                <h3 className="text-sm font-semibold text-gray-900">Order Summary</h3>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-600">Campaign Plan</span>
+                                    <span className="font-medium">${planAmount}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-500">
+                                    <span>Estimated Ad Spend ({planAmount <= 100 ? '55%' : '65%'})</span>
+                                    <span>${(planAmount * (planAmount <= 100 ? 0.55 : 0.65)).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-500">
+                                    <span>MusiNova Service Fee ({planAmount <= 100 ? '45%' : '35%'})</span>
+                                    <span>${(planAmount * (planAmount <= 100 ? 0.45 : 0.35)).toFixed(2)}</span>
+                                </div>
+                                <div className="pt-2 border-t border-gray-200 flex justify-between font-bold text-gray-900">
+                                    <span>Total</span>
+                                    <span>${planAmount}</span>
+                                </div>
+                            </div> */}
 
                             <div className="flex justify-between">
                                 <Button variant="outline" type="button" onClick={() => navigate(-1)}>

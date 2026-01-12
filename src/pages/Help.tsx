@@ -33,7 +33,7 @@ const Help = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: user?.user_name || "",
+      name: user?.name || "",
       email: user?.email || "",
       subject: "",
       message: "",
@@ -42,7 +42,7 @@ const Help = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      form.setValue('name', user.user_name || "");
+      form.setValue('name', user.name || "");
       form.setValue('email', user.email || "");
     }
   }, [isAuthenticated, user, form]);

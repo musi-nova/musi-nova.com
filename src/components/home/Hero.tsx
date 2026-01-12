@@ -147,7 +147,7 @@ const Hero: React.FC = () => {
         <div className="pt-8 flex flex-col h-full">
           <FlowTabs flow={flow} setFlow={setFlow} />
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch flex-1 min-h-[500px] md:min-h-[600px]">
             <LeftColumn flow={flow} />
 
             <div className="md:col-span-6 flex items-center justify-end md:justify-end min-h-0">

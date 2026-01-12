@@ -19,7 +19,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import MobileBadge from '@/components/ui/mobile-badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Calendar, AlertTriangle, Info } from 'lucide-react';
-import GuestBanner from '@/components/GuestBanner';
 import {
   Area,
   AreaChart,
@@ -190,6 +189,7 @@ const Dashboard = () => {
   };
 
   const isMobile = useIsMobile();
+  // guest banner removed per request
   const [showGuestBanner, setShowGuestBanner] = useState(false);
   const [viewMode, setViewMode] = useState<'campaign' | 'submissions'>('campaign');
   const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
@@ -260,9 +260,10 @@ const Dashboard = () => {
   useEffect(() => {
     try {
       const dismissed = localStorage.getItem('guestBannerDismissed');
-      const userName = (user?.user_name || '').toString().toLowerCase();
+      const userName = (user?.name || '').toString().toLowerCase();
       const isGuest = userName.includes('guest');
-      setShowGuestBanner(isGuest && !dismissed);
+      // keep state but do not show banner
+      setShowGuestBanner(false);
     } catch (err) {
       setShowGuestBanner(false);
     }
@@ -476,9 +477,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      {showGuestBanner && (
-        <GuestBanner onDismiss={() => { localStorage.setItem('guestBannerDismissed', '1'); setShowGuestBanner(false); }} />
-      )}
+      {/* GuestBanner removed as requested */}
 
       {/* Submissions view - mirror Submission.tsx layout */}
       {viewMode === 'submissions' && isAuthenticated && (
@@ -748,18 +747,23 @@ const Dashboard = () => {
                         {campaignSummary.playlist_tracks_total}
                       </p>
                     </div>
-                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Genre</h4>
-                      <p className="text-lg font-bold text-musinova-darkgray mt-1">
-                        {campaignSummary.campaign_genre || "N/A"}
-                      </p>
-                    </div>
-                    <div className="col-span-1 xs:col-span-2 sm:col-span-2 md:col-span-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Moods</h4>
-                      <p className="text-base font-semibold text-musinova-darkgray mt-1">
-                        {campaignSummary.campaign_moods?.join(", ") || "N/A"}
-                      </p>
-                    </div>
+                    {campaignSummary?.campaign_genre != null && (
+                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Genre</h4>
+                        <p className="text-lg font-bold text-musinova-darkgray mt-1">
+                          {campaignSummary.campaign_genre}
+                        </p>
+                      </div>
+                    )}
+
+                    {Array.isArray(campaignSummary?.campaign_moods) && campaignSummary.campaign_moods.length > 0 && (
+                      <div className="col-span-1 xs:col-span-2 sm:col-span-2 md:col-span-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Moods</h4>
+                        <p className="text-base font-semibold text-musinova-darkgray mt-1">
+                          {campaignSummary.campaign_moods.join(", ")}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
 

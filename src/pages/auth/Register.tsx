@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -49,6 +49,7 @@ const Register = ({ standalone = true, redirectToCampaign = false }: RegisterPro
   const navigate = useNavigate();
   const location = useLocation();
   const { register, loginWithGoogle, loginWithMicrosoft } = useAuth();
+  const { checkEmailExists } = useAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -60,6 +61,37 @@ const Register = ({ standalone = true, redirectToCampaign = false }: RegisterPro
       acceptTerms: false,
     },
   });
+
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailProviders, setEmailProviders] = useState<string[] | null>(null);
+  const watchedEmail = form.watch('email');
+
+  useEffect(() => {
+    let mounted = true;
+    let timer: any;
+    const validateEmail = (e: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
+    setEmailProviders(null);
+    if (!validateEmail(watchedEmail)) return;
+    timer = setTimeout(async () => {
+      setCheckingEmail(true);
+      try {
+        const res = await checkEmailExists(watchedEmail);
+        if (!mounted) return;
+        if (res.exists) setEmailProviders(res.providers || []);
+        else setEmailProviders(null);
+      } catch (err) {
+        if (!mounted) return;
+        setEmailProviders(null);
+      } finally {
+        if (mounted) setCheckingEmail(false);
+      }
+    }, 600);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
+  }, [watchedEmail, checkEmailExists]);
 
   const acceptTerms = form.watch('acceptTerms'); // Watch the value of acceptTerms
 
@@ -116,6 +148,19 @@ const Register = ({ standalone = true, redirectToCampaign = false }: RegisterPro
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
+      // Prevent registering if email already exists with other providers
+      try {
+        const exists = await checkEmailExists(values.email);
+        if (exists.exists) {
+          const methods = (exists.providers || []).map((p: string) => p === 'google.com' ? 'Google' : p === 'microsoft.com' ? 'Microsoft' : p).join(', ');
+          toast({ title: 'Account already exists', description: `An account with this email already exists. Use ${methods} or log in.`, variant: 'destructive' });
+          setIsLoading(false);
+          return;
+        }
+      } catch (err) {
+        // ignore errors from check and continue
+      }
+
       await register(values.email, values.password, values.name);
 
       toast({
@@ -167,6 +212,24 @@ const Register = ({ standalone = true, redirectToCampaign = false }: RegisterPro
                   <Input placeholder="your@email.com" {...field} />
                 </FormControl>
                 <FormMessage>{fieldState.error?.message}</FormMessage>
+                {checkingEmail && <p className="text-xs text-gray-500 mt-1">Checking account...</p>}
+                {emailProviders && (
+                  <div className="mt-1 text-xs">
+                    <p className="text-red-600">An account already exists for this email. Associated methods: {emailProviders.map((p) => (p === 'google.com' ? 'Google' : p === 'microsoft.com' ? 'Microsoft' : p)).join(', ')}.</p>
+                    <div className="mt-2 flex gap-2">
+                      {emailProviders.includes('google.com') && (
+                        <Button type="button" variant="outline" size="sm" onClick={handleGoogleLogin} disabled={isLoading}>
+                          Continue with Google
+                        </Button>
+                      )}
+                      {emailProviders.includes('microsoft.com') && (
+                        <Button type="button" variant="outline" size="sm" onClick={handleMicrosoftLogin} disabled={isLoading}>
+                          Continue with Microsoft
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </FormItem>
             )}
           />
@@ -224,7 +287,7 @@ const Register = ({ standalone = true, redirectToCampaign = false }: RegisterPro
           <Button
             type="submit"
             className={`w-full ${acceptTerms ? 'bg-musinova-green' : 'bg-gray-400'}`}
-            disabled={isLoading || !acceptTerms} // Disable if loading or acceptTerms is false
+            disabled={isLoading || !acceptTerms || !!emailProviders} // Disable if email already exists
           >
             {isLoading ? (
               <>

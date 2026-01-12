@@ -1,4 +1,3 @@
-// filepath: /Users/jamestwose/Coding/musi-nova.com/src/lib/api.ts
 const baseUrl = import.meta.env.VITE_MN_API_BASE_URL;
 
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
@@ -44,4 +43,31 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   }
 
   return response;
+}
+
+export type CheckEmailResult = {
+  exists: boolean;
+  providers?: string[];
+};
+
+/**
+ * POST /auth/check-email helper
+ * Uses the same baseUrl as apiFetch but does not attach the stored access token.
+ */
+export async function checkEmail(email: string): Promise<CheckEmailResult> {
+  const url = `${baseUrl}auth/check-email`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`checkEmail failed: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  return data as CheckEmailResult;
 }

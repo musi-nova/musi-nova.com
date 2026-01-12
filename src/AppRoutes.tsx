@@ -9,7 +9,6 @@ import SmartUrlDashboard from "@/pages/dashboard/SmartUrlDashboard";
 import Help from "@/pages/Help";
 import Index from "@/pages/Index";
 import LearnMore from "@/pages/LearnMore";
-import NewCampaign from "@/pages/NewCampaign";
 import CreateCampaign from "@/pages/CreateCampaign";
 import NotFound from "@/pages/NotFound";
 import PaymentFailed from "@/pages/PaymentFailed";
@@ -51,8 +50,6 @@ export default function AppRoutes() {
         <Route path="/submissions" element={<Submission />} />
         <Route path="/campaigns/new" element={<CreateCampaign />} />
         <Route path="/campaign/new" element={<CreateCampaign />} />
-        {/* legacy/new-style full flow kept for reference */}
-        <Route path="/campaigns/new-old" element={<NewCampaign />} />
         <Route path="/payment-credits" element={<PaymentCreditsPage />} />
         {/* <Route path="/submit-to-playlists" element={<SubmissionPromo />} /> */}
         <Route path="/payment-success" element={<PaymentSuccess />} />

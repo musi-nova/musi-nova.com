@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -34,6 +34,42 @@ const Login = () => {
       password: '',
     },
   });
+
+  const { checkEmailExists } = useAuth();
+
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailProviders, setEmailProviders] = useState<string[] | null>(null);
+
+  const watchedEmail = form.watch('email');
+
+  useEffect(() => {
+    let mounted = true;
+    let timer: any;
+    const validateEmail = (e: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
+    setEmailProviders(null);
+    if (!validateEmail(watchedEmail)) return;
+    timer = setTimeout(async () => {
+      setCheckingEmail(true);
+      try {
+        const res = await checkEmailExists(watchedEmail);
+        if (!mounted) return;
+        if (res.exists) setEmailProviders(res.providers || []);
+        else setEmailProviders(null);
+      } catch (err) {
+        if (!mounted) return;
+        setEmailProviders(null);
+      } finally {
+        if (mounted) setCheckingEmail(false);
+      }
+    }, 600);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
+  }, [watchedEmail, checkEmailExists]);
+
+  const externalProviders = emailProviders ? emailProviders.filter((p) => p !== 'password') : null;
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -83,6 +119,19 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Check if email is associated with other providers
+      try {
+        const exists = await checkEmailExists(values.email);
+        if (exists.exists && exists.providers && !exists.providers.includes('password')) {
+          const methods = exists.providers.map((p: string) => p === 'google.com' ? 'Google' : p === 'microsoft.com' ? 'Microsoft' : p).join(', ');
+          toast({ title: 'Sign-in method mismatch', description: `This email is associated with ${methods}. Please use that method to sign in.`, variant: 'destructive' });
+          setIsLoading(false);
+          return;
+        }
+      } catch (err) {
+        // ignore check errors and continue to normal login flow
+      }
+
       // Call the login function from the auth context
       await login(values.email, values.password);
 
@@ -132,6 +181,24 @@ const Login = () => {
                           <Input placeholder="your@email.com" {...field} />
                         </FormControl>
                         <FormMessage />
+                        {checkingEmail && <p className="text-xs text-gray-500 mt-1">Checking account...</p>}
+                        {externalProviders && externalProviders.length > 0 && (
+                          <div className="mt-1 text-xs">
+                            <p className="text-red-600">This email is associated with: {externalProviders.map((p) => (p === 'google.com' ? 'Google' : p === 'microsoft.com' ? 'Microsoft' : p)).join(', ')}. Please use the appropriate sign-in method.</p>
+                            <div className="mt-2 flex gap-2">
+                              {externalProviders.includes('google.com') && (
+                                <Button type="button" variant="outline" size="sm" onClick={handleGoogleLogin} disabled={isLoading}>
+                                  Sign in with Google
+                                </Button>
+                              )}
+                              {externalProviders.includes('microsoft.com') && (
+                                <Button type="button" variant="outline" size="sm" onClick={handleMicrosoftLogin} disabled={isLoading}>
+                                  Sign in with Microsoft
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </FormItem>
                     )}
                   />
@@ -150,7 +217,7 @@ const Login = () => {
                     )}
                   />
 
-                  <Button type="submit" className="w-full bg-musinova-green" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-musinova-green" disabled={isLoading || (emailProviders !== null && !emailProviders.includes('password'))}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

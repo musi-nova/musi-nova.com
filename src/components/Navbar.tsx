@@ -148,7 +148,7 @@ const Navbar: React.FC = () => {
                       className="flex items-center gap-2 text-sm"
                     >
                       <UserCircle size={20} />
-                      <span>{user?.user_name}</span>
+                      <span>{user?.name}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">

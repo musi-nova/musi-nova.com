@@ -30,7 +30,7 @@ type Submission = {
 };
 
 const SubmissionPage = () => {
-    const { isAuthenticated, login, register } = useAuth();
+    const { isAuthenticated, loginAnonymously } = useAuth();
     const navigate = useNavigate();
     const [items, setItems] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
@@ -186,7 +186,7 @@ const SubmissionPage = () => {
             // If the user is not authenticated, ensure a guest user exists and is logged in
             if (!isAuthenticated) {
                 const { ensureGuestUser } = await import('@/lib/guestUser');
-                const res = await ensureGuestUser(login, register, 'pending_submission', body);
+                const res = await ensureGuestUser(loginAnonymously, '', 'pending_submission', body);
                 if (!res.success) return; // ensureGuestUser handles persisting and redirecting on failure
             }
 
