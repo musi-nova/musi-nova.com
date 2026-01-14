@@ -26,6 +26,7 @@ const CreateCampaign: React.FC = () => {
     const [emailProviders, setEmailProviders] = useState<string[] | null>(null);
     const [tracks, setTracks] = useState<string[]>(defaultTracks);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [signInLoading, setSignInLoading] = useState(false);
     const { toast } = useToast();
     const { isAuthenticated, user, login, loginAnonymously, loginWithGoogle, loginWithMicrosoft, checkEmailExists } = useAuth();
 
@@ -354,6 +355,9 @@ const CreateCampaign: React.FC = () => {
                                     {/* Show password field if the provider list includes password or if providers are unknown */}
                                     {(emailProviders === null || emailProviders.includes('password')) && (
                                     <>
+                                        <p className="text-xs text-musinova-blue">
+                                            Welcome back! Please enter your password to continue with your existing account.
+                                        </p>
                                         <div className="flex items-center justify-between">
                                             <label className="block text-sm font-medium">Password <span className="text-red-500">*</span></label>
                                             <Link to="/forgotten-password" title="Forgot password?" className="text-xs text-musinova-blue hover:underline">
@@ -367,9 +371,32 @@ const CreateCampaign: React.FC = () => {
                                             placeholder="••••••••" 
                                             autoFocus
                                         />
-                                        <p className="text-xs text-musinova-blue">
-                                            Welcome back! Please enter your password to continue with your existing account.
-                                        </p>
+                                        <div className="flex justify-end mt-2">
+                                            <Button
+                                                type="button"
+                                                onClick={async () => {
+                                                    if (!password) {
+                                                        toast({ title: 'Enter password', description: 'Please enter your password to sign in.', variant: 'destructive' });
+                                                        return;
+                                                    }
+                                                    try {
+                                                        setSignInLoading(true);
+                                                        await login(email, password);
+                                                        toast({ title: 'Signed in', description: 'Welcome back!' });
+                                                        setShowPasswordField(false);
+                                                    } catch (err) {
+                                                        console.error('Login failed', err);
+                                                        toast({ title: 'Login failed', description: 'Please check your password and try again.', variant: 'destructive' });
+                                                    } finally {
+                                                        setSignInLoading(false);
+                                                    }
+                                                }}
+                                                disabled={signInLoading}
+                                            >
+                                                {signInLoading ? 'Signing in...' : 'Sign in'}
+                                            </Button>
+                                        </div>
+
                                     </>
                                     )}
 
