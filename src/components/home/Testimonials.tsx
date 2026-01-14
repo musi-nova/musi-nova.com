@@ -24,9 +24,9 @@ const videos = [
   }
 ];
 
-const Testimonials = () => {
+const Testimonials = ({ whiteBg = false }: { whiteBg?: boolean }) => {
   return (
-    <section className="py-16 bg-gradient-to-br from-musinova-lightyellow to-musinova-lightgreen">
+    <section className={`py-16 ${whiteBg ? 'bg-white' : 'bg-gradient-to-br from-musinova-lightyellow to-musinova-lightgreen'}`}>
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center text-musinova-darkgray mb-4">
           What People Say About Us

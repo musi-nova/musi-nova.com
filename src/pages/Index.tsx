@@ -1,6 +1,7 @@
 
 import Footer from '@/components/Footer';
 import Hero from '@/components/home/Hero';
+import Testimonials from '@/components/home/Testimonials';
 import Navbar from '@/components/Navbar';
 
 const Index = () => {
@@ -9,7 +10,8 @@ const Index = () => {
       {/* <Navbar /> */}
 
       <main className="flex-grow">
-        <Hero />
+  <Hero />
+  <Testimonials whiteBg />
       </main>
 
       {/* <Footer /> */}

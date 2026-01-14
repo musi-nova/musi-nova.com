@@ -72,9 +72,9 @@ const LeftColumn = memo(function LeftColumn({ flow }: { flow: FlowType }) {
               </>
             ) : (
               <>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-musinova-darkgray mb-6">Do you want your own playlists?</h1>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-musinova-darkgray mb-6">Get your music heard</h1>
 
-                <p className="text-base md:text-xl text-musinova-darkgray mb-4 max-w-xl">Get your personal playlist, advertised by the team that has spent over <span className="font-semibold"> $250,000 </span> in high converting playlist campaigns.</p>
+                <p className="text-base md:text-xl text-musinova-darkgray mb-4 max-w-xl">Your personal playlist featuring your music prominently, advertised by the team that has spent over <span className="font-semibold"> $250,000 </span> in high converting playlist campaigns.</p>
 
                 <ul className="list-disc pl-6 text-musinova-darkgray space-y-2 mb-4 max-w-xl text-sm md:text-base">
                   <li>Your playlist, your music <span className="font-semibold">always</span> at the top.</li>
@@ -89,11 +89,11 @@ const LeftColumn = memo(function LeftColumn({ flow }: { flow: FlowType }) {
                       Launch Campaign
                     </Button>
                   </Link>
-                  <Link to="/testimonials" className="w-full sm:w-auto">
+                  {/* <Link to="/testimonials" className="w-full sm:w-auto">
                     <Button className={`font-bold text-base md:text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-brown text-white`}>
                       Testimonials
                     </Button>
-                  </Link>
+                  </Link> */}
                   <Link to="/learn-more" className="w-full sm:w-auto">
                     <Button className={`font-bold text-base md:text-lg py-4 px-6 rounded-lg transition-all flex items-center justify-center w-full sm:w-auto bg-musinova-brown text-white`}>
                       Learn More
