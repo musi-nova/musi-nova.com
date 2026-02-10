@@ -305,8 +305,8 @@ const CreateCampaign: React.FC = () => {
                         <div className="bg-gray-50 p-4 rounded-md mb-4 text-sm text-gray-700">
                             <p>Please list all your songs that you want in the playlist.</p>
                             <p className="mt-2 font-medium">List them from most to least important</p>
-                            <p className="mt-2 text-sm">All your songs are important to us of course, but the higher they are ranked the more streams they will get</p>
-                            <p className="mt-2">We will blend your songs in with popular music within your genre, so people will love the playlist, and your music will be discovered as a result.</p>
+                            <p className="mt-2 text-sm">All your songs are important to us of course, but the higher they are ranked the more streams they will get.</p>
+                            <p className="mt-2">We blend your music with established tracks from your genre to provide clear genre context, helping Spotify's recommendation systems identify the right audience and surface your music to listeners with similar tastes.</p>
                         </div>
 
 
