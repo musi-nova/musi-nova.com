@@ -4,6 +4,7 @@ import logo from "/logo.png"; // Update the path to your logo file
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 // helper to detect guest user by name
 const looksLikeGuestUser = (u: any) => {
@@ -17,6 +18,12 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isResending, setIsResending] = useState(false);
+  const { trackPageView, trackClick, logEvent } = useAnalytics();
+
+  React.useEffect(() => {
+    void trackPageView('/payment/success', { component: 'PaymentSuccess' });
+    void logEvent({ event_type: 'payment_success', properties: { component: 'PaymentSuccess' } });
+  }, [trackPageView, logEvent]);
 
   const handleRedirect = () => {
     navigate('/dashboard');
@@ -80,7 +87,7 @@ const PaymentSuccess = () => {
         </div>
       )}
 
-      <button onClick={handleRedirect} className="px-8 py-3 bg-green-600 text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-green-700 transition transform hover:scale-105">
+      <button onClick={() => { void trackClick('go_to_dashboard', { component: 'PaymentSuccess' }); handleRedirect(); }} className="px-8 py-3 bg-green-600 text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-green-700 transition transform hover:scale-105">
         Go to Dashboard
       </button>
     </div>

@@ -10,8 +10,8 @@ const Index = () => {
       {/* <Navbar /> */}
 
       <main className="flex-grow">
-  <Hero />
-  <Testimonials whiteBg />
+        <Hero />
+        <Testimonials whiteBg />
       </main>
 
       {/* <Footer /> */}

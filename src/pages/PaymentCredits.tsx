@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 const PaymentCreditsPage: React.FC = () => {
   const [creditsAmount, setCreditsAmount] = useState<number>(5);
@@ -15,6 +16,7 @@ const PaymentCreditsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { trackPageView, logEvent, trackClick } = useAnalytics();
 
   // Redirect guest users to settings on page load
   React.useEffect(() => {
@@ -27,6 +29,10 @@ const PaymentCreditsPage: React.FC = () => {
       // ignore
     }
   }, [user, navigate, toast]);
+
+  React.useEffect(() => {
+    void trackPageView('/payment/credits', { component: 'PaymentCredits' });
+  }, [trackPageView]);
 
   // Show any pending toast persisted across redirects
   React.useEffect(() => {
@@ -57,6 +63,7 @@ const PaymentCreditsPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    void trackClick('buy_credits_clicked', { component: 'PaymentCredits', creditsAmount });
     try {
       // Block guest users from purchasing credits until they update their email/username
       if (user && /guest/i.test(user.name)) {
@@ -77,6 +84,7 @@ const PaymentCreditsPage: React.FC = () => {
 
       if (!response.ok) throw new Error('Failed to create checkout session');
       const { url } = await response.json();
+      void logEvent({ event_type: 'checkout_started', properties: { amount: creditsAmount, method: 'stripe', component: 'PaymentCredits' } });
       window.location.href = url;
     } catch (err) {
       console.error(err);

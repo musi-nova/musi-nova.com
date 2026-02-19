@@ -1,9 +1,16 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "/logo.png"; // Update the path to your logo file
+import { useAnalytics } from '@/hooks/use-analytics';
 
 const PaymentFailed = () => {
   const navigate = useNavigate();
+  const { trackPageView, trackClick, logEvent } = useAnalytics();
+
+  React.useEffect(() => {
+    void trackPageView('/payment/failed', { component: 'PaymentFailed' });
+    void logEvent({ event_type: 'payment_failed', properties: { component: 'PaymentFailed' } });
+  }, [trackPageView, logEvent]);
 
   const handleRedirect = () => {
     navigate("/dashboard");
@@ -19,7 +26,7 @@ const PaymentFailed = () => {
         Unfortunately, your payment could not be processed. Please try again or contact support if the issue persists.
       </p>
       <button
-        onClick={handleRedirect}
+        onClick={() => { void trackClick('go_to_dashboard', { component: 'PaymentFailed' }); handleRedirect(); }}
         className="px-8 py-3 bg-red-600 text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-red-700 transition transform hover:scale-105"
       >
         Go to Dashboard

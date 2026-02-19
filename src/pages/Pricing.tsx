@@ -6,10 +6,17 @@ import { Link, useNavigate } from "react-router-dom";
 import { Check, Rocket, TrendingUp, Award } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import React from "react";
+import { useAnalytics } from '@/hooks/use-analytics';
 
 
 const Pricing = () => {
 	const navigate = useNavigate();
+
+	const { trackPageView, trackClick } = useAnalytics();
+
+	React.useEffect(() => {
+		void trackPageView('/pricing', { component: 'Pricing' });
+	}, [trackPageView]);
 
 	// Use the same breakdown calculation as Payment
 	const calculateBreakdown = (amount: number) => {
@@ -25,6 +32,8 @@ const Pricing = () => {
 	// Handles guest campaign payment logic
 	const handlePlanClick = async (e: React.MouseEvent, planAmount: number) => {
 		e.preventDefault();
+		// Track selected plan then go to create campaign flow
+		void trackClick('select_plan', { component: 'Pricing', plan_amount: planAmount });
 		// Always go to the create campaign flow and pass the chosen plan amount
 		navigate('/campaign/new', { state: { planAmount } });
 	};

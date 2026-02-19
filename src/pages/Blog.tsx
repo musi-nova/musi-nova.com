@@ -37,18 +37,7 @@ const blogPosts = [{
 
 const Blog = () => {
   return (
-    <PageLayout tabs={blogTabs} className="bg-gray-50 py-0">
-      <div className="w-full bg-gray-50 py-16 border-b mb-12">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-            Help Center
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
-            Find answers to common questions or search for specific help articles.
-          </p>
-        </div>
-      </div>
-      
+    <PageLayout tabs={blogTabs} className="bg-gray-50 py-0">      
       <div className="max-w-5xl mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Featured post */}
