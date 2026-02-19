@@ -9,6 +9,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 const defaultTracks = [''];
 
@@ -28,6 +29,11 @@ const CreateCampaign: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     const { isAuthenticated, user, login, loginAnonymously, loginWithGoogle, loginWithMicrosoft, checkEmailExists } = useAuth();
+    const { trackPageView, trackFormSubmit, trackClick, logEvent } = useAnalytics();
+
+    React.useEffect(() => {
+        void trackPageView('/campaign/new', { component: 'CreateCampaign' });
+    }, [trackPageView]);
 
     // Auto-check email existence
     React.useEffect(() => {
@@ -86,6 +92,7 @@ const CreateCampaign: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        void trackFormSubmit('create_campaign', { component: 'CreateCampaign', planAmount, tracks_count: tracks.length, email_provided: !!email });
         // ensure at least one non-empty track first
         const sanitizedTracks = tracks.map((t) => t.trim()).filter(Boolean);
         if (sanitizedTracks.length === 0) {
@@ -224,6 +231,8 @@ const CreateCampaign: React.FC = () => {
 
             const campaignResult = await createCampaignRes.json();
             const campaignId = campaignResult.id || campaignResult.campaign_id || null;
+            // Log campaign created (non-blocking)
+            void logEvent({ event_type: 'campaign_created', properties: { campaign_id: campaignId, plan_amount: planAmount, playlist_id: playlistId, component: 'CreateCampaign' } });
             if (!campaignId) {
                 throw new Error('Campaign API did not return campaign id');
             }
@@ -273,6 +282,8 @@ const CreateCampaign: React.FC = () => {
 
                 if (!response.ok) throw new Error('Failed to create checkout session');
                 const { url } = await response.json();
+                // Track checkout started
+                void logEvent({ event_type: 'checkout_started', properties: { campaign_id: campaignId, amount: planAmount, method: 'stripe', component: 'CreateCampaign' } });
                 window.location.href = url;
             } catch (err) {
                 console.error('Failed to create checkout session', err);

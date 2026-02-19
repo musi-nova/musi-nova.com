@@ -27,6 +27,7 @@ import AuthGuard from "@/components/AuthGuard";
 import TestimonialsPage from "./pages/TestimonialsPage";
 import CreditsBanner from '@/components/CreditsBanner';
 import Unsubscribe from "./pages/Unsubscribe";
+import Blog from "./pages/Blog";
 
 export default function AppRoutes() {
   return (
@@ -39,6 +40,7 @@ export default function AppRoutes() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/register" element={<Register />} />
         {/* <Route path="/smart-url" element={<SmartUrl />} /> */}
+        <Route path="/blog" element={<Blog />} />
         <Route path="/learn-more" element={<LearnMore />} />
         <Route path="/help" element={<Help />} />
         <Route path="/playlist-checker" element={<PlaylistChecker />} />
@@ -51,7 +53,6 @@ export default function AppRoutes() {
         <Route path="/campaigns/new" element={<CreateCampaign />} />
         <Route path="/campaign/new" element={<CreateCampaign />} />
         <Route path="/payment-credits" element={<PaymentCreditsPage />} />
-        {/* <Route path="/submit-to-playlists" element={<SubmissionPromo />} /> */}
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-failed" element={<PaymentFailed />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
