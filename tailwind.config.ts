@@ -110,7 +110,7 @@ export default {
 				'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite'
 			},
 			fontFamily: {
-				musinova: ['Roboto Slab', 'serif'],
+				musinova: ['Inter', 'serif'],
 			},
 			backgroundImage: {
 				'gradient-hero': 'linear-gradient(135deg, #F7F8CB 0%, #73AB81 100%)',
