@@ -33,7 +33,7 @@ const CreateCampaign: React.FC = () => {
     const { trackPageView, trackFormSubmit, trackClick, logEvent } = useAnalytics();
 
     React.useEffect(() => {
-        void trackPageView('/campaign/new', { component: 'CreateCampaign' });
+        void trackPageView('/campaigns/new', { component: 'CreateCampaign' });
     }, [trackPageView]);
 
     // Auto-check email existence
@@ -303,7 +303,7 @@ const CreateCampaign: React.FC = () => {
     return (
         <div className="min-h-screen flex flex-col">
             <Navbar />
-            <main className="flex-grow bg-gray-50 py-12">
+            <main className="flex-grow bg-gray-50 pt-24 py-12 px-4">
                 <div className="container mx-auto px-4 max-w-3xl">
                     <div className="bg-white shadow-sm rounded-lg p-4 md:p-6 relative">
                         <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">

@@ -261,24 +261,14 @@ const SubmissionPage = () => {
 
     return (
         <PageLayout showSidebar={isAuthenticated}>
-            <div className="max-w-6xl mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto px-8 md:px-12 pt-24 pb-12">
                 <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-musinova-navy">{viewMode === 'playlists' ? 'Our Playlists' : 'Your Submissions'}</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold text-musinova-green">{viewMode === 'playlists' ? 'Our Playlists' : 'Your Submissions'}</h1>
                         <p className="text-gray-600">{viewMode === 'playlists' ? "Submit your music to possibly be featured in MusiNova's playlists!" : 'Your recent submissions and their review status.'}</p>
                     </div>
 
                     <div className="flex items-center space-x-2">
-                        {/* <Button
-                            className="text-sm md:text-base bg-musinova-brown text-white font-bold px-6 py-3 rounded-xl shadow-lg border-2 border-musinova-brown hover:bg-white hover:text-musinova-brown transition-all flex items-center gap-2 dashboard-topup-btn"
-                            style={{ boxShadow: '0 0 0 2px #8B5A2B, 0 2px 8px 0 rgba(0,0,0,0.08)' }}
-                            onClick={() => (window.location.href = "/payment-credits")}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>Buy Credits</span>
-                        </Button> */}
                         {isAuthenticated ? (
                             <>
                                 <Button size="sm" variant={viewMode === 'playlists' ? undefined : 'outline'} onClick={() => setViewMode('playlists')}>Playlists</Button>
@@ -291,7 +281,7 @@ const SubmissionPage = () => {
                 {/* Filters for playlists view */}
                 {viewMode === 'playlists' && (
                     <div className="mb-4 flex justify-center">
-                        <div className="w-full max-w-6xl bg-white p-4 rounded-md shadow-sm">
+                        <div className="w-full bg-white p-6 rounded-2xl shadow-md">
                             <div className="flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-3">
                                 <input className="w-full md:flex-1 min-w-[160px] border p-2 rounded" placeholder="Search by name" value={filterName} onChange={(e) => setFilterName(e.target.value)} />
 
@@ -331,7 +321,7 @@ const SubmissionPage = () => {
 
                                 <input type="number" className="w-full md:w-32 border p-2 rounded" placeholder="Max credits" value={filterMaxCredits ?? ''} onChange={(e) => setFilterMaxCredits(e.target.value ? Number(e.target.value) : null)} />
 
-                                <button className="w-full md:w-auto md:ml-auto text-sm text-musinova-navy py-2" onClick={() => { setFilterName(''); setFilterGenres([]); setFilterMoods([]); setFilterInstrumental(null); setFilterMaxCredits(null); }}>Clear</button>
+                                <button className="w-full md:w-auto md:ml-auto text-sm text-musinova-green py-2" onClick={() => { setFilterName(''); setFilterGenres([]); setFilterMoods([]); setFilterInstrumental(null); setFilterMaxCredits(null); }}>Clear</button>
                             </div>
                         </div>
                     </div>

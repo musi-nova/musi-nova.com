@@ -72,7 +72,7 @@ const SmartUrl = () => {
         title: 'Error',
         description: (
           <>
-            <p>Your facebook business is not registered with Musi-Nova.</p>
+            <p>Your facebook business is not registered with MusiNova.</p>
             <p>Please send us your business id, pixel id, and ad account id.</p>
             <a href="/help" className="text-musinova-green underline">
               Contact Support

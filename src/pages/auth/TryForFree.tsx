@@ -41,7 +41,7 @@ const TryForFree = () => {
         <div className="container mx-auto px-4 max-w-4xl">
           {currentStep < 3 && <>
               <div className="mb-4 text-center">
-                <h1 className="text-3xl font-bold text-musinova-navy mb-2">Start Using Musi-Nova</h1>
+                <h1 className="text-3xl font-bold text-musinova-green mb-2">Start Using MusiNova</h1>
                 <p className="text-gray-600">
                   Let's get you started with MusiNova in just a few steps.
                 </p>

@@ -5,7 +5,7 @@ import { CheckCircle } from 'lucide-react';
 const Benefits = () => {
   return <section className="py-16 bg-gradient-to-br from-musinova-cream to-white">
     <div className="container mx-auto px-4">
-      <h2 className="text-3xl font-bold text-center text-musinova-darkgray mb-4">Why Choose Musi-Nova?</h2>
+      <h2 className="text-3xl font-bold text-center text-musinova-darkgray mb-4">Why Choose MusiNova?</h2>
       <p className="text-center text-musinova-darkgray mb-12 max-w-2xl mx-auto">
         Promoting your own playlist with us has a big impact for your audience.
       </p>

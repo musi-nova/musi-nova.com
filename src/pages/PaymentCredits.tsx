@@ -99,7 +99,7 @@ const PaymentCreditsPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow bg-gray-50 py-12">
+      <main className="flex-grow bg-gray-50 pt-28 md:pt-32 px-4">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="bg-white shadow-sm rounded-lg p-6">
             <h2 className="text-2xl font-bold text-center mb-6">Buy Credits</h2>

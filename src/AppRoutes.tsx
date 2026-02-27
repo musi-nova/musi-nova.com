@@ -51,7 +51,6 @@ export default function AppRoutes() {
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/submissions" element={<Submission />} />
         <Route path="/campaigns/new" element={<CreateCampaign />} />
-        <Route path="/campaign/new" element={<CreateCampaign />} />
         <Route path="/payment-credits" element={<PaymentCreditsPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-failed" element={<PaymentFailed />} />

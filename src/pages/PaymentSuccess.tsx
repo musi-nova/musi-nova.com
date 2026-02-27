@@ -73,7 +73,7 @@ const PaymentSuccess = () => {
       {isGuest && (
         <div className="mb-6 w-full max-w-4xl">
           <div className="p-6 rounded-lg bg-white shadow-md border border-green-100 flex flex-col items-center justify-center text-center">
-            <h2 className="text-xl font-bold text-musinova-navy mb-2">Finish setting your password</h2>
+            <h2 className="text-xl font-bold text-musinova-green mb-2">Finish setting your password</h2>
             <p className="text-sm text-gray-700 mb-4">
               We've sent a follow-up email{guestEmail ? <> to <strong>{guestEmail}</strong></> : ''} with instructions to set your password and access your account. Please check your inbox (and spam folder).
             </p>

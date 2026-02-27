@@ -127,7 +127,7 @@ const GenreStats = () => {
           Performance By Genre
         </h2>
         <p className="text-center text-musinova-darkgray mb-6 max-w-2xl mx-auto">
-          See how different genres perform with Musi-Nova promotion campaigns. Find your niche and estimate your growth potential.
+          See how different genres perform with MusiNova promotion campaigns. Find your niche and estimate your growth potential.
         </p>
         
         {/* Genre Selection Buttons */}

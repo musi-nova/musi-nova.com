@@ -367,7 +367,7 @@ const Register = ({ standalone = true, redirectToCampaign = false }: RegisterPro
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow bg-gray-50 py-12">
+      <main className="flex-grow bg-gray-50 pt-24 py-12 px-4">
         <div className="container mx-auto px-4 max-w-md">
           <Card className="bg-white shadow-sm">
             <CardHeader className="space-y-1 text-center">

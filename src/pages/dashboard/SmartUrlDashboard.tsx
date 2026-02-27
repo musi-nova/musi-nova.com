@@ -121,7 +121,7 @@ const SmartUrlDashboard = () => {
         title: 'Error',
         description: (
           <>
-            <p>Your Facebook business is not registered with Musi-Nova.</p>
+            <p>Your Facebook business is not registered with MusiNova.</p>
             <p>Please send us your business ID, pixel ID, and ad account ID.</p>
             <a href="/help" className="text-musinova-green underline">
               Contact Support
@@ -165,7 +165,7 @@ const SmartUrlDashboard = () => {
   return (
     <PageLayout showSidebar={true} className="bg-musinova-cream/30 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-musinova-navy mb-2">Smart Url Page</h1>
+        <h1 className="text-3xl font-bold text-musinova-green mb-2">Smart Url Page</h1>
       </div>
       <Card>
         <CardContent className='p-6'>

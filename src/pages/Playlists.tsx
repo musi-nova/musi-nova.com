@@ -59,7 +59,7 @@ const Playlists = () => {
     <PageLayout showSidebar={true} className="bg-musinova-cream/30 py-4 md:py-8">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-8">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-musinova-navy mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-musinova-green mb-2">
             {user?.name}'s Playlists
           </h1>
           <p className="text-sm md:text-base text-gray-600">

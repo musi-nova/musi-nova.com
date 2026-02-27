@@ -2,9 +2,9 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
 const Privacy = () => (
-  <div className="min-h-screen flex flex-col bg-gradient-to-br from-musinova-lightyellow to-musinova-lightgreen">
+  <div className="min-h-screen flex flex-col bg-white">
     <Navbar />
-    <main className="flex-grow flex flex-col items-center py-12 px-4">
+    <main className="flex-grow flex flex-col items-center pt-24 pb-12 px-4">
       <div className="w-full max-w-3xl bg-white/90 rounded-2xl shadow-xl p-8">
         <h1 className="text-3xl md:text-4xl font-extrabold text-musinova-green mb-6 text-center">Privacy Policy</h1>
         <p className="mb-6 text-musinova-darkgray text-base text-center">
@@ -52,7 +52,7 @@ const Privacy = () => (
         <h2 className="text-xl font-bold mt-8 mb-2">7. Cookies</h2>
         <p className="mb-4 text-musinova-darkgray">We do not use cookies or similar tracking technologies for analytics or marketing. If this changes, we will update this policy and provide notice as required by U.S. law.</p>
         <h2 className="text-xl font-bold mt-8 mb-2">8. Contact</h2>
-        <p className="mb-4 text-musinova-darkgray">If you have questions or wish to exercise your rights, please contact us at <a href="mailto:musi.nova321@gmail.com" className="underline text-musinova-green">musi.nova321@gmail.com</a>.</p>
+        <p className="mb-4 text-musinova-darkgray">If you have questions or wish to exercise your rights, please contact us at <a href="mailto:contact@musi-nova.com" className="underline text-musinova-green">contact@musi-nova.com</a>.</p>
         <p className="text-xs text-gray-400 mt-8">This policy was last updated on {new Date().toLocaleDateString()}. This policy is governed by the laws of the State of Wyoming, United States of America.</p>
       </div>
     </main>

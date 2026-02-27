@@ -2,9 +2,9 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
 const Terms = () => (
-  <div className="min-h-screen flex flex-col bg-gradient-to-br from-musinova-lightyellow to-musinova-lightgreen">
+  <div className="min-h-screen flex flex-col bg-white">
     <Navbar />
-    <main className="flex-grow flex flex-col items-center py-12 px-4">
+    <main className="flex-grow flex flex-col items-center pt-24 py-12 px-4">
       <div className="w-full max-w-3xl bg-white/90 rounded-2xl shadow-xl p-8">
         <h1 className="text-3xl md:text-4xl font-extrabold text-musinova-green mb-6 text-center">Terms & Conditions</h1>
         <p className="mb-6 text-musinova-darkgray text-base text-center">
@@ -53,7 +53,7 @@ const Terms = () => (
         <h2 className="text-xl font-bold mt-8 mb-2">9. Governing Law</h2>
         <p className="mb-4 text-musinova-darkgray">These Terms are governed by the laws of the State of Wyoming, United States of America, without regard to conflict of law principles. Any disputes will be subject to the exclusive jurisdiction of the state and federal courts located in Wyoming, USA.</p>
         <h2 className="text-xl font-bold mt-8 mb-2">10. Contact</h2>
-        <p className="mb-4 text-musinova-darkgray">For questions about these Terms, please contact us at <a href="mailto:musi.nova321@gmail.com" className="underline text-musinova-green">musi.nova321@gmail.com</a>.</p>
+        <p className="mb-4 text-musinova-darkgray">For questions about these Terms, please contact us at <a href="mailto:contact@musi-nova.com" className="underline text-musinova-green">contact@musi-nova.com</a>.</p>
         <p className="text-xs text-gray-400 mt-8">These Terms were last updated on {new Date().toLocaleDateString()}.</p>
       </div>
     </main>

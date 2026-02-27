@@ -45,7 +45,7 @@ const PlaylistTips = () => {
     <PageLayout tabs={playlistCheckerTabs} className="bg-gray-50 py-6 md:py-12">
       <div className="max-w-4xl mx-auto px-4 md:px-0">
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-musinova-navy mb-2">Playlist Optimization Tips</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-musinova-green mb-2">Playlist Optimization Tips</h1>
           <p className="text-gray-600">
             Expert advice to make your playlists more effective for promotion.
           </p>

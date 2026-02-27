@@ -78,7 +78,7 @@ const Help = () => {
 
   return (
     <PageLayout>
-      <div className="max-w-4xl mx-auto px-4 md:px-0 py-8 md:py-12">
+      <div className="max-w-4xl mx-auto px-4 pt-28 pb-4">
         <section className="mb-16">
           <div className="mb-8 text-center">
             <h2 className="text-2xl font-bold text-musinova-darkgray mb-2">Contact Support</h2>
