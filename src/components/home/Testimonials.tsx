@@ -1,5 +1,6 @@
 import { AdvancedVideo } from '@cloudinary/react';
 import { Cloudinary } from '@cloudinary/url-gen';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 const cld = new Cloudinary({ cloud: { cloudName: 'dudtoiunq' } });
 const videos = [
@@ -24,6 +25,7 @@ const videos = [
 ];
 
 const Testimonials = ({ whiteBg = false }: { whiteBg?: boolean }) => {
+  const { trackClick } = useAnalytics();
   return (
     <section className={`py-20 px-8 md:px-12 max-w-7xl mx-auto ${whiteBg ? '' : ''}`}>
       <div className="container mx-auto px-4">
@@ -53,6 +55,7 @@ const Testimonials = ({ whiteBg = false }: { whiteBg?: boolean }) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block text-musinova-green hover:text-musinova-green/80 font-semibold underline text-sm transition-colors mb-1"
+                  onClick={() => trackClick('testimonial_external_link', { label: video.name, url: video.url })}
                 >
                   Check them out
                 </a>

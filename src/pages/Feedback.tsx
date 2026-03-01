@@ -17,6 +17,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 const formSchema = z.object({
 	satisfaction: z.enum([
@@ -34,6 +35,7 @@ const formSchema = z.object({
 
 const Feedback = () => {
 	const { toast } = useToast();
+	const { trackClick } = useAnalytics();
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -48,6 +50,7 @@ const Feedback = () => {
 	});
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
+		void trackClick('feedback_submit', { recommend: values.recommend });
 		try {
 			const response = await apiFetch('feedback', {
 				method: 'POST',

@@ -8,11 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import { Music, Plus, Play, Users } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 const Playlists = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("my-playlists");
   const isMobile = useIsMobile();
+  const { trackClick } = useAnalytics();
   
   const myPlaylists = [
     {
@@ -67,7 +69,7 @@ const Playlists = () => {
           </p>
         </div>
         
-        <Link to="/playlist-creator" className="mt-3 md:mt-0">
+        <Link to="/playlist-creator" className="mt-3 md:mt-0" onClick={() => trackClick('playlists_create_playlist') }>
           <Button className="w-full md:w-auto bg-musinova-brown hover:bg-musinova-brown/90 text-white">
             <Plus className="mr-2 h-4 w-4" /> Create Playlist
           </Button>
@@ -108,7 +110,7 @@ const Playlists = () => {
                   
                   <div className="mt-3 md:mt-4 flex justify-between">
                     <Button variant="outline" size={isMobile ? "sm" : "default"}>Edit</Button>
-                    <Link to={`/campaigns/new?playlist=${playlist.id}`}>
+                    <Link to={`/campaigns/new?playlist=${playlist.id}`} onClick={() => trackClick('playlists_promote', { playlistId: playlist.id })}>
                       <Button size={isMobile ? "sm" : "default"}>Promote</Button>
                     </Link>
                   </div>
@@ -122,7 +124,7 @@ const Playlists = () => {
               <p className="text-gray-500 text-xs md:text-sm mb-3 md:mb-4">
                 Add your favorite tracks and share
               </p>
-              <Link to="/playlist-creator">
+              <Link to="/playlist-creator" onClick={() => trackClick('playlists_get_started_card')}>
                 <Button variant="outline" size={isMobile ? "sm" : "default"}>Get Started</Button>
               </Link>
             </Card>
@@ -167,7 +169,7 @@ const Playlists = () => {
             <p className="text-sm md:text-base text-gray-500 mb-4 md:mb-6">
               Start promoting your playlists to grow your audience
             </p>
-            <Link to="/campaigns/new">
+            <Link to="/campaigns/new" onClick={() => trackClick('playlists_promote_from_promoted') }>
               <Button>Create Campaign</Button>
             </Link>
           </div>

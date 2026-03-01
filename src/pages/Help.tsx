@@ -19,6 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import emailjs from '@emailjs/browser';
 import { useAuth } from '@/hooks/use-auth';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 // Define the form schema
 const formSchema = z.object({
@@ -49,6 +50,7 @@ const Help = () => {
 
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    void trackClick('help_contact_submit', { subject: values.subject });
     console.log("Form submitted:", values);
     try {
       // Send email using EmailJS

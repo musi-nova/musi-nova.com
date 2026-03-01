@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useAnalytics } from '@/hooks/use-analytics';
 import PageLayout from '@/components/PageLayout';
 import { playlistCheckerTabs } from '@/config/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Plus, Music } from 'lucide-react';
 
 const PlaylistCreator = () => {
+  const { trackClick } = useAnalytics();
+
   return (
     <PageLayout tabs={playlistCheckerTabs} className="bg-gray-50 py-6 md:py-12">
       <div className="max-w-4xl mx-auto px-4 md:px-0">
@@ -92,10 +95,10 @@ const PlaylistCreator = () => {
                     </div>
                     
                     <div className="flex items-center gap-3 p-3 border border-dashed border-gray-200 rounded-md bg-gray-50">
-                      <Button variant="outline" className="w-full" size="sm">
-                        <Plus size={16} className="mr-2" />
-                        Add Another Track
-                      </Button>
+                              <Button variant="outline" className="w-full" size="sm" onClick={() => trackClick('playlist_creator_add_track')}>
+                                <Plus size={16} className="mr-2" />
+                                Add Another Track
+                              </Button>
                     </div>
                   </div>
                 </div>
@@ -115,7 +118,7 @@ const PlaylistCreator = () => {
                         placeholder="Search artists or tracks..."
                         className="mb-4"
                       />
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full" onClick={() => trackClick('playlist_creator_browse_similar')}>
                         <Music size={16} className="mr-2" />
                         Browse Similar Artists
                       </Button>
@@ -126,7 +129,7 @@ const PlaylistCreator = () => {
             </div>
             
             <div className="flex justify-end">
-              <Button className="btn-primary">
+              <Button className="btn-primary" onClick={() => trackClick('playlist_creator_create')}>
                 Create Playlist
               </Button>
             </div>

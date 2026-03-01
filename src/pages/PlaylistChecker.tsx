@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useAnalytics } from '@/hooks/use-analytics';
 import { Link } from 'react-router-dom';
 import PageLayout from '@/components/PageLayout';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { playlistCheckerTabs } from '@/config/navigation';
 
 const PlaylistChecker = () => {
   const [playlistUrl, setPlaylistUrl] = useState('');
+  const { trackClick } = useAnalytics();
   const [isChecking, setIsChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<null | {
     passed: boolean;
@@ -20,6 +22,7 @@ const PlaylistChecker = () => {
     e.preventDefault();
     
     if (!playlistUrl) return;
+    void trackClick('playlist_checker_check', { playlistUrl });
     
     setIsChecking(true);
     
@@ -158,7 +161,7 @@ const PlaylistChecker = () => {
               
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <p className="text-gray-600 text-sm">
-                  Don't have a playlist yet? <Link to="/playlist-tips" className="text-musinova-green hover:underline">Learn how to create an effective playlist</Link>
+                  Don't have a playlist yet? <Link to="/playlist-tips" className="text-musinova-green hover:underline" onClick={() => trackClick('playlist_checker_learn_playlist_tips')}>Learn how to create an effective playlist</Link>
                 </p>
               </div>
             </CardContent>
@@ -216,7 +219,7 @@ const PlaylistChecker = () => {
                 </Button>
                 
                 {checkResult.passed ? (
-                  <Link to="/campaigns/new">
+                  <Link to="/campaigns/new" onClick={() => trackClick('playlist_checker_launch_campaign', { playlistReady: true })}>
                     <Button className="btn-primary w-full sm:w-auto">
                       Launch Campaign <ArrowRight size={16} className="ml-2" />
                     </Button>

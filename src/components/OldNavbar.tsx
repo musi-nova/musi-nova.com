@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useAnalytics } from '@/hooks/use-analytics';
 import { Menu, X } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { trackClick } = useAnalytics();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -26,15 +28,15 @@ const Navbar: React.FC = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          <a href="#" className="text-sm font-medium hover:text-brand-accent transition-colors">Playlist Submission</a>
-          <a href="#" className="text-sm font-medium hover:text-brand-accent transition-colors">Music Promotion</a>
-          <a href="#" className="text-sm font-medium hover:text-brand-accent transition-colors">Case Studies</a>
-          <a href="#" className="text-sm font-medium hover:text-brand-accent transition-colors">Pricing</a>
+          <a href="#" className="text-sm font-medium hover:text-brand-accent transition-colors" onClick={() => trackClick('oldnav_playlist_submission')}>Playlist Submission</a>
+          <a href="#" className="text-sm font-medium hover:text-brand-accent transition-colors" onClick={() => trackClick('oldnav_music_promotion')}>Music Promotion</a>
+          <a href="#" className="text-sm font-medium hover:text-brand-accent transition-colors" onClick={() => trackClick('oldnav_case_studies')}>Case Studies</a>
+          <a href="#" className="text-sm font-medium hover:text-brand-accent transition-colors" onClick={() => trackClick('oldnav_pricing')}>Pricing</a>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <button className="text-sm font-semibold px-4 py-2">Log In</button>
-          <button className="bg-brand-primary text-white text-sm font-semibold px-6 py-2.5 rounded-full hover:opacity-90 transition-all">Get Started</button>
+          <button className="text-sm font-semibold px-4 py-2" onClick={() => trackClick('oldnav_login')}>Log In</button>
+          <button className="bg-brand-primary text-white text-sm font-semibold px-6 py-2.5 rounded-full hover:opacity-90 transition-all" onClick={() => trackClick('oldnav_get_started')}>Get Started</button>
         </div>
 
         <button className="md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -48,12 +50,12 @@ const Navbar: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="absolute top-full left-0 right-0 bg-white border-b border-black/5 p-6 flex flex-col gap-4 md:hidden"
         >
-          <a href="#" className="text-lg font-medium">Playlist Submission</a>
-          <a href="#" className="text-lg font-medium">Music Promotion</a>
-          <a href="#" className="text-lg font-medium">Case Studies</a>
-          <a href="#" className="text-lg font-medium">Pricing</a>
+            <a href="#" className="text-lg font-medium" onClick={() => trackClick('oldnav_mobile_playlist_submission')}>Playlist Submission</a>
+            <a href="#" className="text-lg font-medium" onClick={() => trackClick('oldnav_mobile_music_promotion')}>Music Promotion</a>
+            <a href="#" className="text-lg font-medium" onClick={() => trackClick('oldnav_mobile_case_studies')}>Case Studies</a>
+            <a href="#" className="text-lg font-medium" onClick={() => trackClick('oldnav_mobile_pricing')}>Pricing</a>
           <hr className="border-black/5" />
-          <button className="w-full bg-brand-primary text-white py-4 rounded-xl font-semibold">Get Started</button>
+          <button className="w-full bg-brand-primary text-white py-4 rounded-xl font-semibold" onClick={() => trackClick('oldnav_mobile_get_started')}>Get Started</button>
         </motion.div>
       )}
     </nav>

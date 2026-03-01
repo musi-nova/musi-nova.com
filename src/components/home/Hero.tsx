@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useAnalytics } from '@/hooks/use-analytics';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, ArrowRight, CheckCircle2, Users } from 'lucide-react';
 
 const Hero: React.FC = () => {
+  const { trackClick } = useAnalytics();
   const playlistImages = [
     'assets/alt-pop-example.gif',
     'assets/alt-rock-example.gif',
@@ -46,10 +48,18 @@ const Hero: React.FC = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              <a href="/campaigns/new" className="btn-primary flex items-center gap-2 group w-full sm:w-auto justify-center">
+              <a
+                href="/campaigns/new"
+                className="btn-primary flex items-center gap-2 group w-full sm:w-auto justify-center"
+                onClick={() => trackClick('hero_start_campaign', { label: 'Start Your Campaign', location: 'hero' })}
+              >
                 Start Your Campaign
               </a>
-              <a href="/submissions" className="btn-secondary flex items-center gap-2 w-full sm:w-auto justify-center">
+              <a
+                href="/submissions"
+                className="btn-secondary flex items-center gap-2 w-full sm:w-auto justify-center"
+                onClick={() => trackClick('hero_submit_playlists', { label: 'Submit To Playlists', location: 'hero' })}
+              >
                 Submit To Playlists
               </a>
             </div>

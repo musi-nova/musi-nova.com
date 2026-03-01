@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, ArrowRight, Music, Building2 } from 'lucide-react';
 import Register from './Register';
 import { useAuth } from '@/hooks/use-auth';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 const TryForFree = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -18,8 +19,10 @@ const TryForFree = () => {
   const {
     isAuthenticated
   } = useAuth();
+  const { trackClick } = useAnalytics();
 
   const handleNext = () => {
+    void trackClick('try_for_free_next', { step: currentStep, accountType });
     if (currentStep === 2 && isAuthenticated) {
       // If user is authenticated after registration, redirect to campaign creation
       navigate('/campaigns/new');

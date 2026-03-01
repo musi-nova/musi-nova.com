@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { useAnalytics } from '@/hooks/use-analytics';
 
 const NotFound = () => {
+  const { trackClick } = useAnalytics();
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -36,7 +38,7 @@ const NotFound = () => {
           </div>
           
           <div className="flex flex-col gap-4">
-            <Link to="/">
+            <Link to="/" onClick={() => trackClick('notfound_return_home')}>
               <Button className="btn-primary w-full">
                 Return to Home
               </Button>
