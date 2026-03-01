@@ -405,7 +405,7 @@ const SubmissionPage = () => {
                                                         if (open) openSubmitDialog(item);
                                                         else closeDialog();
                                                     }}
-                                                    trigger={<Button size="sm" className="ml-auto" onClick={() => openSubmitDialog(item)}>Submit to playlist</Button>}
+                                                    trigger={<Button size="sm" className="ml-auto" onClick={() => { if (!isAuthenticated) { navigate('/login'); return; } openSubmitDialog(item); }}>Submit to playlist</Button>}
                                                 />
                                             </div>
                                         </CardContent>

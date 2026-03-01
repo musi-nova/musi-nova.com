@@ -8,6 +8,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/hooks/use-auth';
+import { apiFetch } from '@/lib/api';
+import { Music, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -39,6 +41,13 @@ const SubmitToPlaylistDialog: React.FC<Props> = ({ playlist, open, onOpenChange,
     resolver: zodResolver(schema),
     defaultValues: { message: '', trackId: '', playlistId: playlist?.id || '' },
   });
+
+  const [linkOrQuery, setLinkOrQuery] = React.useState('');
+  const [searchResults, setSearchResults] = React.useState<any[]>([]);
+  const [isSearching, setIsSearching] = React.useState(false);
+  const [searchError, setSearchError] = React.useState<string | null>(null);
+  type TrackItem = { url: string; name?: string | null; image?: string | null };
+  const [selectedTrack, setSelectedTrack] = React.useState<TrackItem | null>(null);
 
   React.useEffect(() => {
     form.reset({ message: '', trackId: '', playlistId: playlist?.id || '' });
@@ -140,9 +149,90 @@ const SubmitToPlaylistDialog: React.FC<Props> = ({ playlist, open, onOpenChange,
 
             <FormField control={form.control} name="trackId" render={({ field }) => (
               <FormItem>
-                <FormLabel>Track ID</FormLabel>
+                <FormLabel>Track</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://open.spotify.com/track/..." {...field} />
+                  <div>
+                    <div className="flex gap-2">
+                      <Input placeholder="Paste link or search (e.g. Back in Black)" value={linkOrQuery} onChange={(e) => setLinkOrQuery(e.target.value)} />
+                      <Button type="button" onClick={async () => {
+                        const q = (linkOrQuery || '').trim();
+                        if (!q) return;
+                        if (q.includes('http://') || q.includes('https://')) {
+                          field.onChange(q);
+                          setSelectedTrack(null);
+                          setLinkOrQuery('');
+                          setSearchResults([]);
+                          setSearchError(null);
+                          return;
+                        }
+                        setIsSearching(true);
+                        setSearchError(null);
+                        try {
+                          const res = await apiFetch(`spotify/search/tracks?query=${encodeURIComponent(q)}`);
+                          if (!res.ok) throw new Error('Search failed');
+                          const data = await res.json();
+                          setSearchResults(Array.isArray(data) ? data : []);
+                        } catch (err: any) {
+                          console.error('Search error', err);
+                          setSearchError(err?.message || 'Search failed');
+                        } finally {
+                          setIsSearching(false);
+                        }
+                      }}>{isSearching ? 'Searching...' : 'Add/Search'}</Button>
+                    </div>
+
+                    {searchError && <div className="text-sm text-destructive mt-2">{searchError}</div>}
+
+                    {searchResults.length > 0 && (
+                      <div className="mt-3">
+                        <div role="list" className="max-h-60 overflow-y-auto pr-2 grid grid-cols-1 gap-2">
+                          {searchResults.map((r: any, i: number) => {
+                            const img = r.album?.images && r.album.images.length ? r.album.images[0].url : null;
+                            const url = r.external_urls?.spotify || '';
+                            return (
+                              <div key={r.id || i} className="flex items-center justify-between p-2 rounded-md border border-gray-200 bg-white">
+                                <div className="flex items-center gap-3">
+                                  {img ? <img src={img} alt={r.name} className="w-12 h-12 object-cover rounded" /> : <div className="w-12 h-12 bg-gray-100 rounded" />}
+                                  <div className="text-sm">
+                                    <div className="font-medium">{r.name}</div>
+                                  </div>
+                                </div>
+                                <div>
+                                  <Button type="button" size="sm" onClick={() => { field.onChange(url); setSearchResults([]); setLinkOrQuery(''); setSelectedTrack({ url, name: r.name, image: img }); }}>{'Add'}</Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {selectedTrack ? (
+                      <div className="mt-3 flex items-center gap-2">
+                        <div className="flex items-center gap-3 px-3 py-1 rounded-full border bg-white">
+                          {selectedTrack.image ? (
+                            // eslint-disable-next-line jsx-a11y/img-redundant-alt
+                            <img src={selectedTrack.image} alt={selectedTrack.name || 'track image'} className="w-8 h-8 object-cover rounded" />
+                          ) : (
+                            <Music className="w-4 h-4 text-gray-500" />
+                          )}
+                          <div className="text-sm text-gray-900 truncate max-w-xs">{selectedTrack.name || selectedTrack.url}</div>
+                        </div>
+                        <Button type="button" variant="outline" size="icon" onClick={() => { field.onChange(''); setSelectedTrack(null); }}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : field.value ? (
+                      <div className="mt-3 flex items-center gap-2">
+                        <div className="flex items-center gap-3 px-3 py-1 rounded-full border bg-white">
+                          <Music className="w-4 h-4 text-gray-500" />
+                          <div className="text-sm text-gray-900 truncate max-w-xs">{field.value}</div>
+                        </div>
+                        <Button type="button" variant="outline" size="icon" onClick={() => field.onChange('')}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

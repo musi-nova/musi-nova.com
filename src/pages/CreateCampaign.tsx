@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Music, Plus, X } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAnalytics } from '@/hooks/use-analytics';
 
-const defaultTracks = [''];
+type TrackItem = { url: string; name?: string | null; image?: string | null };
+
+const defaultTracks: TrackItem[] = [];
 
 const CreateCampaign: React.FC = () => {
     const navigate = useNavigate();
@@ -25,9 +27,16 @@ const CreateCampaign: React.FC = () => {
     const [showPasswordField, setShowPasswordField] = useState(false);
     const [isCheckingEmail, setIsCheckingEmail] = useState(false);
     const [emailProviders, setEmailProviders] = useState<string[] | null>(null);
-    const [tracks, setTracks] = useState<string[]>(defaultTracks);
+    const [tracks, setTracks] = useState<TrackItem[]>(defaultTracks);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [signInLoading, setSignInLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [currentSearchIndex, setCurrentSearchIndex] = useState<number | null>(null);
+    const [linkOrQuery, setLinkOrQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
     const { toast } = useToast();
     const { isAuthenticated, user, login, loginAnonymously, loginWithGoogle, loginWithMicrosoft, checkEmailExists } = useAuth();
     const { trackPageView, trackFormSubmit, trackClick, logEvent } = useAnalytics();
@@ -79,12 +88,103 @@ const CreateCampaign: React.FC = () => {
         }
     };
 
-    const updateTrack = (index: number, value: string) => {
-        setTracks((prev) => prev.map((t, i) => (i === index ? value : t)));
+    const updateTrack = (index: number, value: string | TrackItem) => {
+        setTracks((prev) =>
+            prev.map((t, i) => {
+                if (i !== index) return t;
+                if (typeof value === 'string') return { ...(t || { url: '' }), url: value };
+                return value;
+            }),
+        );
     };
 
-    const addTrack = () => setTracks((prev) => [...prev, '']);
+    const addTrack = () => {
+        if (tracks.length >= 5) {
+            toast({ title: 'Limit reached', description: 'You can add up to 5 tracks.' });
+            return;
+        }
+        setTracks((prev) => [...prev, { url: '' }]);
+    };
     const removeTrack = (index: number) => setTracks((prev) => prev.filter((_, i) => i !== index));
+
+    const performSearch = async (q: string, index: number | null = null) => {
+        if (!q || q.trim().length === 0) {
+            setSearchResults([]);
+            setCurrentSearchIndex(null);
+            return;
+        }
+        setSearchLoading(true);
+        setCurrentSearchIndex(index);
+        try {
+            const res = await apiFetch(`spotify/search/tracks?query=${encodeURIComponent(q)}`);
+            if (!res.ok) {
+                console.error('Spotify search failed', res.statusText);
+                setSearchResults([]);
+                return;
+            }
+            const data = await res.json();
+            setSearchResults(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error('Spotify search error', e);
+            setSearchResults([]);
+        } finally {
+            setSearchLoading(false);
+        }
+    };
+
+    const addTrackFromResult = (
+        item: string | { name?: string | null; image?: string | null; url?: string | null } | null,
+        index?: number | null,
+    ) => {
+        if (!item) return;
+        const track: TrackItem =
+            typeof item === 'string'
+                ? { url: item, name: null, image: null }
+                : { url: item.url || '', name: item.name || null, image: item.image || null };
+        // If an index was provided, set that slot directly
+        if (typeof index === 'number' && index >= 0 && index < tracks.length) {
+            updateTrack(index, track);
+            setSearchResults([]);
+            setCurrentSearchIndex(null);
+            return;
+        }
+
+        // Prefer filling an empty slot if present
+        const emptyIndex = tracks.findIndex((t) => !t?.url || t.url.trim() === '');
+        if (emptyIndex !== -1) {
+            const newTracks = [...tracks];
+            newTracks[emptyIndex] = track;
+            setTracks(newTracks);
+            return;
+        }
+
+        if (tracks.length < 5) {
+            setTracks([...tracks, track]);
+            return;
+        }
+
+        toast({ title: 'Limit reached', description: 'You can add up to 5 tracks.' });
+    };
+
+    const addAndClear = (
+        item: string | { name?: string | null; image?: string | null; url?: string | null } | null,
+        index?: number | null,
+    ) => {
+        addTrackFromResult(item, index ?? null);
+        setLinkOrQuery('');
+        setSearchResults([]);
+        setSearchError(null);
+    };
+
+    const copyToClipboard = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            toast({ title: 'Copied', description: 'Track URL copied to clipboard.' });
+        } catch (e) {
+            console.error('Copy failed', e);
+            toast({ title: 'Copy failed', description: 'Could not copy URL.', variant: 'destructive' });
+        }
+    };
 
     const validateEmail = (e: string) => {
         // simple email regex
@@ -95,7 +195,7 @@ const CreateCampaign: React.FC = () => {
         e.preventDefault();
         void trackFormSubmit('create_campaign', { component: 'CreateCampaign', planAmount, tracks_count: tracks.length, email_provided: !!email });
         // ensure at least one non-empty track first
-        const sanitizedTracks = tracks.map((t) => t.trim()).filter(Boolean);
+        const sanitizedTracks = tracks.map((t) => (t.url || '').trim()).filter(Boolean);
         if (sanitizedTracks.length === 0) {
             alert('Please add at least one track URL.');
             return;
@@ -300,6 +400,8 @@ const CreateCampaign: React.FC = () => {
         }
     };
 
+    const hasTracks = tracks.some((t) => ((t.url || '').trim().length > 0));
+
     return (
         <div className="min-h-screen flex flex-col">
             <Navbar />
@@ -324,20 +426,111 @@ const CreateCampaign: React.FC = () => {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
                                 <label className="block text-sm font-medium mb-2">Tracks to include <span className="text-red-500">*</span></label>
-                                <div className="space-y-2">
-                                    {tracks.map((t, i) => (
-                                        <div key={i} className="flex gap-2">
-                                            <Input placeholder="https://open.spotify.com/track/..." value={t} onChange={(e) => updateTrack(i, e.target.value)} className="flex-1" />
-                                            <Button type="button" variant="outline" size="sm" onClick={() => removeTrack(i)} disabled={tracks.length === 1} className="px-2 md:px-4">
-                                                <span className="hidden md:inline">Remove</span>
-                                                <span className="md:hidden">X</span>
-                                            </Button>
+                                <div className="mb-4">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Paste link https://open.spotify.com/track/... or search (e.g. Back in Black)"
+                                            value={linkOrQuery}
+                                            onChange={(e) => setLinkOrQuery(e.target.value)}
+                                            className="flex-1"
+                                        />
+                                        <Button type="button" onClick={async () => {
+                                            const q = linkOrQuery?.trim();
+                                            if (!q) return;
+                                            if (q.includes('http://') || q.includes('https://')) {
+                                                addTrackFromResult(q);
+                                                setLinkOrQuery('');
+                                                setSearchResults([]);
+                                                setSearchError(null);
+                                                return;
+                                            }
+                                            setIsSearching(true);
+                                            setSearchError(null);
+                                            try {
+                                                const items = await apiFetch(`spotify/search/tracks?query=${encodeURIComponent(q)}`);
+                                                if (!items.ok) throw new Error('Search failed');
+                                                const data = await items.json();
+                                                setSearchResults(Array.isArray(data) ? data : []);
+                                            } catch (err: any) {
+                                                console.error('Search error', err);
+                                                setSearchError(err?.message || 'Search failed');
+                                            } finally {
+                                                setIsSearching(false);
+                                            }
+                                        }}>{isSearching ? 'Searching...' : 'Add/Search'}</Button>
+                                    </div>
+
+                                    {searchError && <div className="text-sm text-red-500 mt-2">{searchError}</div>}
+
+                                    {searchResults.length > 0 && (
+                                        <div className="mt-3">
+                                            <div role="list" className="max-h-60 overflow-y-auto pr-2 grid grid-cols-1 gap-2">
+                                                {searchResults.map((r, i) => {
+                                                    const img = r.album?.images && r.album.images.length ? r.album.images[0].url : null;
+                                                    const url = r.external_urls?.spotify || '';
+                                                    return (
+                                                        <div key={r.id || i} className="flex items-center justify-between p-2 rounded-md border border-gray-200 bg-white">
+                                                            <div className="flex items-center gap-3">
+                                                                {img ? <img src={img} alt={r.name} className="w-12 h-12 object-cover rounded" /> : <div className="w-12 h-12 bg-gray-100 rounded" />}
+                                                                <div className="text-sm">
+                                                                    <div className="font-medium">{r.name}</div>
+                                                                    <div className="text-xs text-gray-500">{url}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <Button type="button" size="sm" onClick={() => addAndClear({ name: r.name, image: img, url })}>Add</Button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
-                                <div className="mt-2">
-                                    <Button type="button" onClick={addTrack}>+ Add another track</Button>
+
+                                <div className="space-y-3">
+                                <div className="flex flex-wrap gap-2 items-center">
+                                    {!hasTracks && (
+                                        <div className="text-sm text-gray-500">No tracks added yet. Paste a link or search above, or add one manually.</div>
+                                    )}
+
+                                    {tracks.map((track, index) => {
+                                        const url = (track.url || '').trim();
+                                        if (!url) return null;
+                                        return (
+                                            <div key={index} className="flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-white">
+                                                <div className="flex items-center gap-3">
+                                                    {track.image ? (
+                                                        <img src={track.image} alt={track.name || 'track'} className="w-8 h-8 object-cover rounded" />
+                                                    ) : (
+                                                        <Music className="w-4 h-4 text-gray-400" />
+                                                    )}
+                                                    <div className="text-sm text-gray-900 truncate max-w-[18rem]">{track.name || track.url}</div>
+                                                </div>
+
+                                                <div className="flex items-center gap-1">
+                                                    <Button type="button" variant="outline" size="icon" onClick={() => removeTrack(index)}>
+                                                        <X className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
+                            </div>
+
+                                {tracks.length < 5 && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        onClick={addTrack}
+                                        className="mt-3 text-musinova-green hover:text-musinova-green/80"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add Another Track
+                                    </Button>
+                                )}
+                        
                             </div>
 
                             <div>
