@@ -41,15 +41,15 @@ export default function AppRoutes() {
         <Route path="/register" element={<Register />} />
         {/* <Route path="/smart-url" element={<SmartUrl />} /> */}
         <Route path="/blog" element={<Blog />} />
-        <Route path="/learn-more" element={<LearnMore />} />
+        {/* <Route path="/learn-more" element={<LearnMore />} /> */}
         <Route path="/help" element={<Help />} />
-        <Route path="/playlist-checker" element={<PlaylistChecker />} />
-        <Route path="/playlist-tips" element={<PlaylistTips />} />
+        {/* <Route path="/playlist-checker" element={<PlaylistChecker />} /> */}
+        {/* <Route path="/playlist-tips" element={<PlaylistTips />} /> */}
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/feedback" element={<Feedback />} />
-        <Route path="/submissions" element={<Submission />} />
+        {/* <Route path="/submissions" element={<Submission />} /> */}
         <Route path="/campaigns/new" element={<CreateCampaign />} />
         <Route path="/payment-credits" element={<PaymentCreditsPage />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />

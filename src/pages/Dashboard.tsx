@@ -13,7 +13,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { apiFetch } from "@/lib/api";
 import { useEffect, useState } from "react";
-import UserSubmissionsList from '@/components/UserSubmissionsList';
+// Submission UI temporarily disabled on this page
+// import UserSubmissionsList from '@/components/UserSubmissionsList';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import MobileBadge from '@/components/ui/mobile-badge';
@@ -192,9 +193,10 @@ const Dashboard = () => {
   // guest banner removed per request
   const [showGuestBanner, setShowGuestBanner] = useState(false);
   const [viewMode, setViewMode] = useState<'campaign' | 'submissions'>('campaign');
-  const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
-  const [subsLoading, setSubsLoading] = useState(false);
-  const [subsError, setSubsError] = useState<string | null>(null);
+  // Submission-related state temporarily disabled
+  // const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
+  // const [subsLoading, setSubsLoading] = useState(false);
+  // const [subsError, setSubsError] = useState<string | null>(null);
 
   // Fetch jobs
   useEffect(() => {
@@ -405,6 +407,7 @@ const Dashboard = () => {
   }, [selectedJob, jobs]);
 
   // Fetch user submissions when viewMode is 'submissions'
+  /*
   useEffect(() => {
     if (viewMode !== 'submissions') return;
     const fetchUserSubmissions = async () => {
@@ -425,6 +428,7 @@ const Dashboard = () => {
 
     fetchUserSubmissions();
   }, [viewMode]);
+  */
 
   return (
     <PageLayout
@@ -434,14 +438,14 @@ const Dashboard = () => {
       {/* Job Selector */}
       <div className="mb-4 md:mb-8">
         {/* View toggle similar to Hero FlowTabs */}
-        <div className="flex justify-center py-2 mb-4">
+        {/* <div className="flex justify-center py-2 mb-4">
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'campaign' | 'submissions')} className="w-full max-w-[92vw] md:w-[480px]">
             <TabsList className="w-full">
-              <TabsTrigger value="campaign" className="w-1/2 data-[state=active]:bg-musinova-green data-[state=active]:text-white">Your Campaigns</TabsTrigger>
-              <TabsTrigger value="submissions" className="w-1/2 data-[state=active]:bg-musinova-green data-[state=active]:text-white">Your Submissions</TabsTrigger>
-            </TabsList>
+                <TabsTrigger value="campaign" className="w-1/2 data-[state=active]:bg-musinova-green data-[state=active]:text-white">Your Campaigns</TabsTrigger>
+                <TabsTrigger value="submissions" className="w-1/2 data-[state=active]:bg-musinova-green data-[state=active]:text-white">Your Submissions</TabsTrigger>
+              </TabsList>
           </Tabs>
-        </div>
+        </div> */}
 
         {/* Job selector (only for campaign view) */}
         {viewMode === 'campaign' && (
@@ -479,12 +483,13 @@ const Dashboard = () => {
 
       {/* GuestBanner removed as requested */}
 
-      {/* Submissions view - mirror Submission.tsx layout */}
+      {/* Submissions view - temporarily disabled
       {viewMode === 'submissions' && isAuthenticated && (
         <>
           <UserSubmissionsList submissions={userSubmissions} loading={subsLoading} error={subsError} />
         </>
       )}
+      */}
 
       {/* Render Campaign Summary */}
       {viewMode === 'campaign' && campaignSummary && (

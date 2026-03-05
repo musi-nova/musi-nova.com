@@ -104,11 +104,11 @@ const Sidebar = () => {
       path: '/campaigns/new', 
       icon: <FileText size={20} /> 
     },
-    {
-      label: 'New Submission',
-      path: '/submissions',
-      icon: <FileText size={20} />
-    },
+    // {
+    //   label: 'New Submission',
+    //   path: '/submissions',
+    //   icon: <FileText size={20} />
+    // },
     // { 
     //   label: 'Smart URL', 
     //   path: '/dashboard/smart-url', 

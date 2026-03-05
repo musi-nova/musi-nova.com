@@ -37,13 +37,13 @@ const Navbar: React.FC = () => {
           >
             Music Promotion
           </a>
-          <a
+          {/* <a
             href="/submissions"
             className="text-sm font-medium hover:text-brand-accent transition-colors"
             onClick={() => trackClick('nav_playlist_submission', { label: 'Playlist Submission', location: 'navbar' })}
           >
             Playlist Submission
-          </a>
+          </a> */}
           {/* <a href="/case-studies" className="text-sm font-medium hover:text-brand-accent transition-colors">Case Studies</a> */}
           <a
             href="/pricing"
@@ -89,23 +89,51 @@ const Navbar: React.FC = () => {
           className="absolute top-full left-0 right-0 bg-white border-b border-black/5 p-6 flex flex-col gap-4 md:hidden"
         >
           <hr className="border-black/5" />
-          {isAuthenticated ? (
-            <a
-              href="/dashboard"
-              className="w-full inline-flex items-center justify-center bg-brand-primary text-white py-4 rounded-xl font-semibold"
-              onClick={() => trackClick('nav_mobile_dashboard', { label: 'Dashboard', location: 'navbar_mobile' })}
-            >
-              Dashboard
-            </a>
-          ) : (
+          <div className="flex flex-col gap-2">
             <a
               href="/campaigns/new"
-              className="w-full inline-flex items-center justify-center bg-brand-primary text-white py-4 rounded-xl font-semibold"
-              onClick={() => trackClick('nav_mobile_get_started', { label: 'Get Started', location: 'navbar_mobile' })}
+              className="w-full inline-flex items-center justify-center text-sm font-medium py-3 rounded-xl hover:bg-gray-50"
+              onClick={() => trackClick('nav_mobile_music_promotion', { label: 'Music Promotion', location: 'navbar_mobile' })}
             >
-              Get Started
+              Music Promotion
             </a>
-          )}
+
+            <a
+              href="/pricing"
+              className="w-full inline-flex items-center justify-center text-sm font-medium py-3 rounded-xl hover:bg-gray-50"
+              onClick={() => trackClick('nav_mobile_pricing', { label: 'Pricing', location: 'navbar_mobile' })}
+            >
+              Pricing
+            </a>
+
+            {!isAuthenticated && (
+              <a
+                href="/login"
+                className="w-full inline-flex items-center justify-center text-sm font-medium py-3 rounded-xl hover:bg-gray-50"
+                onClick={() => trackClick('nav_mobile_login', { label: 'Log In', location: 'navbar_mobile' })}
+              >
+                Log In
+              </a>
+            )}
+
+            {isAuthenticated ? (
+              <a
+                href="/dashboard"
+                className="w-full inline-flex items-center justify-center bg-musinova-green text-white py-4 rounded-xl font-semibold"
+                onClick={() => trackClick('nav_mobile_dashboard', { label: 'Dashboard', location: 'navbar_mobile' })}
+              >
+                Dashboard
+              </a>
+            ) : (
+              <a
+                href="/campaigns/new"
+                className="w-full inline-flex items-center justify-center bg-musinova-green text-white py-4 rounded-xl font-semibold"
+                onClick={() => trackClick('nav_mobile_get_started', { label: 'Get Started', location: 'navbar_mobile' })}
+              >
+                Get Started
+              </a>
+            )}
+          </div>
         </motion.div>
       )}
     </nav>

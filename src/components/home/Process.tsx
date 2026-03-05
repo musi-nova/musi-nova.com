@@ -2,6 +2,7 @@ import React from 'react';
 import PlaylistGrid from './PlaylistGrid';
 import { motion } from 'motion/react';
 import { Users } from 'lucide-react';
+import { title } from 'process';
 
 const Process: React.FC = () => {
   const steps = [
@@ -12,8 +13,10 @@ const Process: React.FC = () => {
     },
     {
       number: '02',
-      title: 'Choose Your Strategy',
-      desc: 'Let us get to work on the meta ads, submit your tracks directly to our playlists or try a mix of both.'
+      // title: 'Choose Your Strategy',
+      title: 'We Get to Work',
+      desc: 'Once we have your tracks, we get to work setting up your campaign. We handle everything.'
+      // desc: 'Let us get to work on the meta ads, submit your tracks directly to our playlists or try a mix of both.'
     },
     {
       number: '03',

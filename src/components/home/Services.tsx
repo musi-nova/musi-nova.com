@@ -9,23 +9,23 @@ const items = [
         icon: <TrendingUp className="w-6 h-6" />,
         color: 'bg-musinova-green'
     },
-    {
-        title: 'Playlist Submission',
-        desc: 'Submit your latest tracks to our network of genre-specific, curated playlists. Boost your visibility and get your music heard by listeners who are actively looking for their next favorite song.',
-        icon: <Radio className="w-6 h-6" />,
-        color: 'bg-musinova-brown'
-    },
-    {
-        title: 'Smart URLs',
-        desc: 'Create sleek, mobile-optimized landing pages that give fans a direct path to your music. Minimize friction and ensure every click has the best chance of becoming a stream.',
-        icon: <Globe className="w-6 h-6" />,
-        color: 'bg-musinova-brown'
-    },
+    // {
+    //     title: 'Playlist Submission',
+    //     desc: 'Submit your latest tracks to our network of genre-specific, curated playlists. Boost your visibility and get your music heard by listeners who are actively looking for their next favorite song.',
+    //     icon: <Radio className="w-6 h-6" />,
+    //     color: 'bg-musinova-brown'
+    // },
+    // {
+    //     title: 'Smart URLs',
+    //     desc: 'Create sleek, mobile-optimized landing pages that give fans a direct path to your music. Minimize friction and ensure every click has the best chance of becoming a stream.',
+    //     icon: <Globe className="w-6 h-6" />,
+    //     color: 'bg-musinova-brown'
+    // },
     {
         title: 'Analytics & Insights',
         desc: 'Monitor your momentum with real-time tracking for streams, saves, and audience growth. Use these actionable insights to understand your fans and refine your release strategy with confidence.',
         icon: <BarChart3 className="w-6 h-6" />,
-        color: 'bg-musinova-green'
+        color: 'bg-musinova-brown'
     }
 ];
 
@@ -40,7 +40,8 @@ const Services: React.FC = () => {
             <div className="max-w-6xl mx-auto">
                 <div className="mb-16 text-center">
                     <h2 className="text-3xl md:text-4xl font-bold">Everything You Need</h2>
-                    <p className="text-black/60 max-w-2xl mx-auto mt-3">Powerful tools for independent artists — playlist pitching, ads, smart links, and analytics.</p>
+                    {/* <p className="text-black/60 max-w-2xl mx-auto mt-3">Powerful tools for independent artists — playlist pitching, ads, smart links, and analytics.</p> */}
+                    <p className="text-black/60 max-w-2xl mx-auto mt-3">Powerful tools for independent artists.</p>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-10">

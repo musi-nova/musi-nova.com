@@ -39,14 +39,12 @@ const Hero: React.FC = () => {
             <span className="inline-block px-4 py-1.5 bg-musinova-green/10 text-musinova-green rounded-full text-xs font-bold uppercase tracking-widest mb-6">
               Simple and effective meta campaigns
             </span>
-            <h1 className="text-6xl md:text-8xl font-bold leading-[0.9] mb-8 tracking-tighter">
-              Get Your Music <br />
-              <span className="text-musinova-green italic">Heard Everywhere</span>
+            <h1 className="text-5xl md:text-7xl font-bold leading-[0.9] mb-8 tracking-tighter">
+              Create your personal <br />
+              <span className="text-musinova-green italic">high engagement Spotify playlist</span>
             </h1>
-            <p className="text-xl text-black/60 max-w-xl mb-10 leading-relaxed">
-              Launch high-impact ad campaigns, submit your tracks to curated playlists, and grow your audience with MusiNova's data-driven promotion tools.
-            </p>
-
+            <p className="text-l text-black/60 max-w-xl mb-10 leading-relaxed">
+              We create a personalized playlist, featuring your music, and advertise it to the right listeners with the proven advertising methods we have used for over 5 years. Your tracks stay at the top of the list. No pitching. Guaranteed exposure.</p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <a
                 href="/campaigns/new"
@@ -55,6 +53,7 @@ const Hero: React.FC = () => {
               >
                 Start Your Campaign
               </a>
+              {/* Submission feature temporarily disabled
               <a
                 href="/submissions"
                 className="btn-secondary flex items-center gap-2 w-full sm:w-auto justify-center"
@@ -62,6 +61,7 @@ const Hero: React.FC = () => {
               >
                 Submit To Playlists
               </a>
+              */}
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-8 opacity-40 grayscale">
