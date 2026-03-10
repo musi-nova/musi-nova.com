@@ -21,7 +21,8 @@ import AuthGuard from "@/components/AuthGuard";
 import TestimonialsPage from "./pages/TestimonialsPage";
 import CreditsBanner from '@/components/CreditsBanner';
 import Unsubscribe from "./pages/Unsubscribe";
-import Blog from "./pages/Blog";
+// import Blog from "./pages/Blog";
+import Faqs from "./pages/Faqs";
 
 export default function AppRoutes() {
   return (
@@ -33,7 +34,7 @@ export default function AppRoutes() {
         <Route path="/forgotten-password" element={<ForgottenPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/blog" element={<Blog />} />
+        {/* <Route path="/blog" element={<Blog />} /> */}
         <Route path="/help" element={<Help />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/privacy" element={<Privacy />} />
@@ -45,6 +46,9 @@ export default function AppRoutes() {
         <Route path="/payment-failed" element={<PaymentFailed />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />
+        
+        {/* faqs routes */}
+        <Route path="/faqs" element={<Faqs />} />
 
         {/* Protected routes (require AuthGuard) */}
         <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
