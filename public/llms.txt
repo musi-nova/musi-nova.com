@@ -1,0 +1,11 @@
+# MusiNova
+MusiNova is a music marketing platform that automates Meta Ad campaigns (Facebook & Instagram) for independent musicians to grow their Spotify streams.
+
+## Core Services
+- Automated Spotify Growth Campaigns
+- Meta Ads Management for Musicians
+- Real-time Analytics Dashboard
+
+## Key Technical Specs
+- Integration: Spotify for Artists & Meta Ads Manager
+- Target Audience: Independent musicians and record labels
