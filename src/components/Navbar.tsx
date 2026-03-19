@@ -37,13 +37,13 @@ const Navbar: React.FC = () => {
           >
             Music Promotion
           </a>
-          {/* <a
-            href="/submissions"
+          <a
+            href="/case-studies"
             className="text-sm font-medium hover:text-brand-accent transition-colors"
-            onClick={() => trackClick('nav_playlist_submission', { label: 'Playlist Submission', location: 'navbar' })}
+            onClick={() => trackClick('nav_case_studies', { label: 'Case Studies', location: 'navbar' })}
           >
-            Playlist Submission
-          </a> */}
+            Case Studies
+          </a>
           {/* <a href="/case-studies" className="text-sm font-medium hover:text-brand-accent transition-colors">Case Studies</a> */}
           <a
             href="/pricing"

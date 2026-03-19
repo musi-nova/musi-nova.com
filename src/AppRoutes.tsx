@@ -21,6 +21,7 @@ import AuthGuard from "@/components/AuthGuard";
 import TestimonialsPage from "./pages/TestimonialsPage";
 import CreditsBanner from '@/components/CreditsBanner';
 import Unsubscribe from "./pages/Unsubscribe";
+import CaseStudies from "./pages/CaseStudies";
 // import Blog from "./pages/Blog";
 import Faqs from "./pages/Faqs";
 
@@ -46,6 +47,7 @@ export default function AppRoutes() {
         <Route path="/payment-failed" element={<PaymentFailed />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />
+        <Route path="/case-studies" element={<CaseStudies />} />
         
         {/* faqs routes */}
         <Route path="/faqs" element={<Faqs />} />
