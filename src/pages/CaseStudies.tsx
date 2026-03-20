@@ -118,7 +118,7 @@ const genreDatasets: Record<string, DataRow[]> = Object.fromEntries(
 ) as Record<string, DataRow[]>;
 
 const CaseStudies = () => {
-    const [selectedGenre, setSelectedGenre] = useState<'Rock'|'R&B'|'Indie'|'Electronic'>('Indie');
+    const [selectedGenre, setSelectedGenre] = useState<'Rock'|'R&B'|'Indie'|'Electronic'>('Rock');
 
     const raw = genreDatasets[selectedGenre];
     const data = raw.map(d => ({
